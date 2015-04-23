@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+
+import os.path
+import pickle
+
+# For now just store things in a flat file, in the future we'll make
+# this a database.
+
+# GET
+
+def get_sponsors( eventID ):
+    return get_data( "sponsors", eventID )
+
+def get_registrants( eventID ):
+    return get_data( "registrants", eventID )
+
+def get_data( table, eventID ):
+    if os.path.isfile( "datastore/%s-%s.dat" % ( table, eventID ) ):
+        with open( "datastore/%s-%s.dat" % ( table, eventID ), "r" ) as f:
+            return pickle.load( f )
+    else:
+        return []
+
+# SET
+
+def add_sponsors( eventID, new_sponsors ):
+    '''Takes in a list of sponsors'''
+    return add_data( "sponsors", eventID, new_sponsors )
+
+def add_registrants( eventID, new_registrants ):
+    '''Takes in a list of registrants'''
+    return add_data( "registrants", eventID, new_registrants )
+
+def add_data( table, eventID, new_data ):
+    if len( new_data ):
+        items = get_data( table, eventID )
+        item_ids = { x['ID']:x for x in items }
+    
+        for new_item in new_data:
+            if new_item['ID'] not in item_ids:
+                items.append( new_item )
+
+        with open( "datastore/%s-%s.dat" % ( table, eventID ), "w" ) as f:
+            pickle.dump( items, f )
+                

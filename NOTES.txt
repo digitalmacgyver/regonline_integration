@@ -1,0 +1,6 @@
+My API key is:
+9mIRFe399oIBM0fnX5jxLtupSZlaizGgtHUEuDpUi34QWs66G6LxFDZ6wsdpgzCw
+
+API docs at:
+http://developer.regonline.com/
+

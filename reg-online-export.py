@@ -111,6 +111,13 @@ def export_event_data( eventID, attendee_type ):
                     
                     if custom_data5.Success != True:
                         logging.error( "Failed to extract custom field data for eventID: %s, registrationID %s.  StatusCode=%s, Authority=%s" % ( eventID, attendee['ID'], custom_data5.StatusCode, custom_data5.Authority ) )
+
+                        # DEBUG - perhaps our client is getting corrupted somehow after much use? 
+                        # Get a new client and keep trying.
+                        client = Client( regonline_wsdl )
+                        token = client.factory.create( "TokenHeader" )
+                        token.APIToken = regonline_api_key
+                        client.set_options( soapheaders=token )
                         continue
 
                     if custom_data5.Data == '':

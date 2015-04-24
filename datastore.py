@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import os.path
 import pickle
 
@@ -13,6 +14,9 @@ def get_sponsors( eventID ):
 
 def get_registrants( eventID ):
     return get_data( "registrants", eventID )
+
+def get_discount_codes( eventID ):
+    return get_data( "discount_codes", eventID )
 
 def get_data( table, eventID ):
     if os.path.isfile( "datastore/%s-%s.dat" % ( table, eventID ) ):
@@ -31,6 +35,10 @@ def add_registrants( eventID, new_registrants ):
     '''Takes in a list of registrants'''
     return add_data( "registrants", eventID, new_registrants )
 
+def add_discount_codes( eventID, new_codes ):
+    '''Takes in a list of discount codes'''
+    return add_data( "discount_codes", eventID, new_codes )
+
 def add_data( table, eventID, new_data ):
     if len( new_data ):
         items = get_data( table, eventID )
@@ -40,6 +48,14 @@ def add_data( table, eventID, new_data ):
             if new_item['ID'] not in item_ids:
                 items.append( new_item )
 
-        with open( "datastore/%s-%s.dat" % ( table, eventID ), "w" ) as f:
+        # Create new.
+        with open( "datastore/%s-%s.dat.new" % ( table, eventID ), "w" ) as f:
             pickle.dump( items, f )
-                
+
+        # Rename existinig if any.
+        if os.path.isfile( "datastore/%s-%s.dat" % ( table, eventID ) ):
+            os.rename( "datastore/%s-%s.dat" % ( table, eventID ), "datastore/%s-%s.dat.old" % ( table, eventID ) )
+
+        # Rename new to current.
+        os.rename( "datastore/%s-%s.dat.new" % ( table, eventID ), "datastore/%s-%s.dat" % ( table, eventID ) )
+        

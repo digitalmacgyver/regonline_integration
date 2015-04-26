@@ -41,6 +41,7 @@ def logout():
     flash('You were logged out')
     return redirect(url_for('discount_code'))
 
+@app.route( '/', methods=[ 'GET', 'POST' ] )
 @app.route( '/discount_code/', methods=[ 'GET', 'POST' ] )
 def discount_code():
     # Answer the query if we had a search request.

@@ -34,7 +34,7 @@
              <table>
              {% for discount_code in sponsor.discount_codes %}
 	       <tr>
-	         <td><a href="/discount_code/?code={{ discount_code.discount_code }}">{{ discount_code.discount_code }}</a></td>
+	         <td><a href="/abi/discount_code/?code={{ discount_code.discount_code }}">{{ discount_code.discount_code }}</a></td>
 	         <td>{{ discount_code.quantity }}</td>
 	         <td>{{ discount_code.redeemed }}</td>
 	         <td>{{ discount_code.available }}</td>

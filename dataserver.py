@@ -143,7 +143,6 @@ def discount_code():
         return jsonify( { "error" : "You must provide a valid discount_code argument to this method.",
                           "success" : False } )        
 
-
     discounts = get_discount_codes( data['discount_eventID'] )
     registrants = get_registrants( data['registrant_eventID'] )
 
@@ -160,6 +159,7 @@ def discount_code():
             "name" : "%s %s" % ( registrant['FirstName'], registrant['LastName'] ),
             "company" : registrant['Company'],
             "title" : registrant['Title'],
+            "status" : registration['Status'],
             "registration_type" : registrant['RegistrationType'],
             "registration_date" : registrant['AddDate']
         }
@@ -167,9 +167,9 @@ def discount_code():
     attendees = [ get_fields( x ) for x in registrants if x['discount_code'] == data['discount_code'] ]
 
     return jsonify( { "discount_code_data" : discount_code_data,
-                      "total" : discount_code_data['quantity'],
+                      "total" : discount_code_data.get( 'quantity', None ),
                       "redeemed" : len( attendees ),
-                      "available" : discount_code_data['quantity'] - len( attendees ),
+                      "available" : discount_code_data.get( 'quantity', 0 ) - len( attendees ),
                       "redemptions" : attendees,
                       "success"  : True } )
 

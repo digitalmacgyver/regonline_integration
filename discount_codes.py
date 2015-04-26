@@ -9,72 +9,89 @@ sponsor_entitlements_2015 = {
     'ABI Partners Only - Diamond' : [
         { 'product_code' : 'GHP5G',
           'badge_type' : 'general_full',
+          'regonline_str' : '-100%',
           'quantity' : 20, },
         { 'product_code' : 'GHP5B',
           'badge_type' : 'booth',
+          'regonline_str' : '-100%',
           'quantity' : 8, },
     ],
     'ABI Partners Only - Platinum' : [ 
         { 'product_code' : 'GHP5G',
           'badge_type' : 'general_full',
+          'regonline_str' : '-100%',
           'quantity' : 10, },
         { 'product_code' : 'GHP5B',
           'badge_type' : 'booth',
+          'regonline_str' : '-100%',
           'quantity' : 4, },
     ],
     'Corporate - Gold'             : [ 
         { 'product_code' : 'GHP5G',
           'badge_type' : 'general_full',
+          'regonline_str' : '-100%',
           'quantity' : 5, },
         { 'product_code' : 'GHP5B',
           'badge_type' : 'booth',
+          'regonline_str' : '-100%',
           'quantity' : 3, },
     ],
     'Corporate - Silver'           : [ 
         { 'product_code' : 'GHP5G',
           'badge_type' : 'general_full',
+          'regonline_str' : '-100%',
           'quantity' : 3, },
         { 'product_code' : 'GHP5B',
+          'regonline_str' : '-100%',
           'badge_type' : 'booth',
           'quantity' : 2, },
     ],
     'Academic - Gold'              : [ 
         { 'product_code' : 'GHP5A',
           'badge_type' : 'academic_full',
+          'regonline_str' : '-100%',
           'quantity' : 3, },
         { 'product_code' : 'GHP5S',
           'badge_type' : 'student_20',
+          'regonline_str' : '-20%',
           'quantity' : 100, },
     ],
     'Academic - Silver'            : [ 
         { 'product_code' : 'GHP5A',
           'badge_type' : 'academic_full',
+          'regonline_str' : '-100%',
           'quantity' : 2, },
         { 'product_code' : 'GHP5S',
           'badge_type' : 'student_15',
+          'regonline_str' : '-15%',
           'quantity' : 50, },
     ],
     'Academic - Bronze'            : [ 
         { 'product_code' : 'GHP5A',
           'badge_type' : 'academic_full',
+          'regonline_str' : '-100%',
           'quantity' : 1, },
         { 'product_code' : 'GHP5S',
           'badge_type' : 'student_10',
+          'regonline_str' : '-10%',
           'quantity' : 25, },
     ],
     'Lab & Non-Profit - Gold'      : [ 
         { 'product_code' : 'GHP5G',
           'badge_type' : 'general_full',
+          'regonline_str' : '-100%',
           'quantity' : 3, },
     ],
     'Lab & Non-Profit - Silver'    : [ 
         { 'product_code' : 'GHP5G',
           'badge_type' : 'general_full',
+          'regonline_str' : '-100%',
           'quantity' : 2, },
     ],
     'Lab & Non-Profit - Bronze'    : [ 
         { 'product_code' : 'GHP5G',
           'badge_type' : 'general_full',
+          'regonline_str' : '-100%',
           'quantity' : 1, },
     ],
 }
@@ -104,7 +121,7 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes ):
             discount_code['ID'] = str( uuid.uuid4() )
 
             discount_code['badge_type'] = entitlement['badge_type']
-
+            discount_code['regonline_str'] = entitlement['regonline_str']
             discount_code['quantity'] = entitlement['quantity']
             # Get rid of any unicode stuff we don't want.
             company_abbr = sponsor['Company'].encode( 'ascii', 'ignore' ).upper()

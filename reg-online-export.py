@@ -130,7 +130,9 @@ def export_event_data( eventID, attendee_type ):
                         discount_amount = 0
 
                         if 'Password' in custom_data5.Data.APICustomFieldResponse[0]:
-                            discount_code = custom_data5.Data.APICustomFieldResponse[0].Password.encode( 'utf-8' )
+                            tmp_discount_code = custom_data5.Data.APICustomFieldResponse[0].Password
+                            if tmp_discount_code is not None:
+                                discount_code = tmp_discount_code.encoding( 'utf-8' )
                             discount_amount = custom_data5.Data.APICustomFieldResponse[0].DiscountCodeCredit
 
                         add_attendee['discount_code'] = discount_code

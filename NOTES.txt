@@ -1,3 +1,12 @@
+TODO:
+
+1. Create some spoof data for discount codes matching prior years
+actuall used codes.
+
+2. Create header template dealy with links to the other pages.
+
+
+
 My API key is:
 9mIRFe399oIBM0fnX5jxLtupSZlaizGgtHUEuDpUi34QWs66G6LxFDZ6wsdpgzCw
 

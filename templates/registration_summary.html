@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+{% block body %}
+
+  {% if session.logged_in %}
+    <table class="singlerow">
+      <tr>
+        <td>Total Registered: {{ registration_summary.registered }}</td>
+        <td>Reserved for Sponsors: {{ registration_summary.reserved }}</td>
+      </tr>
+    </table>
+    {% if registration_summary.sponsors %}
+      <table class="singlerow">
+        <tr>
+          <th>Company</th>
+	  <th>Contact Email</th>
+	  <th>Sponsorship</th>
+          <th>Discount Codes
+              <table>
+		<tr>
+		  <th>Discount code</th>
+		  <th>Total</th>
+		  <th>Redeemed</th>
+		  <th>Unused</th>
+		</tr>
+	      </table>
+          </th>
+        </tr>
+       {% for sponsor in registration_summary.sponsors %}
+         <tr>
+	   <td>{{ sponsor.Company|safe }}</td>
+	   <td>{{ sponsor.Email|safe }}</td>
+	   <td>{{ sponsor.RegistrationType|safe }}</td>
+	   <td>
+             <table>
+             {% for discount_code in sponsor.discount_codes %}
+	       <tr>
+	         <td><a href="/discount_code/?code={{ discount_code.discount_code }}">{{ discount_code.discount_code }}</a></td>
+	         <td>{{ discount_code.quantity }}</td>
+	         <td>{{ discount_code.redeemed }}</td>
+	         <td>{{ discount_code.available }}</td>
+               </tr>
+             {% endfor %}
+             </table>
+           </td>
+         </tr>
+       {% endfor %}
+      </table>
+    {% endif %}
+  {% else %}
+    <p>Log in to access registration summary information.</p>
+  {% endif %}
+
+{% endblock %}

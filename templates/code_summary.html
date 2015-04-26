@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block body %}
+  {% if session.logged_in %}
+
+    {% for badge_type in badge_types %}
+       <h2>RegOnline Discount Code String for {{ badge_type.label }}:</h2>
+       <p>{{ badge_type.regonline_code_string }}</p>
+    {% endfor %}
+
+  {% else %}
+    <p>Log in to access discount code summary information.</p>
+  {% endif %}
+
+{% endblock %}

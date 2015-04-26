@@ -9,11 +9,11 @@
   </form>
 
   {% if redeemed_codes %}
-    <table class="single_row">
+    <table class="singlerow">
       <tr>
-        <td>Available: {{ redeemed_codes.available }}</td>
-        <td>Redeemed: {{ redeemed_codes.redeemed }}</td>
         <td>Total: {{ redeemed_codes.total }}</td>
+        <td>Redeemed: {{ redeemed_codes.redeemed }}</td>
+        <td>Unused: {{ redeemed_codes.available }}</td>
       </tr>
     </table>
     {% if redeemed_codes.redemptions %}
@@ -26,19 +26,19 @@
           <th>Status</th>
           <th>Registration Date</th>
         </tr>
-       {% for attendee in redeemed_codes.attendees %}
-       <tr>
-	 <td>{{ attendee.name|safe }}</td>
-	 <td>{{ attendee.company|safe }}</td>
-	 <td>{{ attendee.title|safe }}</td>
-	 <td>{{ attendee.registration_type|safe }}</td>
-	 <td>{{ attendee.status|safe }}</td>
-	 <td>{{ attendee.created_date|safe }}</td>
-       </tr>
-       {% endfor %}
-    </table>
+        {% for attendee in redeemed_codes.redemptions %}
+          <tr>
+	    <td>{{ attendee.name|safe }}</td>
+	    <td>{{ attendee.company|safe }}</td>
+	    <td>{{ attendee.title|safe }}</td>
+	    <td>{{ attendee.registration_type|safe }}</td>
+	    <td>{{ attendee.status|safe }}</td>
+	    <td>{{ attendee.registration_date|safe }}</td>
+          </tr>
+        {% endfor %}
+      </table>
     {% endif %}
   {% else %}
-    <li><em>Enter discount code to show redemptions.</em></li>
+    <em>Enter discount code to show redemptions.</em>
   {% endif %}
 {% endblock %}

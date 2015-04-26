@@ -10,7 +10,7 @@ import logging
 logging.basicConfig( level=logging.INFO )
 logging.getLogger( 'suds.clinet' ).setLevel( logging.DEBUG )
 
-from datastore import get_sponsors, get_registrants, add_sponsors, add_registrants, get_discount_codes, add_discount_codes
+from datastore import get_sponsors, get_registrants, set_sponsors, set_registrants, get_discount_codes, set_discount_codes
 from discount_codes import generate_discount_codes
 
 regonline_api_key = '9mIRFe399oIBM0fnX5jxLtupSZlaizGgtHUEuDpUi34QWs66G6LxFDZ6wsdpgzCw'
@@ -68,10 +68,9 @@ def export_event_data( eventID, attendee_type ):
                     'ID'                : attendee['ID'],
                     'RegTypeID'         : attendee['RegTypeID'],
                     'StatusID'          : attendee['StatusID'],
-                    'StatusDescription' : attendee['StatusDescription'],
-                    'FirstName'         : attendee['FirstName'],
-                    'LastName'          : attendee['LastName'],
-                    'Email'             : attendee['Email'],
+                    'StatusDescription' : attendee['StatusDescription'].encode( 'utf-8' ),
+                    'FirstName'         : attendee['FirstName'].encode( 'utf-8' ),
+                    'LastName'          : attendee['LastName'].encode( 'utf-8' ),
                     'CancelDate'        : attendee['CancelDate'],
                     'IsSubstitute'      : attendee['IsSubstitute'],
                     'AddBy'             : attendee['AddBy'],
@@ -80,6 +79,7 @@ def export_event_data( eventID, attendee_type ):
                     'ModDate'           : attendee['ModDate'],
                     'CCEmail'           : "",
                     'Company'           : "",
+                    'Email'             : "",
                     'Phone'             : "",
                     'RegistrationType'  : "",
                     'Title'             : "",
@@ -88,10 +88,10 @@ def export_event_data( eventID, attendee_type ):
                 # DEBUG
                 # grep -i 'object has no attribute' export-log4.txt
                 
-                optional_fields = [ 'CCEmail', 'Company', 'Phone', 'RegistrationType', 'Title' ]
+                optional_fields = [ 'CCEmail', 'Company', 'Email', 'Phone', 'RegistrationType', 'Title' ]
                 for field in optional_fields:
-                    if field in attendee:
-                        add_attendee[field] = attendee[field]
+                    if field in attendee and attendee[field] is not None:
+                        add_attendee[field] = attendee[field].encode( 'utf-8' )
 
                 if attendee_type == "registrants":
                     # Since they are a registrant we need to get some custom
@@ -122,20 +122,19 @@ def export_event_data( eventID, attendee_type ):
 
                     if custom_data5.Data == '':
                         logging.warning( "No detailed registration data found for attendee %s with status %s" % ( attendee['ID'], attendee['StatusDescription'] ) )
-                        continue
+                    else:
+                        add_attendee['registration_type'] = custom_data5.Data.APICustomFieldResponse[0].CustomFieldNameOnReport.encode( 'utf-8' )
+                        add_attendee['registration_amount'] = custom_data5.Data.APICustomFieldResponse[0].Amount
 
-                    add_attendee['registration_type'] = custom_data5.Data.APICustomFieldResponse[0].CustomFieldNameOnReport
-                    add_attendee['registration_amount'] = custom_data5.Data.APICustomFieldResponse[0].Amount
+                        discount_code = ""
+                        discount_amount = 0
 
-                    discount_code = ""
-                    discount_amount = 0
+                        if 'Password' in custom_data5.Data.APICustomFieldResponse[0]:
+                            discount_code = custom_data5.Data.APICustomFieldResponse[0].Password.encode( 'utf-8' )
+                            discount_amount = custom_data5.Data.APICustomFieldResponse[0].DiscountCodeCredit
 
-                    if 'Password' in custom_data5.Data.APICustomFieldResponse[0]:
-                        discount_code = custom_data5.Data.APICustomFieldResponse[0].Password
-                        discount_amount = custom_data5.Data.APICustomFieldResponse[0].DiscountCodeCredit
-
-                    add_attendee['discount_code'] = discount_code
-                    add_attendee['discount_amount'] = discount_amount
+                        add_attendee['discount_code'] = discount_code
+                        add_attendee['discount_amount'] = discount_amount
                 elif attendee_type == "sponsors":
                     # If this sponsor already has discount codes,
                     # don't add any new ones.
@@ -159,11 +158,14 @@ def export_event_data( eventID, attendee_type ):
 
     if attendee_type == "registrants":
         logging.info( "Persisting data for %d registrants." % ( len( attendees ) ) )
-        add_registrants( eventID, attendees )
+        set_registrants( eventID, attendees )
     elif attendee_type == 'sponsors':
         logging.info( "Persisting data for %d sponsors." % ( len( attendees ) ) )
-        add_sponsors( eventID, attendees )
-        add_discount_codes( eventID, discount_codes )
+        set_sponsors( eventID, attendees )
+        try:
+            set_discount_codes( eventID, discount_codes )
+        except:
+            logging.warning( "No discount codes found." )
     else:
         raise Exception( "Unknown attendee type: '%s' - must be one of registrants or sponsors." % ( attendee_type ) )
 
@@ -177,3 +179,10 @@ if __name__ == "__main__":
     sponsors_2014 = 1438449
     logging.info( "Exporting data for sponsors." )
     export_event_data( sponsors_2014, "sponsors" )
+
+    #wov_sponsors_2015 = 1441015
+    #wov_registrants_2015 = 1376075
+    #logging.info( "WOV Sponsors." )
+    #export_event_data( wov_sponsors_2015, "sponsors" )
+    #logging.info( "WOV Registrants." )
+    #export_event_data( wov_registrants_2015, "registrants" )

@@ -25,7 +25,7 @@ def get_data( table, eventID ):
     else:
         return []
 
-# SET
+# Update
 
 def add_sponsors( eventID, new_sponsors ):
     '''Takes in a list of sponsors'''
@@ -58,4 +58,31 @@ def add_data( table, eventID, new_data ):
 
         # Rename new to current.
         os.rename( "datastore/%s-%s.dat.new" % ( table, eventID ), "datastore/%s-%s.dat" % ( table, eventID ) )
-        
+
+# Overwrite
+def set_sponsors( eventID, new_sponsors ):
+    '''Takes in a list of sponsors'''
+    return set_data( "sponsors", eventID, new_sponsors )
+
+def set_registrants( eventID, new_registrants ):
+    '''Takes in a list of registrants'''
+    return set_data( "registrants", eventID, new_registrants )
+
+def set_discount_codes( eventID, new_codes ):
+    '''Takes in a list of discount codes'''
+    return set_data( "discount_codes", eventID, new_codes )
+
+def set_data( table, eventID, items ):
+    if len( items ):
+        # Create new.
+        with open( "datastore/%s-%s.dat.new" % ( table, eventID ), "w" ) as f:
+            pickle.dump( items, f )
+
+        # Rename existinig if any.
+        if os.path.isfile( "datastore/%s-%s.dat" % ( table, eventID ) ):
+            os.rename( "datastore/%s-%s.dat" % ( table, eventID ), "datastore/%s-%s.dat.old" % ( table, eventID ) )
+
+        # Rename new to current.
+        os.rename( "datastore/%s-%s.dat.new" % ( table, eventID ), "datastore/%s-%s.dat" % ( table, eventID ) )
+    else:
+        raise Exception( "set_data called with no items to set." )

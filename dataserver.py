@@ -42,29 +42,18 @@ provide an API key which can be validated via JSON like:
 The data server will have the following APIs, the numbers indicate the
 priority order in which they will be added:
 
+DONE:
 1 - /data/sponsors/
 Authentication required
 Returns a list of all sponsors
-
-4 - /data/sponsors/[sponsorID]
-Authentication required
-Returns data for just that sponsor
-
-1 - /data/registrant/
+1 - /data/registrants/
 Authentication required
 Returns a list of all registrants
-
-4 - /data/registrant/[registrantID]
-Authentication required
-Returns details of a particular registrant
-
 1 - /data/discounts/
-Authentication required
-Returns a list of all discount codes
+Authentication may be required depending on mode
 
-1 - /data/discounts/[discount_code] or [discountID]
-Publicly accessible
-Returns registration details for that code
+
+TBD:
 
 2 - /data/new_discount/
 Authentication required
@@ -95,23 +84,95 @@ def auth_ok( data ):
 def sponsors():
     data = request.get_json( force=True, silent=True )
 
+    return attendees( 'sponsors', data )
+
+@app.route( '/data/registrants/', methods=[ 'POST' ] )
+def registrants():
+    data = request.get_json( force=True, silent=True )
+
+    return attendees( 'registrants', data )
+
+def attendees( table, data ):
     if auth_ok( data ):
         if 'eventID' in data:
-            sponsors = get_sponsors( data['eventID'] )
-            return jsonify( { 
-                "sponsors" : sponsors,
-                "success"  : True
-            } )
+            if table == 'sponsors':
+                attendees = get_sponsors( data['eventID'] )
+            elif table == 'registrants':
+                attendees = get_registrants( data['eventID'] )
+            else:
+                return jsonify( { "error" : "Internal server error.",
+                                  "success" : False, } )
+
+            return jsonify( { table : attendees,
+                              "success"  : True } )
         else:
-            return jsonify( { 
-                "error" : "You must provide a valid eventID argument to this method.",
-                "success" : False
-            } )
+            return jsonify( { "error" : "You must provide a valid eventID argument to this method.",
+                              "success" : False } )
     else:
-        return jsonify( { 
-            "error" : "You must provide a valid api_key argument to this method.",
-            "success" : False
-        } )
+        return jsonify( { "error" : "You must provide a valid api_key argument to this method.",
+                          "success" : False } )
+
+@app.route( '/data/discounts/', methods=[ 'POST' ] )
+def discounts():
+    data = request.get_json( force=True, silent=True )
+
+    if auth_ok( data ):
+        if 'eventID' in data:
+            discounts = get_discount_codes( data['eventID'] )
+
+            return jsonify( { "discount_codes" : discounts,
+                              "success"  : True } )
+        else:
+            return jsonify( { "error" : "You must provide a valid eventID argument to this method.",
+                              "success" : False } )
+    else:
+        return jsonify( { "error" : "You must provide a valid api_key argument to this method.",
+                          "success" : False } )
+
+@app.route( '/data/discount_code/', methods=[ 'POST' ] )
+def discount_code():
+    data = request.get_json( force=True, silent=True )
+
+    if 'discount_eventID' not in data:
+        return jsonify( { "error" : "You must provide a valid discount_eventID argument to this method.",
+                          "success" : False } )        
+    if 'registrant_eventID' not in data:
+        return jsonify( { "error" : "You must provide a valid registrant_eventID argument to this method.",
+                          "success" : False } )        
+    if 'discount_code' not in data:
+        return jsonify( { "error" : "You must provide a valid discount_code argument to this method.",
+                          "success" : False } )        
+
+
+    discounts = get_discount_codes( data['discount_eventID'] )
+    registrants = get_registrants( data['registrant_eventID'] )
+
+    discount_code_data = {}
+    for code in discounts:
+        if data['discount_code'] == code['discount_code']:
+            discount_code_data = code
+            break
+
+    # Private function that strips down a registrant data to what we
+    # can give out publicly to someone with the code.
+    def get_fields( registrant ):
+        return {
+            "name" : "%s %s" % ( registrant['FirstName'], registrant['LastName'] ),
+            "company" : registrant['Company'],
+            "title" : registrant['Title'],
+            "registration_type" : registrant['RegistrationType'],
+            "registration_date" : registrant['AddDate']
+        }
+
+    attendees = [ get_fields( x ) for x in registrants if x['discount_code'] == data['discount_code'] ]
+
+    return jsonify( { "discount_code_data" : discount_code_data,
+                      "total" : discount_code_data['quantity'],
+                      "redeemed" : len( attendees ),
+                      "available" : discount_code_data['quantity'] - len( attendees ),
+                      "redemptions" : attendees,
+                      "success"  : True } )
+
 
 '''
 @app.route( '/get_movies/', methods=[ 'GET', 'POST'] )

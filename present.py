@@ -101,6 +101,8 @@ def registration_summary():
 
     codes_by_sponsor = {}
 
+    nonreserved_codes = {}
+
     for discount_code in discount_codes:
         if discount_code['SponsorID'] in codes_by_sponsor:
             codes_by_sponsor[discount_code['SponsorID']].append( discount_code )
@@ -108,14 +110,19 @@ def registration_summary():
             codes_by_sponsor[discount_code['SponsorID']] = [ discount_code ]
 
         if discount_code['regonline_str'] == '-100%':
-            reserved += discount_code['quantity']
+            reserved += int( discount_code['quantity'] )
+        else:
+            nonreserved_codes[discount_code['discount_code']] = True
 
     redemptions_by_code = {}
 
     for registrant in registrants:
         if registrant['discount_code']:
             redeemed += 1
-            reserved -= 1
+
+            if registrant['discount_code'] not in nonreserved_codes:
+                reserved -= 1
+
             if registrant['discount_code'] in redemptions_by_code:
                 redemptions_by_code[registrant['discount_code']] += 1
             else:
@@ -139,7 +146,7 @@ def registration_summary():
         "nonsponsored" : nonsponsored,
         "reserved" : reserved,
         "redeemed" : redeemed,
-        "registerd" : nonsponsored + redeemed
+        "registered" : nonsponsored + redeemed
     }
 
     return render_template( "registration_summary.html", registration_summary=registration_summary )        

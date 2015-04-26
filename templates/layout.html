@@ -1,13 +1,13 @@
 <!doctype html>
 <title>Grace Hopper Celebration 2015 Registration Reports</title>
-<link rel="stylesheet" type="text/css" href="/abi/{{ url_for('static', filename='style.css') }}" />
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}" />
 <div class="page">
   <table class="navbar">
     <tr>
-      <td><a href="/abi/discount_code/">Search Discount Codes</a></td>
+      <td><a href="/discount_code/">Search Discount Codes</a></td>
       {% if session.logged_in %}
-      <td><a href="/abi/registration_summary/">Registration Summary</a></td>
-      <td><a href="/abi/code_summary/">RegOnline Codes</a></td>
+      <td><a href="/registration_summary/">Registration Summary</a></td>
+      <td><a href="/code_summary/">RegOnline Codes</a></td>
       {% endif %}
     </tr>
   </table>

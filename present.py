@@ -21,7 +21,7 @@ APP_KEY = '9Cn3gKNS3DB7FEck'
 app = Flask(__name__)
 app.config.from_object(__name__)
 
-@app.route('/abi/login', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
     if request.method == 'POST':
@@ -35,14 +35,14 @@ def login():
             return redirect(url_for('registration_summary'))
     return render_template('login.html', error=error)
 
-@app.route('/abi/logout')
+@app.route('/logout')
 def logout():
     session.pop('logged_in', None)
     flash('You were logged out')
     return redirect(url_for('discount_code'))
 
-@app.route( '/abi/', methods=[ 'GET', 'POST' ] )
-@app.route( '/abi/discount_code/', methods=[ 'GET', 'POST' ] )
+@app.route( '/', methods=[ 'GET', 'POST' ] )
+@app.route( '/discount_code/', methods=[ 'GET', 'POST' ] )
 def discount_code():
     # Answer the query if we had a search request.
     redeemed_codes = None
@@ -59,7 +59,7 @@ def discount_code():
 
     return render_template( "discount_code.html", redeemed_codes=redeemed_codes )
 
-@app.route( '/abi/code_summary/', methods=[ 'GET' ] )
+@app.route( '/code_summary/', methods=[ 'GET' ] )
 def code_summary():
     data = {
         'eventID' : SPONSOR_EVENT,
@@ -79,7 +79,7 @@ def code_summary():
             
     return render_template( "code_summary.html", badge_types=badge_types )
 
-@app.route( '/abi/registration_summary/', methods=[ 'GET' ] )
+@app.route( '/registration_summary/', methods=[ 'GET' ] )
 def registration_summary():
     data = {
         'eventID' : SPONSOR_EVENT,

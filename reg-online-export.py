@@ -132,7 +132,7 @@ def export_event_data( eventID, attendee_type ):
                         if 'Password' in custom_data5.Data.APICustomFieldResponse[0]:
                             tmp_discount_code = custom_data5.Data.APICustomFieldResponse[0].Password
                             if tmp_discount_code is not None:
-                                discount_code = tmp_discount_code.encoding( 'utf-8' )
+                                discount_code = tmp_discount_code.encode( 'utf-8' )
                             discount_amount = custom_data5.Data.APICustomFieldResponse[0].DiscountCodeCredit
 
                         add_attendee['discount_code'] = discount_code
@@ -175,8 +175,8 @@ if __name__ == "__main__":
 
     # Get a list of all registrations for GHC 2014.
     registrants_2014 = 1438441
-    logging.info( "Exporting data for registrants." )
-    export_event_data( registrants_2014, "registrants" )
+    #logging.info( "Exporting data for registrants." )
+    #export_event_data( registrants_2014, "registrants" )
 
     sponsors_2014 = 1438449
     logging.info( "Exporting data for sponsors." )

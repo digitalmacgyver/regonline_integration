@@ -5,9 +5,10 @@ from flask import Flask, request, session, g, redirect, url_for, \
      abort, render_template, flash, request
 import requests
 
+from discount_codes import get_badge_types, generate_discount_code
 
 # configuration
-DEBUG = False
+DEBUG = True
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'aghcb2015i'
@@ -69,6 +70,12 @@ def code_summary():
 
     codes_by_type = {}
 
+    # DEBUG - This is just example code, in a real deployment we use
+    # the badge_types returned by the get_badge_types function.
+    #
+    # Here we are currently using made up badge types backfired into our
+    # registrant data.
+
     for discount_code in discount_codes:
         if discount_code['badge_type'] in codes_by_type:
             codes_by_type[discount_code['badge_type']] += ",%s=%s(%d)" % ( discount_code['discount_code'], discount_code['regonline_str'], discount_code['quantity'] )
@@ -79,7 +86,7 @@ def code_summary():
             
     return render_template( "code_summary.html", badge_types=badge_types )
 
-@app.route( '/registration_summary/', methods=[ 'GET' ] )
+@app.route( '/registration_summary/', methods=[ 'GET', 'POST' ] )
 def registration_summary():
     data = {
         'eventID' : SPONSOR_EVENT,
@@ -94,6 +101,25 @@ def registration_summary():
         'api_key' : APP_KEY
     }
     registrants = requests.post( "%s/data/registrants/" % ( APP_SERVER ), json.dumps( data ) ).json()['registrants']
+
+
+    badge_types = get_badge_types( SPONSOR_EVENT )
+    if "add_discount_code" in request.values:
+        badge_type = request.values['badge_type']
+        quantity = int( request.values['quantity'] )
+        sponsorID = int( request.values['sponsorID'] )
+
+        sponsor = [ x for x in sponsors if x['ID'] == sponsorID ][0]
+    
+        discount_code = generate_discount_code( SPONSOR_EVENT, sponsor, badge_type, quantity, discount_codes )
+
+        result = requests.post( "%s/data/discount_code/add/" % ( APP_SERVER ), json.dumps( { "eventID" : SPONSOR_EVENT, "discount_code_data" : discount_code } ) )
+
+        if result.json()['success']:
+            discount_codes.append( discount_code )
+            flash( 'Added %d %s badges to sponsor %s with discount code: %s' % ( quantity, badge_types[badge_type]['name'], sponsor['Company'], discount_code['discount_code'] ) )
+        else:
+            raise Exception( "Failed to add code!" )
 
     nonsponsored = 0
     reserved = 0
@@ -146,7 +172,8 @@ def registration_summary():
         "nonsponsored" : nonsponsored,
         "reserved" : reserved,
         "redeemed" : redeemed,
-        "registered" : nonsponsored + redeemed
+        "registered" : nonsponsored + redeemed,
+        "badge_type_names" : [ { "value" : k, "name" : badge_types[k]['name'] } for k in sorted( badge_types.keys() ) ]
     }
 
     return render_template( "registration_summary.html", registration_summary=registration_summary )        

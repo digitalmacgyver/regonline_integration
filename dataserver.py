@@ -4,7 +4,7 @@
 
 from flask import Flask, request, jsonify, url_for, abort
 
-from datastore import get_sponsors, get_registrants, get_discount_codes
+from datastore import get_sponsors, get_registrants, get_discount_codes, add_discount_codes
 
 app = Flask( __name__ )
 
@@ -121,6 +121,21 @@ def discount_code():
                       "available" : discount_code_data.get( 'quantity', 0 ) - len( attendees ),
                       "redemptions" : attendees,
                       "success"  : True } )
+
+@app.route( '/data/discount_code/add/', methods=[ 'POST' ] )
+def discount_code_add():
+    data = request.get_json( force=True, silent=True )
+
+    if 'eventID' not in data:
+        return jsonify( { "error" : "You must provide a valid eventID argument to this method.",
+                          "success" : False } )        
+    if 'discount_code_data' not in data:
+        return jsonify( { "error" : "You must provide a valid discount_code_data argument to this method.",
+                          "success" : False } )        
+        
+    add_discount_codes( data['eventID'], [ data['discount_code_data'] ] )
+    
+    return jsonify( { "success" : True } )
 
 
 if __name__ == '__main__':

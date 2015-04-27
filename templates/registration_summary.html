@@ -11,18 +11,21 @@
     {% if registration_summary.sponsors %}
       <table class="singlerow">
         <tr>
-          <th>Company</th>
+          <th>Company Name</th>
 	  <th>Contact Email</th>
 	  <th>Sponsorship</th>
           <th>Discount Codes
               <table>
 		<tr>
-		  <th>Discount code</th>
-		  <th>Total</th>
-		  <th>Redeemed</th>
-		  <th>Unused</th>
+		  <th style="width:260px;">Discount code</th>
+		  <th style="width:30px;">Total</th>
+		  <th style="width:30px;">Redeemed</th>
+		  <th style="width:30px;">Unused</th>
 		</tr>
 	      </table>
+          </th>
+          <th>
+            Add New Code
           </th>
         </tr>
        {% for sponsor in registration_summary.sponsors %}
@@ -34,13 +37,25 @@
              <table>
              {% for discount_code in sponsor.discount_codes %}
 	       <tr>
-	         <td><a href="/discount_code/?code={{ discount_code.discount_code }}">{{ discount_code.discount_code }}</a></td>
-	         <td>{{ discount_code.quantity }}</td>
-	         <td>{{ discount_code.redeemed }}</td>
-	         <td>{{ discount_code.available }}</td>
+	         <td style="width:260px;"><a href="/discount_code/?code={{ discount_code.discount_code }}">{{ discount_code.discount_code }}</a></td>
+	         <td style="width:30px;">{{ discount_code.quantity }}</td>
+	         <td style="width:30px;">{{ discount_code.redeemed }}</td>
+	         <td style="width:30px;">{{ discount_code.available }}</td>
                </tr>
              {% endfor %}
              </table>
+           </td>
+           <td>
+             <form action="{{ url_for( 'registration_summary' ) }}" method="post" class="add-code" style="display:inline;" >
+	       <input name="sponsorID" type="hidden" value="{{ sponsor.ID }}" />
+	       <select name="badge_type" id="badge-type-id">
+		 {% for badge_type_name in registration_summary.badge_type_names %}
+                   <option value="{{ badge_type_name.value }}">{{ badge_type_name.name }}</option>
+                 {% endfor %}
+	       </select>
+               <input name="quantity" id="quantity-id" type="number" min="0" maxlength="5" style="width:50px;" />
+	       <input type="submit" name="add_discount_code" value="Add" />
+             </form>
            </td>
          </tr>
        {% endfor %}

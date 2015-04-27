@@ -9,13 +9,12 @@
   </form>
 
   {% if redeemed_codes %}
-    <table class="singlerow">
-      <tr>
-        <td>Total: {{ redeemed_codes.total }}</td>
-        <td>Redeemed: {{ redeemed_codes.redeemed }}</td>
-        <td>Unused: {{ redeemed_codes.available }}</td>
-      </tr>
-    </table>
+    <ul>
+      <li>Badge Type: {{ redeemed_codes.badge_type_name }}</li>
+      <li>Total: {{ redeemed_codes.total }}</li>
+      <li>Redeemed: {{ redeemed_codes.redeemed }}</li>
+      <li>Unused: {{ redeemed_codes.available }}</li>
+    </ul>
     {% if redeemed_codes.redemptions %}
       <table class="redeemed_codes">
         <tr>

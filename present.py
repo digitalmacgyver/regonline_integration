@@ -57,6 +57,12 @@ def discount_code():
         redeemed_codes = requests.post( "%s/data/discount_code/" % ( APP_SERVER ), json.dumps( data ) ).json()
 
         redeemed_codes['redemptions'].sort( key=lambda x: x['name'].split()[-1] )
+        badge_types = get_badge_types( SPONSOR_EVENT )
+        badge_type_name = redeemed_codes['discount_code_data']['badge_type']
+        if redeemed_codes['discount_code_data']['badge_type'] in badge_types:
+            badge_type_name = badge_types[redeemed_codes['discount_code_data']['badge_type']]['name']
+
+        redeemed_codes['badge_type_name'] = badge_type_name
 
     return render_template( "discount_code.html", redeemed_codes=redeemed_codes )
 

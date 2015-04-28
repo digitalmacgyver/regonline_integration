@@ -6,5 +6,16 @@ http://developer.regonline.com/
 
 ==
 
+Automate collection.  Use supervisor.
+
 Email.
+
+smtp.mandrillapp.com:587
+Username matt@viblio.com
+Password MZDI2Ncl5L1qY--irqO81A
+
+## 
+
+DEBUG: Test multiple admin mail recipients.
+DEBUG: Actually send email to sponsor.email.
 

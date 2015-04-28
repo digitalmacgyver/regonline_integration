@@ -97,7 +97,7 @@ def discount_code():
 
     discount_code_data = {}
     for code in discounts:
-        if data['discount_code'] == code['discount_code']:
+        if data['discount_code'].upper().strip() == code['discount_code'].upper().strip():
             discount_code_data = code
             break
 
@@ -113,7 +113,7 @@ def discount_code():
             "registration_date" : registrant['AddDate']
         }
 
-    attendees = [ get_fields( x ) for x in registrants if x['discount_code'] == data['discount_code'] ]
+    attendees = [ get_fields( x ) for x in registrants if x['discount_code'].upper().strip() == data['discount_code'].upper().strip() ]
 
     return jsonify( { "discount_code_data" : discount_code_data,
                       "total" : discount_code_data.get( 'quantity', None ),

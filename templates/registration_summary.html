@@ -43,6 +43,15 @@
 	         <td style="width:30px;">{{ discount_code.available }}</td>
                </tr>
              {% endfor %}
+	       <tr>
+		 <td>
+		   <form action="{{ url_for( 'registration_summary' ) }}" method="post" class="send-email" >
+		     <input name="sponsorID" type="hidden" value="{{ sponsor.ID }}" />
+		     <input name="email_recipients" type="email" multiple="multiple" value="{{ sponsor.Email|safe }}{{ registration_summary.ADMIN_MAIL_RECIPIENTS }}" />
+		     <input type="submit" name="send_email" value="Email Discount Summary" />
+		   </form>
+		 </td>
+	       </tr>
              </table>
            </td>
            <td>

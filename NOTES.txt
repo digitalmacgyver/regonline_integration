@@ -11,10 +11,6 @@ TODO:
 0. Make the app key actually secret (e.g. load from file not in source
 control).
 
-0. gunicorn init scripts.
-
-0. Supervisor init script for data collection.
-
 0. Set up delay on email sending from mandrill.
 
 This costs money: 5 cents for every thousand scheduled, plus 2 cents a

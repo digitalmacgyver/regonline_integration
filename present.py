@@ -187,7 +187,7 @@ def registration_summary():
                                     recipients = mail_recipients )
 
             discount_search_url = "%s%s?code=%s" % ( EXTERNAL_SERVER_BASE_URL, url_for( 'discount_code' ), discount_code['discount_code'] )
-            mail_message.html = '<p>Your %s discount code for %d %s badges is:<br />%s.</p><p>Register using this code at:<br /><a href="%s">%s</a></p><p>View a report of attendees who have redeemed this code, and remaining redemptions at:<br /><a href="%s">%s</a></p>' % (
+            mail_message.html = '<p>Your %s discount code for %d %s badges is:<br />%s</p><p>Register using this code at:<br /><a href="%s">%s</a></p><p>View a report of attendees who have redeemed this code, and remaining redemptions at:<br /><a href="%s">%s</a></p>' % (
                 sponsor['Company'], 
                 quantity, 
                 badge_types[badge_type]['name'], 

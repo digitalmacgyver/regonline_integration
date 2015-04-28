@@ -96,9 +96,6 @@ def logout():
 @app.route( '/', methods=[ 'GET', 'POST' ] )
 @app.route( '/discount_code/', methods=[ 'GET', 'POST' ] )
 def discount_code():
-
-    raise Exception( "OH NO, EVERYTHING IS BROKEN!" )
-
     # Answer the query if we had a search request.
     redeemed_codes = None
     if 'code' in request.values:

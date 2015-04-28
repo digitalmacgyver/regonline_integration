@@ -18,6 +18,7 @@ APPDIR=/home/matt/regonline_integration
 USER=matt
 GROUP=matt
 
+
 UNIXNAME=$APPNAME
 
 if [ $(id -u) -eq 0 ] ; then

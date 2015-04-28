@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% block body %}
+  <h2>Internal Error</h2>
+  
+  <p>Sorry - something went wrong - it's not your fault!</p>
+  <p>Our system engineers have been notified, and will look into
+  it.</p>
+
+  <p><a href="{{ url_for( 'discount_code' ) }}">Back to safety!</a></p>
+
+{% endblock %}
+

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import json
+import logging
 import os
 import os.path
 import pickle
@@ -19,10 +21,15 @@ def get_discount_codes( eventID ):
     return get_data( "discount_codes", eventID )
 
 def get_data( table, eventID ):
-    if os.path.isfile( "datastore/%s-%s.dat" % ( table, eventID ) ):
-        with open( "datastore/%s-%s.dat" % ( table, eventID ), "r" ) as f:
+    data_file = "datastore/%s-%s.dat" % ( table, eventID )
+    if os.path.isfile( "%s" % ( data_file ) ):
+        with open( "%s" % ( data_file ), "r" ) as f:
+            logging.info( json.dumps( { 'eventID' : eventID, 
+                                        'message' : 'Loading %s data from data file %s' % ( table, data_file ) } ) )
             return pickle.load( f )
     else:
+        logging.info( json.dumps( { 'eventID' : eventID,
+                                    'message' : 'No prior %s data, returning empty result set.' % ( table ) } ) )
         return []
 
 # Update
@@ -46,18 +53,27 @@ def add_data( table, eventID, new_data ):
     
         for new_item in new_data:
             if new_item['ID'] not in item_ids:
+                logging.info( json.dumps( { 'eventID' : eventID,
+                                            'message' : 'Adding %s data for new attendee ID: %s' % ( table, new_item['ID'] ) } ) )
                 items.append( new_item )
 
+        data_file = "datastore/%s-%s.dat" % ( table, eventID )
+        data_file_new = data_file + ".new"
+        data_file_old = data_file + ".old"
+
         # Create new.
-        with open( "datastore/%s-%s.dat.new" % ( table, eventID ), "w" ) as f:
+        with open( "%s.new" % ( data_file ), "w" ) as f:
             pickle.dump( items, f )
 
-        # Rename existinig if any.
-        if os.path.isfile( "datastore/%s-%s.dat" % ( table, eventID ) ):
-            os.rename( "datastore/%s-%s.dat" % ( table, eventID ), "datastore/%s-%s.dat.old" % ( table, eventID ) )
+        # Rename existing if any.
+        if os.path.isfile( "%s" % ( data_file ) ):
+            os.rename( "%s" % ( data_file ), "%s" % ( data_file_old ) )
 
         # Rename new to current.
-        os.rename( "datastore/%s-%s.dat.new" % ( table, eventID ), "datastore/%s-%s.dat" % ( table, eventID ) )
+        os.rename( "%s" % ( data_file_new ), "%s" % ( data_file ) )
+        logging.info( json.dumps( { 'eventID' : eventID, 
+                                    'message' : 'Renaming data file from %s to %s' % ( data_file_new, data_file ) } ) )
+        return
 
 # Overwrite
 def set_sponsors( eventID, new_sponsors ):
@@ -74,15 +90,26 @@ def set_discount_codes( eventID, new_codes ):
 
 def set_data( table, eventID, items ):
     if len( items ):
+        data_file = "datastore/%s-%s.dat" % ( table, eventID )
+        data_file_new = data_file + ".new"
+        data_file_old = data_file + ".old"
+
         # Create new.
-        with open( "datastore/%s-%s.dat.new" % ( table, eventID ), "w" ) as f:
+        with open( "%s" % ( data_file_new ), "w" ) as f:
             pickle.dump( items, f )
 
-        # Rename existinig if any.
-        if os.path.isfile( "datastore/%s-%s.dat" % ( table, eventID ) ):
-            os.rename( "datastore/%s-%s.dat" % ( table, eventID ), "datastore/%s-%s.dat.old" % ( table, eventID ) )
+        # Rename existing if any.
+        if os.path.isfile( "%s" % ( data_file ) ):
+            os.rename( "%s" % ( data_file ), "%s" % ( data_file_old ) )
 
         # Rename new to current.
-        os.rename( "datastore/%s-%s.dat.new" % ( table, eventID ), "datastore/%s-%s.dat" % ( table, eventID ) )
+        os.rename( "%s" % ( data_file_new ), "%s" % ( data_file ) )
+        logging.info( json.dumps( { 'eventID' : eventID, 
+                                    'message' : 'Renaming data file from %s to %s' % ( data_file_new, data_file ) } ) )
+
+        return
     else:
-        raise Exception( "set_data called with no items to set." )
+        error_message = "Refusing to empty %s all data for eventID %s." % ( table, eventID )
+        logging.warning( json.dumps( { 'eventID' : eventID, 
+                                       'message' : error_message } ) )
+        raise Exception( error_message )

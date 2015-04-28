@@ -6,10 +6,14 @@ from flask import Flask, request, session, g, redirect, url_for, \
 from flask_mail import Mail, Message
 import requests
 
+import logging
+import logging.handlers
+
 from discount_codes import get_badge_types, generate_discount_code
 
 # configuration
-DEBUG = True
+# NOTE - No logging is sent to syslog on exceptions if DEBUG is true.
+DEBUG = False
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'aghcb2015i'
@@ -38,7 +42,31 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 mail = Mail( app )
 
-@app.route('/login', methods=['GET', 'POST'])
+logging.basicConfig( level=logging.INFO )
+
+log = app.logger
+log.setLevel( logging.DEBUG )
+
+syslog = logging.handlers.SysLogHandler( address="/dev/log" )
+
+format_string = 'present.py: { "name" : "%(name)s", "module" : "%(module)s", "lineno" : "%(lineno)s", "funcName" : "%(funcName)s", "level" : "%(levelname)s", "message" : %(message)s }'
+
+sys_formatter = logging.Formatter( format_string )
+
+syslog.setFormatter( sys_formatter )
+syslog.setLevel( logging.INFO )
+consolelog = logging.StreamHandler()
+consolelog.setLevel( logging.DEBUG )
+
+log.addHandler( syslog )
+log.addHandler( consolelog )
+
+# NOTE - This does nothing if DEBUG is True.
+@app.errorhandler( 500 )
+def internal_error( error ):
+    return render_template( 'error.html' )
+
+@app.route('/login', methods=[ 'GET', 'POST' ] )
 def login():
     error = None
     if request.method == 'POST':
@@ -48,19 +76,29 @@ def login():
             error = 'Invalid password'
         else:
             session['logged_in'] = True
-            flash('You were logged in')
-            return redirect(url_for('registration_summary'))
-    return render_template('login.html', error=error)
+            flash( 'You were logged in' )
+            return redirect( url_for( 'registration_summary' ) )
+
+    if error:
+        logging.error( json.dumps( { 'message' : 'Authentication failed: %s' % ( error ) } ) )
+    else:
+        logging.info( json.dumps( { 'message' : '%s authenticated' % ( request.form['username'].strip() ) } ) )
+
+    return render_template( 'login.html', error=error )
 
 @app.route('/logout')
 def logout():
-    session.pop('logged_in', None)
-    flash('You were logged out')
-    return redirect(url_for('discount_code'))
+    session.pop( 'logged_in', None )
+    flash( 'You were logged out' )
+    logging.info( json.dumps( { 'message' : 'User logged out.' } ) )
+    return redirect( url_for( 'discount_code' ) )
 
 @app.route( '/', methods=[ 'GET', 'POST' ] )
 @app.route( '/discount_code/', methods=[ 'GET', 'POST' ] )
 def discount_code():
+
+    raise Exception( "OH NO, EVERYTHING IS BROKEN!" )
+
     # Answer the query if we had a search request.
     redeemed_codes = None
     if 'code' in request.values:

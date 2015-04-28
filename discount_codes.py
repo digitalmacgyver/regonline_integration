@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import json
+import logging
 import random
 import uuid
 
@@ -173,8 +175,12 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes ):
 
             discount_code['discount_code'] = new_discount_code
             discount_codes.append( discount_code )
+            logging.info( json.dumps( { 'message' : "Created new discount_code: %s" % ( new_discount_code ),
+                                        'discount_code_data' : discount_code } ) )
     else:
-        raise Exception( "No sponsor codes found for registration type: %s" % ( sponsor['RegistrationType'] ) )
+        error_message = "No sponsor codes found for registration type: %s" % ( sponsor['RegistrationType'] )
+        logging.error( json.dumps( { 'message' : error_message } ) )
+        raise Exception( error_message )
     
     return discount_codes
 
@@ -235,5 +241,7 @@ def generate_discount_code( eventID, sponsor, badge_type, quantity, all_existing
 
     discount_code['discount_code'] = new_discount_code
 
+    logging.info( json.dumps( { 'message' : "Created new discount_code: %s" % ( new_discount_code ),
+                                'discount_code_data' : discount_code } ) )
+
     return discount_code
-    

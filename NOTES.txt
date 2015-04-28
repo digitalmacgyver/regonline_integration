@@ -6,13 +6,19 @@ http://developer.regonline.com/
 
 ==
 
-Automate collection.  Use supervisor.
+TODO:
 
-Email.
+0. Set up delay on email sending from mandrill.
 
-smtp.mandrillapp.com:587
-Username matt@viblio.com
-Password MZDI2Ncl5L1qY--irqO81A
+1. Automate collection using supervisor.
+
+2. Set up Loggly email notifications.
+
+3. Set up syslog setup stuff for logging to loggly - get distinct
+logging domain?
+
+Logging to syslog.
+
 
 ## 
 

@@ -8,17 +8,26 @@ http://developer.regonline.com/
 
 TODO:
 
+0. Make the app key actually secret (e.g. load from file not in source
+control).
+
+0. gunicorn init scripts.
+
+0. Supervisor init script for data collection.
+
 0. Set up delay on email sending from mandrill.
 
-1. Automate collection using supervisor.
+This costs money: 5 cents for every thousand scheduled, plus 2 cents a
+day for every thousand in storage.
 
-2. Set up Loggly email notifications.
+To schedule a message, indicate when the message should be sent using the send_at parameter to the messages/send, messages/send-template, or messages/send-raw API calls. If you're using SMTP, you can provide the schedule time in the X-MC-SendAt header. Both SMTP and the API accept a UTC timestamp in YYYY-MM-DD HH:MM:SS format. The message ID returned by the send call can be used to cancel or reschedule the message.
 
-3. Set up syslog setup stuff for logging to loggly - get distinct
-logging domain?
+3. Loggly config: new system.
 
-Logging to syslog.
+   * Requires a new account, can't log to a different token without
+     messing up VIBLIO stuff.
 
+   * Set up more email alerts after we set up domain.
 
 ## 
 

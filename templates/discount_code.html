@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block body %}
-  <form action="{{ url_for('discount_code') }}" method="get" class="add-entry">
+  <form action="{{ url_for('discount_code') }}" method="get" class="add-entry" >
     <dl>
       <dt>Discount Code:</dt>
         <dd><input type="text" size="20" name="code" />
@@ -40,4 +40,9 @@
   {% else %}
     <em>Enter discount code to show redemptions.</em>
   {% endif %}
+
+  <div class="metanav">
+    <p style="text-align:left;">New registrations may take 30 minutes to appear.</p>
+  </div>
+
 {% endblock %}

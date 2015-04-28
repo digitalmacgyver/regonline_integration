@@ -12,7 +12,7 @@
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
 APPNAME=supervisord
-APPDIR=/home/matt/regonline_integration
+APPDIR=/home/matt/regonline_integration/config
 #APPDIR=/home/viblio/abi/config
 
 USER=matt

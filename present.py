@@ -77,12 +77,11 @@ def login():
         else:
             session['logged_in'] = True
             flash( 'You were logged in' )
+            logging.info( json.dumps( { 'message' : '%s authenticated' % ( request.form['username'].strip() ) } ) )
             return redirect( url_for( 'registration_summary' ) )
 
     if error:
         logging.error( json.dumps( { 'message' : 'Authentication failed: %s' % ( error ) } ) )
-    else:
-        logging.info( json.dumps( { 'message' : '%s authenticated' % ( request.form['username'].strip() ) } ) )
 
     return render_template( 'login.html', error=error )
 

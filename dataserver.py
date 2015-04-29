@@ -4,12 +4,34 @@
 
 import json
 import logging
+import logging.handlers
+import time
 
 from flask import Flask, request, jsonify, url_for, abort
 
 from datastore import get_sponsors, get_registrants, get_discount_codes, add_discount_codes
 
 app = Flask( __name__ )
+
+logging.basicConfig( level=logging.INFO )
+
+log = app.logger
+log.setLevel( logging.DEBUG )
+
+syslog = logging.handlers.SysLogHandler( address="/dev/log" )
+
+format_string = 'present.py: { "name" : "%(name)s", "module" : "%(module)s", "lineno" : "%(lineno)s", "funcName" : "%(funcName)s", "level" : "%(levelname)s", "message" : %(message)s }'
+
+sys_formatter = logging.Formatter( format_string )
+
+syslog.setFormatter( sys_formatter )
+syslog.setLevel( logging.INFO )
+consolelog = logging.StreamHandler()
+consolelog.setLevel( logging.DEBUG )
+
+log.addHandler( syslog )
+log.addHandler( consolelog )
+
 
 def has_no_empty_params(rule):
     defaults = rule.defaults if rule.defaults is not None else ()
@@ -53,7 +75,9 @@ def attendees( table, data ):
             if table == 'sponsors':
                 attendees = get_sponsors( data['eventID'] )
             elif table == 'registrants':
+                start = time.time()
                 attendees = get_registrants( data['eventID'] )
+                print "Data server registrants:", time.time() - start
             else:
                 logging.error( json.dumps( { 'message' : 'Invalid table type %s in call to attendees.' % ( table ) } ) )
                 return jsonify( { "error" : "Internal server error.",
@@ -77,6 +101,17 @@ def discounts():
     if auth_ok( data ):
         if 'eventID' in data:
             discounts = get_discount_codes( data['eventID'] )
+
+        if 'registrant_eventID' not in data:
+            pass
+            # If we get an optional registrant_eventID compute stats
+            # for each code based on their registrants.
+        
+            #logging.error( json.dumps( { 'message' : 'No registrant_eventID in call to attendees.' } ) )
+            #return jsonify( { "error" : "You must provide a valid registrant_eventID argument to this method.",
+            #                  "success" : False } )        
+
+
 
             return jsonify( { "discount_codes" : discounts,
                               "success"  : True } )
@@ -106,17 +141,20 @@ def discount_code():
         return jsonify( { "error" : "You must provide a valid discount_code argument to this method.",
                           "success" : False } )        
 
+    # Codes are case insensitive and ignore surrounding whitespace.
+    search_code = data['discount_code'].lower().strip()
+
     discounts = get_discount_codes( data['discount_eventID'] )
     registrants = get_registrants( data['registrant_eventID'] )
 
     discount_code_data = {}
     for code in discounts:
-        if data['discount_code'].upper().strip() == code['discount_code'].upper().strip():
+        if search_code == code['discount_code']:
             discount_code_data = code
             break
 
     if discount_code_data == {}:
-        logging.warning( json.dumps( { 'message' : 'No attendees found for discount code: %s' % ( data['discount_code'].upper().strip() ) } ) )
+        logging.warning( json.dumps( { 'message' : 'No attendees found for discount code: %s' % ( search_code ) } ) )
 
     # Private function that strips down a registrant data to what we
     # can give out publicly to someone with the code.
@@ -130,7 +168,7 @@ def discount_code():
             "registration_date" : registrant['AddDate']
         }
 
-    attendees = [ get_fields( x ) for x in registrants if x['discount_code'].upper().strip() == data['discount_code'].upper().strip() ]
+    attendees = [ get_fields( x ) for x in registrants if x['discount_code'].lower().strip() == search_code ]
 
     return jsonify( { "discount_code_data" : discount_code_data,
                       "total" : discount_code_data.get( 'quantity', None ),
@@ -152,6 +190,8 @@ def discount_code_add():
         return jsonify( { "error" : "You must provide a valid discount_code_data argument to this method.",
                           "success" : False } )        
         
+    data['discount_code_data']['discount_code'] = data['discount_code_data']['discount_code'].lower().strip()
+
     add_discount_codes( data['eventID'], [ data['discount_code_data'] ] )
     
     return jsonify( { "success" : True } )

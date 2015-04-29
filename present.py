@@ -5,27 +5,39 @@ from flask import Flask, request, session, g, redirect, url_for, \
      abort, render_template, flash, request
 from flask_mail import Mail, Message
 import requests
+import time
 
 import logging
 import logging.handlers
 
-from discount_codes import get_badge_types, generate_discount_code
+from discount_codes import get_badge_types, generate_discount_code, get_sponsor_reporting_groups
 
 # configuration
 # NOTE - No logging is sent to syslog on exceptions if DEBUG is true.
-DEBUG = False
+DEBUG = True
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'aghcb2015i'
-SPONSOR_EVENT = 1438449
-REGISTRANT_EVENT = 1438441
+
+# 2014
+#SPONSOR_EVENT = 1438449
+#REGISTRANT_EVENT = 1438441
+
+# 2015
+SPONSOR_EVENT = 1639610
+REGISTRANT_EVENT = 1702108
+
+
 PORT=5001
 APP_SERVER = "http://127.0.0.1:5000"
 APP_KEY = '9Cn3gKNS3DB7FEck'
 
 # This will differ in our actual deployment due to nginx.
 EXTERNAL_SERVER_BASE_URL = 'http://ec2-52-12-132-124.us-west-2.compute.amazonaws.com'
-ADMIN_MAIL_RECIPIENTS = [ 'matt@viblio.com' ]
+SEND_AS = ( 'GHC 2015 Registration', 'registration@anitaborg.org' )
+# DEBUG - send to Kathryn once in production.
+#ADMIN_MAIL_RECIPIENTS = [ 'matt@viblio.com' ]
+ADMIN_MAIL_RECIPIENTS = [ 'kathrynb@anitaborg.org', 'matt@viblio.com' ]
 
 # Mail config
 MAIL_SERVER = 'smtp.mandrillapp.com'
@@ -101,12 +113,12 @@ def discount_code():
         data = {
             'discount_eventID' : SPONSOR_EVENT,
             'registrant_eventID' : REGISTRANT_EVENT,
-            'discount_code' : request.values['code'].upper().strip()
+            'discount_code' : request.values['code'].lower().strip()
         }
         redeemed_codes = requests.post( "%s/data/discount_code/" % ( APP_SERVER ), json.dumps( data ) ).json()
 
         if redeemed_codes['discount_code_data'] == {}:
-            flash( "No data found for code: %s" % ( request.values['code'].upper().strip() ) )
+            flash( "No data found for code: %s" % ( request.values['code'].strip() ) )
         else:
             flash( 'Showing data for discount code: %s' % ( request.values['code'].strip() ) )
 
@@ -135,16 +147,24 @@ def code_summary():
     #
     # Here we are currently using made up badge types backfired into our
     # registrant data.
-
+    #for discount_code in discount_codes:
+    #    if discount_code['badge_type'] in codes_by_type:
+    #        codes_by_type[discount_code['badge_type']] += ",%s=%s(%d)" % ( discount_code['discount_code'], discount_code['regonline_str'], discount_code['quantity'] )
+    #    else:
+    #        codes_by_type[discount_code['badge_type']] = "%s=%s(%d)" % ( discount_code['discount_code'], discount_code['regonline_str'], discount_code['quantity'] )
+    #badge_types = [ { "label" : key, "regonline_code_string" : value } for key, value in codes_by_type.items() ]
+     
+    # DEBUG - this is the production version.
+    badge_types = get_badge_types( SPONSOR_EVENT )
     for discount_code in discount_codes:
         if discount_code['badge_type'] in codes_by_type:
             codes_by_type[discount_code['badge_type']] += ",%s=%s(%d)" % ( discount_code['discount_code'], discount_code['regonline_str'], discount_code['quantity'] )
         else:
             codes_by_type[discount_code['badge_type']] = "%s=%s(%d)" % ( discount_code['discount_code'], discount_code['regonline_str'], discount_code['quantity'] )
 
-    badge_types = [ { "label" : key, "regonline_code_string" : value } for key, value in codes_by_type.items() ]
-            
-    return render_template( "code_summary.html", badge_types=badge_types )
+    code_summary = sorted( [ { "label" : v['name'], "regonline_code_string" : codes_by_type.get( k, '' ) } for k, v in badge_types.items() ] )
+       
+    return render_template( "code_summary.html", code_summary=code_summary )
 
 @app.route( '/registration_summary/', methods=[ 'GET', 'POST' ] )
 def registration_summary():
@@ -152,15 +172,22 @@ def registration_summary():
         'eventID' : SPONSOR_EVENT,
         'api_key' : APP_KEY
     }
+    
+    #start = time.time()
     discount_codes = requests.post( "%s/data/discounts/" % ( APP_SERVER ), json.dumps( data ) ).json()['discount_codes']
+    #print "Discount codes:", time.time() - start
 
+    #start = time.time()
     sponsors = requests.post( "%s/data/sponsors/" % ( APP_SERVER ), json.dumps( data ) ).json()['sponsors']
+    #print "Sponsors codes:", time.time() - start
 
     data = {
         'eventID' : REGISTRANT_EVENT,
         'api_key' : APP_KEY
     }
+    #start = time.time()
     registrants = requests.post( "%s/data/registrants/" % ( APP_SERVER ), json.dumps( data ) ).json()['registrants']
+    #print "Registrants codes:", time.time() - start
 
     badge_types = get_badge_types( SPONSOR_EVENT )
 
@@ -183,8 +210,9 @@ def registration_summary():
             # DEBUG, add in mail recipients.
             mail_recipients = ADMIN_MAIL_RECIPIENTS
             mail_message = Message( "Grace Hopper Celebration 2015 Discount Codes",
-                                    sender = ( "Matt Hayward", "matt@viblio.com" ),
-                                    recipients = mail_recipients )
+                                    sender = SEND_AS,
+                                    recipients = mail_recipients,
+                                    bcc = ADMIN_MAIL_RECIPIENTS )
 
             discount_search_url = "%s%s?code=%s" % ( EXTERNAL_SERVER_BASE_URL, url_for( 'discount_code' ), discount_code['discount_code'] )
             mail_message.html = '<p>Your %s discount code for %d %s badges is:<br />%s</p><p>Register using this code at:<br /><a href="%s">%s</a></p><p>View a report of attendees who have redeemed this code, and remaining redemptions at:<br /><a href="%s">%s</a></p>' % (
@@ -233,19 +261,16 @@ def registration_summary():
 
         sponsor_discount_codes = [ x for x in discount_codes if x['SponsorID'] == sponsor['ID'] ]
     
-        all_recipients = ADMIN_MAIL_RECIPIENTS
         mail_sent = False
         try:
-            #import pdb
-            #pdb.set_trace()
 
-            # DEBUG, add in mail recipients.
-            # all_recipients += email_recipients
+            # DEBUG, leave this variable alone here and actually send to the recipients in production.
+            email_recipients = ADMIN_MAIL_RECIPIENTS
 
             mail_message = Message( "Grace Hopper Celebration 2015 Discount Codes",
-                                    sender = ( "Matt Hayward", "matt@viblio.com" ),
-                                    # DEBUG - add in mail_recipients
-                                    recipients = all_recipients )
+                                    sender = SEND_AS,
+                                    recipients = email_recipients,
+                                    bcc = ADMIN_MAIL_RECIPIENTS)
             
             message_html = '<p>Your %s discount codes are:<ul>' % ( sponsor['Company'] )
 
@@ -276,51 +301,86 @@ def registration_summary():
             mail.send( mail_message )
             mail_sent = True
         except Exception as e:
-            # DEBUG - replace email_recipients when we are actually sending stuff.
-            flash( "ERROR! Failed to send discount code summary to: %s." % ( all_recipients + email_recipients ) )
+            flash( "ERROR! Failed to send discount code summary to: %s." % ( email_recipients + ADMIN_MAIL_RECIPIENTS ) )
 
         if mail_sent:
-            # DEBUG - replace email_recipients when we are actually sending stuff.
-            success_message = "Discount summary email sent to: %s" % ( all_recipients + email_recipients )
+            success_message = "Discount summary email sent to: %s" % ( email_recipients + ADMIN_MAIL_RECIPIENTS )
             flash( success_message )
 
     # ==========================================================================
     # Now display all the summary data.
 
+    # Attendees who did not redeem a code.
     nonsponsored = 0
-    reserved = 0
+    # Attendees who did use a code.
     redeemed = 0
+    # Code entitlements not accounted for.
+    quantity = 0
 
+    sponsors_by_id = { x['ID']:x for x in sponsors }
+    discounts_by_code = {}
+
+    # Used to aggregate some reports about Academic, Corporate, etc. sponsors and their registrants.
+    sponsor_reporting_groups = get_sponsor_reporting_groups( SPONSOR_EVENT )    
+    group_attendee_stats = { 
+        'Other Sponsored' : { 'redeemed' : 0,
+                              'quantity' : 0 },
+    }
+
+    # Used to compute redeemed / available for each particular sponsor
+    # code.
     codes_by_sponsor = {}
 
-    nonreserved_codes = {}
-
     for discount_code in discount_codes:
+        discounts_by_code[discount_code['discount_code']] = discount_code
+
         if discount_code['SponsorID'] in codes_by_sponsor:
             codes_by_sponsor[discount_code['SponsorID']].append( discount_code )
         else:
             codes_by_sponsor[discount_code['SponsorID']] = [ discount_code ]
 
-        if discount_code['regonline_str'] == '-100%':
-            reserved += int( discount_code['quantity'] )
+        if discount_code['badge_type'] in badge_types:
+            if badge_types[discount_code['badge_type']]['reserve_spot']:
+                quantity += int( discount_code['quantity'] )
+
+                sponsor_reporting_group = sponsor_reporting_groups.get( sponsors_by_id[discount_code['SponsorID']]['RegistrationType'], 'Other Sponsored' )
+                if sponsor_reporting_group in group_attendee_stats:
+                    group_attendee_stats[sponsor_reporting_group]['quantity'] += discount_code['quantity']
+                else:
+                    group_attendee_stats[sponsor_reporting_group] = { 'quantity' : discount_code['quantity'],
+                                                                      'redeemed' : 0 }
         else:
-            nonreserved_codes[discount_code['discount_code']] = True
+            logging.warning( json.dumps( { 'message' : 'Unknown badge_type: %s found in discount codes.' % ( discount_code['badge_type'] ) } ) )
 
     redemptions_by_code = {}
 
     for registrant in registrants:
         if registrant['discount_code']:
-            redeemed += 1
+            discount_code = discounts_by_code.get( registrant['discount_code'], {} )
 
-            if registrant['discount_code'] not in nonreserved_codes:
-                reserved -= 1
+            if discount_code.get( 'badge_type', None ) in badge_types:
+                if badge_types[discount_code['badge_type']]['reserve_spot']:
 
-            if registrant['discount_code'] in redemptions_by_code:
-                redemptions_by_code[registrant['discount_code']] += 1
+                    sponsor_reporting_group = 'Other Sponsored'
+                    if 'SponsorID' in discount_code:
+                        if discount_code['SponsorID'] in sponsors_by_id:
+                            if sponsors_by_id[discount_code['SponsorID']]['RegistrationType'] in sponsor_reporting_groups:
+                                sponsor_reporting_group = sponsor_reporting_groups[sponsors_by_id[discount_code['SponsorID']]['RegistrationType']]
+          
+                    redeemed += 1
+                    group_attendee_stats[sponsor_reporting_group]['redeemed'] += 1
+
+                if registrant['discount_code'] in redemptions_by_code:
+                    redemptions_by_code[registrant['discount_code']] += 1
+                else:
+                    redemptions_by_code[registrant['discount_code']] = 1
             else:
-                redemptions_by_code[registrant['discount_code']] = 1
+                nonsponsored += 1
         else:
             nonsponsored += 1
+
+    for group_name, group_stats in group_attendee_stats.items():
+        group_stats['reserved'] = group_stats['quantity'] - group_stats['redeemed']
             
     for sponsor, codes in codes_by_sponsor.items():
         for code in codes:
@@ -335,12 +395,12 @@ def registration_summary():
 
     registration_summary = {
         "sponsors" : sponsors,
-        "nonsponsored" : nonsponsored,
-        "reserved" : reserved,
+        "reserved" : quantity - redeemed,
         "redeemed" : redeemed,
+        "nonsponsored" : nonsponsored,
         "registered" : nonsponsored + redeemed,
-        "badge_type_names" : [ { "value" : k, "name" : badge_types[k]['name'] } for k in sorted( badge_types.keys() ) ],
-        "ADMIN_MAIL_RECIPIENTS" : ", " + ", ".join( ADMIN_MAIL_RECIPIENTS )
+        "group_attendee_stats" : [ { "name" : k, "data" : group_attendee_stats[k] } for k in sorted( group_attendee_stats.keys() ) ],
+        "badge_type_names" : [ { "value" : k, "name" : badge_types[k]['name'] } for k in sorted( badge_types.keys() ) ]
     }
 
     return render_template( "registration_summary.html", registration_summary=registration_summary )        

@@ -6,6 +6,7 @@ from optparse import OptionParser
 import time
 
 from suds.client import Client
+from suds.xsd.doctor import ImportDoctor, Import
 
 import logging
 import logging.handlers
@@ -34,9 +35,14 @@ from discount_codes import generate_discount_codes
 
 regonline_api_key = '9mIRFe399oIBM0fnX5jxLtupSZlaizGgtHUEuDpUi34QWs66G6LxFDZ6wsdpgzCw'
 regonline_wsdl = "https://www.regonline.com/api/default.asmx?WSDL"
+regonline_soap_namespace = 'http://www.regonline.com/api'
 
 def export_event_data( eventID, attendee_type ):
-    client = Client( regonline_wsdl )
+    imp = Import( 'http://schemas.xmlsoap.org/soap/encoding/' )
+    imp.filter.add( regonline_soap_namespace )
+    doctor = ImportDoctor( imp )
+
+    client = Client( regonline_wsdl, doctor=doctor )
     token = client.factory.create( "TokenHeader" )
     token.APIToken = regonline_api_key
     client.set_options( soapheaders=token )
@@ -62,6 +68,13 @@ def export_event_data( eventID, attendee_type ):
     # DEBUG For testing limit this to 10 attendees.
     for attendee in new_attendees:
         try:
+            # DEBUG
+            #if attendee['ID'] != 79217975:
+            #    continue
+            #else:
+            #    import pdb
+            #    pdb.set_trace()
+
             # First check if we're dealing with an updated attendee.
             if attendee['ID'] in attendee_ids and attendee['ModDate'] > attendee_ids[attendee['ID']].get( 'ModDate', datetime.datetime.min ):
                 # Delete our old view of this attendee.
@@ -70,6 +83,12 @@ def export_event_data( eventID, attendee_type ):
                 attendee_ids.pop( attendee['ID'] )
 
             if attendee['ID'] not in attendee_ids:
+                registration_status = attendee['StatusDescription'].encode( 'utf-8' )
+
+                if registration_status not in [ 'Confirmed', 'Attended' ]:
+                    log.warning( json.dumps( { 'message' : "Ignoring attendee ID %s with registration status: %s" % ( attendee['ID'], registration_status ) } ) )
+                    continue
+
                 log.info( json.dumps( { 'message' : "Adding data for attendee: %s" % ( attendee['ID'] ) } ) )
 
                 # We need to add this attendee.
@@ -89,12 +108,11 @@ def export_event_data( eventID, attendee_type ):
                     'CCEmail'           : "",
                     'Company'           : "",
                     'Email'             : "",
-                    'Phone'             : "",
                     'RegistrationType'  : "",
                     'Title'             : "",
                 }
 
-                optional_fields = [ 'CCEmail', 'Company', 'Email', 'Phone', 'RegistrationType', 'Title' ]
+                optional_fields = [ 'CCEmail', 'Company', 'Email', 'RegistrationType', 'Title' ]
                 for field in optional_fields:
                     if field in attendee and attendee[field] is not None:
                         add_attendee[field] = attendee[field].encode( 'utf-8' )
@@ -107,9 +125,7 @@ def export_event_data( eventID, attendee_type ):
                     time.sleep( 2 )
                     
                     add_attendee['registration_type'] = ''
-                    add_attendee['registration_amount'] = ''
                     add_attendee['discount_code'] = ''
-                    add_attendee['discount_amount'] = ''
 
                     custom_data5 = client.service.GetCustomFieldResponsesForRegistration( eventID=eventID, 
                                                                                           registrationID=attendee['ID'], 
@@ -130,19 +146,15 @@ def export_event_data( eventID, attendee_type ):
                         log.warning( json.dumps( { 'message' : "No detailed registration data found for attendee %s with status %s" % ( attendee['ID'], attendee['StatusDescription'] ) } ) )
                     else:
                         add_attendee['registration_type'] = custom_data5.Data.APICustomFieldResponse[0].CustomFieldNameOnReport.encode( 'utf-8' )
-                        add_attendee['registration_amount'] = custom_data5.Data.APICustomFieldResponse[0].Amount
 
                         discount_code = ""
-                        discount_amount = 0
 
                         if 'Password' in custom_data5.Data.APICustomFieldResponse[0]:
                             tmp_discount_code = custom_data5.Data.APICustomFieldResponse[0].Password
                             if tmp_discount_code is not None:
                                 discount_code = tmp_discount_code.encode( 'utf-8' )
-                            discount_amount = custom_data5.Data.APICustomFieldResponse[0].DiscountCodeCredit
 
                         add_attendee['discount_code'] = discount_code
-                        add_attendee['discount_amount'] = discount_amount
                 elif attendee_type == "sponsors":
                     # If this sponsor already has discount codes,
                     # don't add any new ones.
@@ -189,30 +201,39 @@ if __name__ == "__main__":
     parser.add_option( "-c", "--continuous",
                        dest = "continuous",
                        action = "store_true",
+                       default = False,
                        help = "Run continuously, defaults to false." )
     parser.add_option( "-f", "--frequency",
                        dest = "sleep_duration",
                        help = "If running continuously, how many seconds to sleep between runs." )
     
     ( options, args ) = parser.parse_args()
-
-    registrants_id = 1438441
+    
+    # GHC 2014
+    #registrants_id = 1438441
+    # Test 2015
+    registrants_id = 1702108
     if options.registrants_id:
         registrants_id = int( options.registrants_id )
-
-    sponsors_id = 1438449
+        
+    # GHC 2014
+    #sponsors_id = 1438449
+    # GHC 2015
+    sponsors_id = 1639610
     if options.sponsors_id:
         sponsors_id = int( options.sponsors_id )
 
+    # DEBUG - Fix this to default to false unless the flag is set.
     continuous = options.continuous
 
-    sleep_duration = 1500
+    sleep_duration = 900
     if options.sleep_duration:
         sleep = int( options.sleep_duration )
 
     keep_going = True
 
     while keep_going:
+        keep_going = False
         # Get a list of all registrations for GHC 2014.
         try:
             log.info( json.dumps( { 'message' : "Exporting data for registrants." } ) )
@@ -226,8 +247,8 @@ if __name__ == "__main__":
         except Exception as e:
             log.error( json.dumps( { 'message' : "Failed to get registrants, error was: %s" % ( e ) } ) )
         
-        if not continuous:
-            False
+        if continuous:
+            keep_going = True
             log.info( json.dumps( { 'message' : "Sleeping for %d seconds" % ( sleep_duration ) } ) )
             time.sleep( sleep_duration )
 

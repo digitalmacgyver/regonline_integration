@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import datetime
 import json
 from flask import Flask, request, session, g, redirect, url_for, \
      abort, render_template, flash, request
@@ -14,7 +15,7 @@ from discount_codes import get_badge_types, generate_discount_code, get_sponsor_
 
 # configuration
 # NOTE - No logging is sent to syslog on exceptions if DEBUG is true.
-DEBUG = True
+DEBUG = False
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'aghcb2015i'
@@ -141,6 +142,7 @@ def code_summary():
     discount_codes = requests.post( "%s/data/discounts/" % ( APP_SERVER ), json.dumps( data ) ).json()['discount_codes']
 
     codes_by_type = {}
+    last_updated_by_type = {}
 
     # DEBUG - This is just example code, in a real deployment we use
     # the badge_types returned by the get_badge_types function.
@@ -154,15 +156,24 @@ def code_summary():
     #        codes_by_type[discount_code['badge_type']] = "%s=%s(%d)" % ( discount_code['discount_code'], discount_code['regonline_str'], discount_code['quantity'] )
     #badge_types = [ { "label" : key, "regonline_code_string" : value } for key, value in codes_by_type.items() ]
      
+    def get_date( date_string ):
+        return datetime.datetime.strptime( date_string, "%a, %d %b %Y %H:%M:%S %Z" )
+
     # DEBUG - this is the production version.
     badge_types = get_badge_types( SPONSOR_EVENT )
-    for discount_code in discount_codes:
+    discount_codes.sort( key=lambda x:['created_date'] )
+    for discount_code in sorted( discount_codes, key=lambda x: get_date( x['created_date'] ) ):
         if discount_code['badge_type'] in codes_by_type:
             codes_by_type[discount_code['badge_type']] += ",%s=%s(%d)" % ( discount_code['discount_code'], discount_code['regonline_str'], discount_code['quantity'] )
+
+            if get_date( last_updated_by_type[discount_code['badge_type']] ) < get_date( discount_code['created_date'] ):
+                last_updated_by_type[discount_code['badge_type']] = discount_code['created_date']
         else:
             codes_by_type[discount_code['badge_type']] = "%s=%s(%d)" % ( discount_code['discount_code'], discount_code['regonline_str'], discount_code['quantity'] )
+            last_updated_by_type[discount_code['badge_type']] = discount_code['created_date']
+            
 
-    code_summary = sorted( [ { "label" : v['name'], "regonline_code_string" : codes_by_type.get( k, '' ) } for k, v in badge_types.items() ] )
+    code_summary = sorted( [ { "label" : v['name'], "regonline_code_string" : codes_by_type.get( k, '' ), "last_updated" : last_updated_by_type.get( k, 'N/A' ) } for k, v in badge_types.items() ] )
        
     return render_template( "code_summary.html", code_summary=code_summary )
 

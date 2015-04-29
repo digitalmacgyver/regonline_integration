@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
+import datetime
 import json
 import logging
 import random
 import uuid
+
+from flask import jsonify
 
 from datastore import get_discount_codes
 
@@ -166,6 +169,7 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes ):
                 'SponsorID'        : sponsor['ID'],
                 'RegTypeID'        : sponsor['RegTypeID'],
                 'RegistrationType' : sponsor['RegistrationType'],
+                'created_date'     : sponsor['AddDate']
             }
 
             discount_code['ID'] = str( uuid.uuid4() )
@@ -195,8 +199,7 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes ):
 
             discount_code['discount_code'] = new_discount_code
             discount_codes.append( discount_code )
-            logging.info( json.dumps( { 'message' : "Created new discount_code: %s" % ( new_discount_code ),
-                                        'discount_code_data' : discount_code } ) )
+            logging.info( json.dumps( { 'message' : "Created new discount_code: %s" % ( new_discount_code ) } ) )
     else:
         error_message = "No sponsor codes found for registration type: %s" % ( sponsor['RegistrationType'] )
         logging.error( json.dumps( { 'message' : error_message } ) )
@@ -228,6 +231,7 @@ def generate_discount_code( eventID, sponsor, badge_type, quantity, all_existing
         'SponsorID'        : sponsor['ID'],
         'RegTypeID'        : sponsor['RegTypeID'],
         'RegistrationType' : sponsor['RegistrationType'],
+        'created_date'     : datetime.datetime.now()
     }
 
     discount_codes = []

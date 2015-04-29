@@ -166,7 +166,7 @@ def export_event_data( eventID, attendee_type ):
                         try:
                             discount_codes += generate_discount_codes( eventID, attendee, discount_codes )
                         except Exception as e:
-                            log.error( json.dumps( { 'message' : "No discount codes found for sponsor: %s, error: %s" % ( attendee['ID'], e ) } ) )
+                            log.error( json.dumps( { 'message' : "Error generating discount code for sponsor: %s, error: %s" % ( attendee['ID'], e ) } ) )
 
                 log.info( json.dumps( { 'message' : ( "Attendee data is: %s" % ( add_attendee ) ).encode( 'utf-8' ) } ) )
                 attendees.append( add_attendee )

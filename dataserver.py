@@ -200,7 +200,7 @@ if __name__ == '__main__':
     # reloads the server on code changes.  Should be set to false in
     # any public facing deployment, as this allows execution of
     # arbitrary code from the web via debugging options.
-    app.debug = True
+    app.debug = False
 
     # This will only listen on 127.0.0.1
     app.run()

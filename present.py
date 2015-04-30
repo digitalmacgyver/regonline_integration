@@ -15,7 +15,7 @@ from discount_codes import get_badge_types, generate_discount_code, get_sponsor_
 
 # configuration
 # NOTE - No logging is sent to syslog on exceptions if DEBUG is true.
-DEBUG = True
+DEBUG = False
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'aghcb2015i'

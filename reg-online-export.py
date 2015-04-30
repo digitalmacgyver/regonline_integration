@@ -211,15 +211,19 @@ if __name__ == "__main__":
     
     # GHC 2014
     #registrants_id = 1438441
-    # Test 2015
-    registrants_id = 1702108
+    # GHC 2015
+    #registrants_id = 1702108
+    # WOV 2015
+    registrants_id = 1376075
     if options.registrants_id:
         registrants_id = int( options.registrants_id )
         
     # GHC 2014
     #sponsors_id = 1438449
     # GHC 2015
-    sponsors_id = 1639610
+    #sponsors_id = 1639610
+    # WOV 2015
+    sponsors_id = 1441015
     if options.sponsors_id:
         sponsors_id = int( options.sponsors_id )
 

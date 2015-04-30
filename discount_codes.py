@@ -11,6 +11,14 @@ from flask import jsonify
 from datastore import get_discount_codes
 
 badge_types = {
+    "wov_attendee"  : { 'name'          : 'Women of Vision Attendee',
+                        'product_code'  : 'WOV15',
+                        'regonline_url' : 'https://www.regonline.com/wov2015',
+                        'reserve_spot'  : True,
+                        'regonline_str' : '-100%' },
+}
+
+badge_types_ghc = {
     "general_full"  : { 'name'          : 'General',
                         'product_code'  : 'GHP5G',
                         'regonline_url' : '[To Be Determined]',

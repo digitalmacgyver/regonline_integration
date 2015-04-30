@@ -15,18 +15,22 @@ from discount_codes import get_badge_types, generate_discount_code, get_sponsor_
 
 # configuration
 # NOTE - No logging is sent to syslog on exceptions if DEBUG is true.
-DEBUG = False
+DEBUG = True
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'aghcb2015i'
 
-# 2014
+# GHC 2014
 #SPONSOR_EVENT = 1438449
 #REGISTRANT_EVENT = 1438441
 
-# 2015
-SPONSOR_EVENT = 1639610
-REGISTRANT_EVENT = 1702108
+# GHC 2015
+#SPONSOR_EVENT = 1639610
+#REGISTRANT_EVENT = 1702108
+
+# WOV 2015
+SPONSOR_EVENT = 1441015
+REGISTRANT_EVENT = 1376075
 
 
 PORT=5001

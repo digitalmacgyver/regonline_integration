@@ -75,9 +75,7 @@ def attendees( table, data ):
             if table == 'sponsors':
                 attendees = get_sponsors( data['eventID'] )
             elif table == 'registrants':
-                start = time.time()
                 attendees = get_registrants( data['eventID'] )
-                print "Data server registrants:", time.time() - start
             else:
                 logging.error( json.dumps( { 'message' : 'Invalid table type %s in call to attendees.' % ( table ) } ) )
                 return jsonify( { "error" : "Internal server error.",

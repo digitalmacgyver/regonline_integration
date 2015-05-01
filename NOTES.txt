@@ -6,7 +6,89 @@ http://developer.regonline.com/
 
 ==
 
+They are using Pentaho ETL to get the data out.
+
+Email discount summary not working?
+
+We could relate the code's type on the sponsor page:
+* Enterprise add on pack
+* Gold tier sponsorship
+* ...
+
+Meet on Tuesday in order to learn about SF.com discount code
+generation - I may be able to use this to get all data, including the
+additional sponsorship opportunities things.  
+
+10:30 - 12:00 schedule - Matt to show up in Lobby 5.
+
+TODO: Email to case from our system into SF.com.
+
+There is an alias called registration - when RegOnline send email it
+CCes to registration, which is an email list to Kathryn, Carol,
+Michael, Jan, ....  Proposal - we add a sf.com case email on the
+registration alias, and then we would add registration as an
+administrator from my system.
+
+TODO: How to tag these emails to get them organized in Salesforce.com.
+
+Tuesday: Use case: Rashni wants to look at a list of scholars and see
+who has registered, or in another case has looked at who has done it
+for speakers.  Elizabeth Bowlen (used academics).
+
+==
+
+uscB2014abi
+
+==
+
+from suds.client import Client
+import logging
+import logging.handlers
+logging.basicConfig( level=logging.INFO )
+consolelog = logging.StreamHandler()
+consolelog.setLevel( logging.DEBUG )
+log.addHandler( consolelog )
+
+regonline_api_key = '9mIRFe399oIBM0fnX5jxLtupSZlaizGgtHUEuDpUi34QWs66G6LxFDZ6wsdpgzCw'
+regonline_wsdl = "https://www.regonline.com/api/default.asmx?WSDL"
+regonline_soap_namespace = 'http://www.regonline.com/api'
+from suds.plugin import MessagePlugin
+class LogPlugin(MessagePlugin):
+    def sending(self, context):
+        print(str(context.envelope))
+    def received(self, context):
+        print(str(context.reply))
+client = Client( regonline_wsdl, plugings=[LogPlugin()] )
+token = client.factory.create( "TokenHeader" )
+token.APIToken = regonline_api_key
+client.set_options( soapheaders=token )
+( a, b ) = client.service.GetRegistrationsMerchandiseForEvent( eventID=1639610 )
+
+
+
+
+client = Client("http://localhost/wsdl.wsdl", plugins=[LogPlugin()])
+
 TODO:
+
+* For each code, the computed redeemed (count of registrants) and available (quantity - redeemed) in the fields 'redeemed' and 'available'
+
+* Top level stats:
+  * nonsponsored
+  * redeemed 
+  * reserved
+
+Also, a breakdown by each major category:
+  * Corporate
+  * Academic
+  * Lab & Non Profit
+  * Show Management
+
+Need a mapping of each registration type to breakdown category.
+
+Probably need to add the breakdown category as an element of the
+discount_code data structure (although it could be computed???)
+
 
 0. Make the app key actually secret (e.g. load from file not in source
 control).

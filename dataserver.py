@@ -5,7 +5,6 @@
 import json
 import logging
 import logging.handlers
-import time
 
 from flask import Flask, request, jsonify, url_for, abort
 
@@ -75,9 +74,7 @@ def attendees( table, data ):
             if table == 'sponsors':
                 attendees = get_sponsors( data['eventID'] )
             elif table == 'registrants':
-                start = time.time()
                 attendees = get_registrants( data['eventID'] )
-                print "Data server registrants:", time.time() - start
             else:
                 logging.error( json.dumps( { 'message' : 'Invalid table type %s in call to attendees.' % ( table ) } ) )
                 return jsonify( { "error" : "Internal server error.",
@@ -101,17 +98,6 @@ def discounts():
     if auth_ok( data ):
         if 'eventID' in data:
             discounts = get_discount_codes( data['eventID'] )
-
-        if 'registrant_eventID' not in data:
-            pass
-            # If we get an optional registrant_eventID compute stats
-            # for each code based on their registrants.
-        
-            #logging.error( json.dumps( { 'message' : 'No registrant_eventID in call to attendees.' } ) )
-            #return jsonify( { "error" : "You must provide a valid registrant_eventID argument to this method.",
-            #                  "success" : False } )        
-
-
 
             return jsonify( { "discount_codes" : discounts,
                               "success"  : True } )
@@ -144,6 +130,15 @@ def discount_code():
     # Codes are case insensitive and ignore surrounding whitespace.
     search_code = data['discount_code'].lower().strip()
 
+    if len( search_code ) == 0:
+        logging.warning( json.dumps( { 'message' : 'Empty discount_code in call to attendees.' } ) )
+        return jsonify ( { "discount_code_data" : {},
+                          "total" : 0,
+                          "redeemed" : 0,
+                          "available" : 0,
+                          "redemptions" : [],
+                          "success"  : True } )
+
     discounts = get_discount_codes( data['discount_eventID'] )
     registrants = get_registrants( data['registrant_eventID'] )
 
@@ -171,7 +166,7 @@ def discount_code():
     attendees = [ get_fields( x ) for x in registrants if x['discount_code'].lower().strip() == search_code ]
 
     return jsonify( { "discount_code_data" : discount_code_data,
-                      "total" : discount_code_data.get( 'quantity', None ),
+                      "total" : discount_code_data.get( 'quantity', 0 ),
                       "redeemed" : len( attendees ),
                       "available" : discount_code_data.get( 'quantity', 0 ) - len( attendees ),
                       "redemptions" : attendees,
@@ -202,7 +197,7 @@ if __name__ == '__main__':
     # reloads the server on code changes.  Should be set to false in
     # any public facing deployment, as this allows execution of
     # arbitrary code from the web via debugging options.
-    app.debug = True
+    app.debug = False
 
     # This will only listen on 127.0.0.1
     app.run()

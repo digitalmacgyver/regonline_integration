@@ -26,8 +26,9 @@ PASSWORD = 'aghcb2015i'
 
 # 2015
 SPONSOR_EVENT = 1639610
+# DEBUG test event
+#SPONSOR_EVENT = 1711768
 REGISTRANT_EVENT = 1702108
-
 
 PORT=5001
 APP_SERVER = "http://127.0.0.1:5000"
@@ -158,6 +159,7 @@ def code_summary():
      
     def get_date( date_string ):
         return datetime.datetime.strptime( date_string, "%a, %d %b %Y %H:%M:%S %Z" )
+        #return datetime.datetime.strptime( date_string, "%a, %d %b %Y %H:%M:%S" )
 
     # DEBUG - this is the production version.
     badge_types = get_badge_types( SPONSOR_EVENT )
@@ -213,6 +215,12 @@ def registration_summary():
         sponsor = [ x for x in sponsors if x['ID'] == sponsorID ][0]
     
         discount_code = generate_discount_code( SPONSOR_EVENT, sponsor, badge_type, quantity, discount_codes )
+
+        def get_date_string( date ):
+            return date.strftime( "%a, %d %b %Y %H:%M:%S %Z" )
+            #return date.strftime( "%a, %d %b %Y %H:%M:%S" )
+
+        discount_code['created_date'] = get_date_string( discount_code['created_date'] )
 
         result = requests.post( "%s/data/discount_code/add/" % ( APP_SERVER ), json.dumps( { "eventID" : SPONSOR_EVENT, "discount_code_data" : discount_code } ) )
 

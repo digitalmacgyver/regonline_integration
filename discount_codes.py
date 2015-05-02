@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
+from collections import Counter
 import datetime
 import json
 import logging
 import random
 import uuid
-
-from flask import jsonify
 
 from datastore import get_discount_codes
 
@@ -151,32 +150,70 @@ def get_sponsor_reporting_groups( eventID=None ):
     # We only have one set of spornsor reporting groups, so ignore the eventID for now.
     return sponsor_reporting_groups
 
-def generate_discount_codes( eventID, sponsor, all_existing_codes ):
+def get_entitlements_for_sponsor_type( sponsorType ):
+    result = []
+
+    if sponsorType in sponsor_entitlements_2015:
+        for entitlement in sponsor_entitlements_2015:
+            entitlement['code_source'] = sponsorType
+            result.append( entitlement )
+
+    return result
+
+def generate_discount_codes( eventID, sponsor, all_existing_codes, add_ons=None ):
     '''Takes in eventID and a sponsor object which can be either a suds
     object or a sponsor like hash from get_sponsors.
 
     Takes a list argument of all existing discount codes for that
-    event.
+    event, and an optional list of add_on events for that sponsor.
+
+    It consults the list of existing codes, and adds any entitlements
+    that are not in place.
+
+    It never deletes an existing entitlement, although it does send an
+    email if there is a mismatch between what it computes the sponsor
+    is entitled to and what it has been awarded.
     '''
 
     all_existing_code_values = { x['discount_code']:True for x in all_existing_codes }
     
     discount_codes = []
 
+    existing_codes = [ x for x in all_existing_codes if x['SponsorID'] == sponsor['ID'] ]
+    granted_codes = Counter( [ ( code['code_source'], code['badge_type'], code['quantity'] ) for code in existing_codes ] )
+
+    entitlements = Counter( [ ( sponsor['RegistrationType'], entitlement['badge_type'], entitlement['quantity'] ) for entitlement in sponsor_entitlements_2015[sponsor['RegistrationType'] ] ] )
+
+    for add_on in add_ons.get( sponsor['ID'], [] ):
+        # DEBUG - This stuff should probably live in a configuration file.
+        if add_on['product_name'] == 'Enterprise Pack':
+            badge_type = 'general_full'
+            if sponsor['RegistrationType'].startswith( 'Academic' ):
+                badge_type = 'academic_full'
+            
+            entitlements.update( [ ( 'Enterprise Pack', badge_type, 10 ) ] * add_on['quantity'] )
+
+    additional_entitlements = entitlements - granted_codes
+
     if sponsor['RegistrationType'] in sponsor_entitlements_2015:
-        for entitlement in sponsor_entitlements_2015[sponsor['RegistrationType']]:
+        for entitlement in additional_entitlements.elements():
+            #for entitlement in sponsor_entitlements_2015[sponsor['RegistrationType']]:
+
+            ( code_source, badge_type, quantity ) = entitlement
+
             discount_code = {
                 'SponsorID'        : sponsor['ID'],
                 'RegTypeID'        : sponsor['RegTypeID'],
                 'RegistrationType' : sponsor['RegistrationType'],
-                'created_date'     : sponsor['AddDate']
+                'created_date'     : sponsor['AddDate'],
+                'code_source'      : code_source
             }
 
             discount_code['ID'] = str( uuid.uuid4() )
 
-            discount_code['badge_type'] = entitlement['badge_type']
-            discount_code['regonline_str'] = badge_types[entitlement['badge_type']]['regonline_str']
-            discount_code['quantity'] = entitlement['quantity']
+            discount_code['badge_type'] = badge_type
+            discount_code['regonline_str'] = badge_types[badge_type]['regonline_str']
+            discount_code['quantity'] = quantity
             # Get rid of any unicode stuff we don't want.
             company_abbr = sponsor['Company'].encode( 'ascii', 'ignore' ).lower()
             
@@ -188,7 +225,7 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes ):
             unique = False
             while not unique:
                 random_string = get_random_string( 3 )
-                new_discount_code = "%s%s%03d" % ( company_abbr, random_string, entitlement['quantity'] )
+                new_discount_code = "%s%s%03d" % ( company_abbr, random_string, quantity )
                 new_discount_code = new_discount_code.replace( '0', 'a' )
                 new_discount_code = new_discount_code.replace( '1', 'b' )
                 if new_discount_code not in all_existing_code_values:
@@ -199,12 +236,17 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes ):
 
             discount_code['discount_code'] = new_discount_code
             discount_codes.append( discount_code )
-            logging.info( json.dumps( { 'message' : "Created new discount_code: %s" % ( new_discount_code ) } ) )
+            logging.info( json.dumps( { 'message' : "Created new discount_code: %s, data: %s" % ( new_discount_code, { k:v for k,v in discount_code.items() if k != 'created_date' } ) } ) )
     else:
         error_message = "No sponsor codes found for registration type: %s" % ( sponsor['RegistrationType'] )
         logging.error( json.dumps( { 'message' : error_message } ) )
         raise Exception( error_message )
     
+    if granted_codes - entitlements != Counter():
+        message = "Sponsor %d has more discount codes granted to them than they are entitled to: %s" % ( sponsor['ID'], granted_codes - entitlements )
+        # Log this as an error so it gets sent out via Loggly to investigate.
+        logging.error( json.dumps( { 'message' : message } ) )
+
     return discount_codes
 
 def get_random_string( length ):
@@ -217,7 +259,7 @@ def get_random_string( length ):
         
     return result
         
-def generate_discount_code( eventID, sponsor, badge_type, quantity, all_existing_codes ):
+def generate_discount_code( eventID, sponsor, badge_type, quantity, all_existing_codes, code_source=None ):
     '''Takes in eventID and a sponsor object which can be either a suds
     object or a sponsor like hash from get_sponsors.
 
@@ -231,7 +273,7 @@ def generate_discount_code( eventID, sponsor, badge_type, quantity, all_existing
         'SponsorID'        : sponsor['ID'],
         'RegTypeID'        : sponsor['RegTypeID'],
         'RegistrationType' : sponsor['RegistrationType'],
-        'created_date'     : datetime.datetime.now()
+        'created_date'     : datetime.datetime.utcnow()
     }
 
     discount_codes = []
@@ -239,6 +281,12 @@ def generate_discount_code( eventID, sponsor, badge_type, quantity, all_existing
     discount_code['ID'] = str( uuid.uuid4() )
 
     discount_code['badge_type'] = badge_type
+
+    if code_source == None:
+        discount_code['code_source'] = 'Show Management'
+    else:
+        discount_code['code_source'] = code_source
+
     discount_code['regonline_str'] = badge_types[badge_type]['regonline_str']
     discount_code['quantity'] = quantity
     # Get rid of any unicode stuff we don't want.
@@ -265,6 +313,6 @@ def generate_discount_code( eventID, sponsor, badge_type, quantity, all_existing
     discount_code['discount_code'] = new_discount_code
 
     logging.info( json.dumps( { 'message' : "Created new discount_code: %s" % ( new_discount_code ),
-                                'discount_code_data' : discount_code } ) )
+                                'discount_code_data' : { k:v for k,v in discount_code.items() if k != 'created_date' } } ) )
 
     return discount_code

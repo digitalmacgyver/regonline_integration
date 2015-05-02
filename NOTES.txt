@@ -6,31 +6,57 @@ http://developer.regonline.com/
 
 ==
 
+discount_codes - array of discount_code discts.
 
-merch = client.service.GetRegistrationsMerchandiseForEvent( eventID=1639610 )
+A discount_code dict is:
+
+{ 
+  ID : uuid for this code,
+  SponsorID : ...,
+  RegTypeID : ...,
+  RegistrationType : ..., (of sponsor)
+  created_date : ..., (sponsor add date for default codes, time of generation for others)
+  code_source : ..., (sponsor registrationtype, or "show management" or a provided argument for custom code sources)
+  quantity : ...,
+  discount_code : ...,
+  regonline_str : '-10%',
+  badge_type : key to list of badge types, notably here the badge type determines whether or not we reserve a spot
+}
+
+==
+
+from suds.client import Client
+import logging
+import logging.handlers
+logging.basicConfig( level=logging.INFO )
+consolelog = logging.StreamHandler()
+consolelog.setLevel( logging.DEBUG )
+log.addHandler( consolelog )
+
+regonline_api_key = '9mIRFe399oIBM0fnX5jxLtupSZlaizGgtHUEuDpUi34QWs66G6LxFDZ6wsdpgzCw'
+regonline_wsdl = "https://www.regonline.com/api/default.asmx?WSDL"
+regonline_soap_namespace = 'http://www.regonline.com/api'
+from suds.plugin import MessagePlugin
+class LogPlugin(MessagePlugin):
+    def sending(self, context):
+        print(str(context.envelope))
+    def received(self, context):
+        print(str(context.reply))
+client = Client( regonline_wsdl, plugings=[LogPlugin()] )
+token = client.factory.create( "TokenHeader" )
+token.APIToken = regonline_api_key
+client.set_options( soapheaders=token )
+( a, b ) = client.service.GetRegistrationsMerchandiseForEvent( eventID=1639610 )
+
+POST /api/default.asmx/GetRegistrationsMerchandiseForEvent HTTP/1.1
+Host: www.regonline.com
+Content-Type: application/x-www-form-urlencoded
+Content-Length: length
+
+eventID=string&filter=string&orderBy=string
 
 
-
-TODO:
-
-* For each code, the computed redeemed (count of registrants) and available (quantity - redeemed) in the fields 'redeemed' and 'available'
-
-* Top level stats:
-  * nonsponsored
-  * redeemed 
-  * reserved
-
-Also, a breakdown by each major category:
-  * Corporate
-  * Academic
-  * Lab & Non Profit
-  * Show Management
-
-Need a mapping of each registration type to breakdown category.
-
-Probably need to add the breakdown category as an element of the
-discount_code data structure (although it could be computed???)
-
+client = Client("http://localhost/wsdl.wsdl", plugins=[LogPlugin()])
 
 0. Make the app key actually secret (e.g. load from file not in source
 control).

@@ -10,6 +10,7 @@
 
   {% if redeemed_codes %}
     <ul>
+      <li>Code Source: {{ redeemed_codes.discount_code_data.code_source }}</li>
       <li>Badge Type: {{ redeemed_codes.badge_type_name }}</li>
       <li>Total: {{ redeemed_codes.total }}</li>
       <li>Redeemed: {{ redeemed_codes.redeemed }}</li>

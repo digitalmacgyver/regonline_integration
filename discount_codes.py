@@ -7,6 +7,25 @@ import logging
 import random
 import uuid
 
+# Mail config
+MAIL_SERVER = 'smtp.mandrillapp.com'
+MAIL_PORT = 587
+MAIL_USE_TLS = True
+MAIL_USE_SSL = False
+MAIL_DEBUG = False
+MAIL_USERNAME = 'matt@viblio.com'
+MAIL_PASSWORD = 'MZDI2Ncl5L1qY--irqO81A'
+DEFAULT_MAIL_SENDER = 'matt@viblio.com'
+EXTERNAL_SERVER_BASE_URL = 'http://ec2-52-12-132-124.us-west-2.compute.amazonaws.com'
+SEND_AS = ( 'GHC 2015 Registration', 'registration@anitaborg.org' )
+ADMIN_MAIL_RECIPIENTS = [ 'kathrynb@anitaborg.org', 'matt@viblio.com' ]
+
+from flask import Flask
+from flask_mail import Mail, Message
+app = Flask(__name__)
+app.config.from_object(__name__)
+mail = Mail( app )
+
 from datastore import get_discount_codes
 
 badge_types = {
@@ -246,6 +265,78 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes, add_ons=None 
         message = "Sponsor %d has more discount codes granted to them than they are entitled to: %s" % ( sponsor['ID'], granted_codes - entitlements )
         # Log this as an error so it gets sent out via Loggly to investigate.
         logging.error( json.dumps( { 'message' : message } ) )
+        # Send an email to admins.
+        try:
+            email_recipients = ADMIN_MAIL_RECIPIENTS
+
+            mail_message = Message( "Warning: Discount Code Mismatch for %s" % ( sponsor['Company'] ),
+                                    sender = SEND_AS,
+                                    recipients = email_recipients )
+        
+            message_html = ''
+    
+            message_html += '<p>Sponsor %s has granted discount codes which exceed their entitlement: %s</p>' % ( sponsor['Company'], granted_codes - entitlements )
+            message_html += '<p>This may not be a problem, but it may indicate that this sponsor was upgraded, or cancelled some enterprise pack purchases, and now their discount codes do not match their entitlement.  Please verify.</p>'
+
+            mail_message.html = message_html
+            with app.test_request_context():
+                mail.send( mail_message )
+
+        except Exception as e:
+            logging.error( json.dumps( { 'message' : "Failed to send notification email to %s, error was: %s" % ( email_recipients, e ) } ) )
+
+    # Send an email to the user.
+    recipients = []
+    if 'Email' in sponsor and len( sponsor['Email'] ):
+        recipients.append( sponsor['Email'] )
+    if 'CCEmail' in sponsor and len( sponsor['CCEmail'] ):
+        recipients.append( sponsor['CCEmail'] )
+        
+    error_message = None
+    if len( recipients ) == 0:
+        error_message = "ERROR, NO RECIPIENTS AVAILABLE FOR SPONSOR %d" % ( sponsor['ID'] )
+
+    try:
+        # DEBUG actually send to recipients here
+        #email_recipients = ADMIN_MAIL_RECIPIENTS + recipients
+        email_recipients = ADMIN_MAIL_RECIPIENTS
+
+        mail_message = Message( "Grace Hopper Celebration 2015 Discount Codes",
+                                sender = SEND_AS,
+                                recipients = email_recipients,
+                                bcc = ADMIN_MAIL_RECIPIENTS)
+        
+        message_html = ''
+
+        if error_message is not None:
+            message_html += "<p>%s</p>" % ( error_message )
+    
+        message_html += '<p>Your %s discount codes are:<ul>' % ( sponsor['Company'] )
+
+        for discount_code in sorted( discount_codes, key = lambda x: x['discount_code'] ):
+            # All this error checking madness is for backfilled
+            # data, for future data where we generated all the
+            # codes there will always be valid badge types.
+            badge_type_name = discount_code['badge_type']
+            regonline_url = badge_types[discount_code['badge_type']]['regonline_url']
+            
+            discount_search_url = "%s%s?code=%s" % ( EXTERNAL_SERVER_BASE_URL, '/discount_code/', discount_code['discount_code'] )
+            message_html += '<li>%s<ul><li>Badge Type: %s</li><li>Quantity: %d</li><li>Registration Link: <a href="%s">%s</a></li><li>Registration Redemption Report: <a href="%s">%s</a></li></ul></li>' % ( 
+                discount_code['discount_code'],
+                badge_type_name,
+                discount_code['quantity'],
+                regonline_url,
+                regonline_url,
+                discount_search_url, 
+                discount_search_url )
+
+        mail_message.html = message_html
+        with app.test_request_context():
+            mail.send( mail_message )
+
+    except Exception as e:
+        logging.error( json.dumps( { 'message' : "Failed to send notification email to %s, error was: %s" % ( email_recipients, e ) } ) )
+
 
     return discount_codes
 

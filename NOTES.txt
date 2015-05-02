@@ -25,41 +25,10 @@ A discount_code dict is:
 
 ==
 
-from suds.client import Client
-import logging
-import logging.handlers
-logging.basicConfig( level=logging.INFO )
-consolelog = logging.StreamHandler()
-consolelog.setLevel( logging.DEBUG )
-log.addHandler( consolelog )
-
-regonline_api_key = '9mIRFe399oIBM0fnX5jxLtupSZlaizGgtHUEuDpUi34QWs66G6LxFDZ6wsdpgzCw'
-regonline_wsdl = "https://www.regonline.com/api/default.asmx?WSDL"
-regonline_soap_namespace = 'http://www.regonline.com/api'
-from suds.plugin import MessagePlugin
-class LogPlugin(MessagePlugin):
-    def sending(self, context):
-        print(str(context.envelope))
-    def received(self, context):
-        print(str(context.reply))
-client = Client( regonline_wsdl, plugings=[LogPlugin()] )
-token = client.factory.create( "TokenHeader" )
-token.APIToken = regonline_api_key
-client.set_options( soapheaders=token )
-( a, b ) = client.service.GetRegistrationsMerchandiseForEvent( eventID=1639610 )
-
-POST /api/default.asmx/GetRegistrationsMerchandiseForEvent HTTP/1.1
-Host: www.regonline.com
-Content-Type: application/x-www-form-urlencoded
-Content-Length: length
-
-eventID=string&filter=string&orderBy=string
-
-
-client = Client("http://localhost/wsdl.wsdl", plugins=[LogPlugin()])
-
 0. Make the app key actually secret (e.g. load from file not in source
 control).
+
+0. Make the admin credentials actually secret.
 
 0. Set up delay on email sending from mandrill.
 
@@ -74,9 +43,4 @@ To schedule a message, indicate when the message should be sent using the send_a
      messing up VIBLIO stuff.
 
    * Set up more email alerts after we set up domain.
-
-## 
-
-DEBUG: Test multiple admin mail recipients.
-DEBUG: Actually send email to sponsor.email.
 

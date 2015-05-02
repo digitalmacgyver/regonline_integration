@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-
 from bs4 import BeautifulSoup
 import datetime
 import json
@@ -10,7 +9,6 @@ import time
 from suds.client import Client
 from suds.xsd.doctor import ImportDoctor, Import
 from suds.plugin import MessagePlugin
-
 
 import logging
 import logging.handlers
@@ -135,7 +133,7 @@ def export_event_data( eventID, attendee_type, add_ons=None ):
             if attendee['ID'] not in attendee_ids:
                 registration_status = attendee['StatusDescription'].encode( 'utf-8' )
 
-                if registration_status not in [ 'Confirmed', 'Attended' ]:
+                if registration_status not in [ 'Confirmed', 'Attended', 'Approved' ]:
                     log.warning( json.dumps( { 'message' : "Ignoring attendee ID %s with registration status: %s" % ( attendee['ID'], registration_status ) } ) )
                     continue
 

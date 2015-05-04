@@ -13,12 +13,33 @@ import logging.handlers
 
 from discount_codes import get_badge_types, generate_discount_code, get_sponsor_reporting_groups
 
+def get_password( password_file ):
+    '''Utility function to load in our various passwords.'''
+    password = None
+    with open( password_file, "r" ) as f:
+        for key in f.readlines():
+            key = key.strip()
+            if key.startswith( '#' ):
+                continue
+            elif len( key ) == 0:
+                continue
+            else:
+                password = key
+                break
+
+    return password
+
+SECRET_KEY_FILE = "./present_secret.txt"
+SECRET_KEY = get_password( SECRET_KEY_FILE )
+
 # configuration
 # NOTE - No logging is sent to syslog on exceptions if DEBUG is true.
-DEBUG = False
-SECRET_KEY = 'development key'
+DEBUG = True
 USERNAME = 'admin'
-PASSWORD = 'aghcb2015i'
+
+# Load out API keys from configuration.
+PASSWORD_FILE = "./present_password.txt"
+PASSWORD = get_password( PASSWORD_FILE )
 
 # 2014
 #SPONSOR_EVENT = 1438449
@@ -32,7 +53,8 @@ REGISTRANT_EVENT = 1702108
 
 PORT=5001
 APP_SERVER = "http://127.0.0.1:5000"
-APP_KEY = '9Cn3gKNS3DB7FEck'
+APP_PASSWORD_FILE = 'present_api_key.txt'
+APP_KEY = get_password( APP_PASSWORD_FILE )
 
 # This will differ in our actual deployment due to nginx.
 EXTERNAL_SERVER_BASE_URL = 'http://ec2-52-12-132-124.us-west-2.compute.amazonaws.com'
@@ -48,7 +70,8 @@ MAIL_USE_TLS = True
 MAIL_USE_SSL = False
 MAIL_DEBUG = False
 MAIL_USERNAME = 'matt@viblio.com'
-MAIL_PASSWORD = 'MZDI2Ncl5L1qY--irqO81A'
+MAIL_PASSWORD_FILE = "./mail_password.txt"
+MAIL_PASSWORD = get_password( MAIL_PASSWORD_FILE )
 DEFAULT_MAIL_SENDER = 'matt@viblio.com'
 
 # create our little application
@@ -82,6 +105,7 @@ def internal_error( error ):
 
 @app.route('/login', methods=[ 'GET', 'POST' ] )
 def login():
+    '''Admin login that unlocks additional functionality - for ABI personnel only.'''
     error = None
     if request.method == 'POST':
         if request.form['username'].strip() != app.config['USERNAME']:
@@ -109,7 +133,8 @@ def logout():
 @app.route( '/', methods=[ 'GET', 'POST' ] )
 @app.route( '/discount_code/', methods=[ 'GET', 'POST' ] )
 def discount_code():
-    # Answer the query if we had a search request.
+    '''Search request for input discount code.'''
+
     redeemed_codes = None
     if 'code' in request.values:
         data = {
@@ -136,6 +161,8 @@ def discount_code():
 
 @app.route( '/code_summary/', methods=[ 'GET' ] )
 def code_summary():
+    '''Admin only - return a summary of all codes for input into RegOnline.'''
+
     data = {
         'eventID' : SPONSOR_EVENT,
         'api_key' : APP_KEY
@@ -145,26 +172,15 @@ def code_summary():
     codes_by_type = {}
     last_updated_by_type = {}
 
-    # DEBUG - This is just example code, in a real deployment we use
-    # the badge_types returned by the get_badge_types function.
-    #
-    # Here we are currently using made up badge types backfired into our
-    # registrant data.
-    #for discount_code in discount_codes:
-    #    if discount_code['badge_type'] in codes_by_type:
-    #        codes_by_type[discount_code['badge_type']] += ",%s=%s(%d)" % ( discount_code['discount_code'], discount_code['regonline_str'], discount_code['quantity'] )
-    #    else:
-    #        codes_by_type[discount_code['badge_type']] = "%s=%s(%d)" % ( discount_code['discount_code'], discount_code['regonline_str'], discount_code['quantity'] )
-    #badge_types = [ { "label" : key, "regonline_code_string" : value } for key, value in codes_by_type.items() ]
-     
     def get_date( date_string ):
         return datetime.datetime.strptime( date_string, "%a, %d %b %Y %H:%M:%S %Z" )
         #return datetime.datetime.strptime( date_string, "%a, %d %b %Y %H:%M:%S" )
 
-    # DEBUG - this is the production version.
     badge_types = get_badge_types( SPONSOR_EVENT )
+
     discount_codes.sort( key=lambda x:['created_date'] )
-    for discount_code in sorted( discount_codes, key=lambda x: get_date( x['created_date'] ) ):
+
+    for discount_code in discount_codes:
         if discount_code['badge_type'] in codes_by_type:
             codes_by_type[discount_code['badge_type']] += ",%s=%s(%d)" % ( discount_code['discount_code'], discount_code['regonline_str'], discount_code['quantity'] )
 
@@ -173,7 +189,6 @@ def code_summary():
         else:
             codes_by_type[discount_code['badge_type']] = "%s=%s(%d)" % ( discount_code['discount_code'], discount_code['regonline_str'], discount_code['quantity'] )
             last_updated_by_type[discount_code['badge_type']] = discount_code['created_date']
-            
 
     code_summary = sorted( [ { "label" : v['name'], "regonline_code_string" : codes_by_type.get( k, '' ), "last_updated" : last_updated_by_type.get( k, 'N/A' ) } for k, v in badge_types.items() ] )
        
@@ -181,31 +196,28 @@ def code_summary():
 
 @app.route( '/registration_summary/', methods=[ 'GET', 'POST' ] )
 def registration_summary():
+    '''Admin only, summaries all registration counts and sponsor data.'''
+
     data = {
         'eventID' : SPONSOR_EVENT,
         'api_key' : APP_KEY
     }
     
-    #start = time.time()
     discount_codes = requests.post( "%s/data/discounts/" % ( APP_SERVER ), json.dumps( data ) ).json()['discount_codes']
-    #print "Discount codes:", time.time() - start
 
-    #start = time.time()
     sponsors = requests.post( "%s/data/sponsors/" % ( APP_SERVER ), json.dumps( data ) ).json()['sponsors']
-    #print "Sponsors codes:", time.time() - start
 
     data = {
         'eventID' : REGISTRANT_EVENT,
         'api_key' : APP_KEY
     }
-    #start = time.time()
     registrants = requests.post( "%s/data/registrants/" % ( APP_SERVER ), json.dumps( data ) ).json()['registrants']
-    #print "Registrants codes:", time.time() - start
 
     badge_types = get_badge_types( SPONSOR_EVENT )
 
     # ==========================================================================
     # Handle the case where we are creating a new discount code for this sponsor.
+    # ==========================================================================
 
     if "add_discount_code" in request.values:
         badge_type = request.values['badge_type']
@@ -274,15 +286,14 @@ def registration_summary():
             email_recipients_raw = request.values['email_recipients'].replace( ';', ',' )
             email_recipients = [ x.strip() for x in email_recipients_raw.split( ',' ) ]
         except Exception as e:
-            flash( "Invalid email address argument! Please enter a list of email addresses sperated by commas." )
+            flash( "Invalid email address argument! Please enter a list of email addresses separated by commas." )
 
         sponsor = [ x for x in sponsors if x['ID'] == sponsorID ][0]
 
         sponsor_discount_codes = [ x for x in discount_codes if x['SponsorID'] == sponsor['ID'] ]
-    
+
         mail_sent = False
         try:
-
             # DEBUG, leave this variable alone here and actually send to the recipients in production.
             email_recipients = ADMIN_MAIL_RECIPIENTS
 
@@ -293,16 +304,11 @@ def registration_summary():
             
             message_html = '<p>Your %s discount codes are:<ul>' % ( sponsor['Company'] )
 
-            for discount_code in sorted( sponsor_discount_codes, key = lambda x: x['discount_code'] ):
+            for discount_code in sorted( sponsor_discount_codes, 
+                                         key = lambda x: x['discount_code'] ):
 
-                # All this error checking madness is for backfilled
-                # data, for future data where we generated all the
-                # codes there will always be valid badge types.
-                badge_type_name = discount_code['badge_type']
-                regonline_url = "[To be determined]"
-                if discount_code['badge_type'] in badge_types:
-                    badge_type_name = badge_types[discount_code['badge_type']]['name']
-                    regonline_url = badge_types[discount_code['badge_type']]['regonline_url']
+                badge_type_name = badge_types[discount_code['badge_type']]['name']
+                regonline_url = badge_types[discount_code['badge_type']]['regonline_url']
 
                 discount_search_url = "%s%s?code=%s" % ( EXTERNAL_SERVER_BASE_URL, url_for( 'discount_code' ), discount_code['discount_code'] )
                 message_html += '<li>%s<ul><li>Badge Type: %s</li><li>Quantity: %d</li><li>Registration Link: <a href="%s">%s</a></li><li>Registration Redemption Report: <a href="%s">%s</a></li></ul></li>' % ( 

@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
+from bdateutil import relativedelta
 from collections import Counter
 import datetime
 import json
 import logging
+import pytz
 import random
 import uuid
 
@@ -333,7 +335,7 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes,
             mail_message = Message( "Warning: Discount Code Mismatch for %s" % ( sponsor['Company'] ),
                                     sender = SEND_AS,
                                     recipients = email_recipients )
-        
+            
             message_html = ''
     
             message_html += '<p>Sponsor %s has granted discount codes which exceed their entitlement: %s</p>' % ( sponsor['Company'], granted_codes - entitlements )
@@ -363,10 +365,20 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes,
         #email_recipients = ADMIN_MAIL_RECIPIENTS + recipients
         email_recipients = ADMIN_MAIL_RECIPIENTS
 
+        today = datetime.date.today()
+        today_4pm = datetime.datetime( today.year, today.month, today.day, 16, tzinfo=pytz.timezone( 'America/Los_Angeles' ) )
+        tomorrow_4pm = today_4pm + relativedelta( bdays = +1 )
+        when = tomorrow_4pm.astimezone( pytz.utc )
+
+        extra_headers = {
+            'X-MC-SendAt' : when.strftime( "%Y-%m-%d %H:%M:%S" )
+        }
+
         mail_message = Message( "Grace Hopper Celebration 2015 Discount Codes",
                                 sender = SEND_AS,
                                 recipients = email_recipients,
-                                bcc = ADMIN_MAIL_RECIPIENTS)
+                                bcc = ADMIN_MAIL_RECIPIENTS, 
+                                extra_headers = extra_headers )
         
         message_html = ''
 

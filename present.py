@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
+from bdateutil import relativedelta
 import datetime
 import json
 from flask import Flask, request, session, g, redirect, url_for, \
      abort, render_template, flash, request
 from flask_mail import Mail, Message
+import pytz
 import requests
 import time
 
@@ -234,16 +236,29 @@ def registration_summary():
 
         discount_code['created_date'] = get_date_string( discount_code['created_date'] )
 
-        result = requests.post( "%s/data/discount_code/add/" % ( APP_SERVER ), json.dumps( { "eventID" : SPONSOR_EVENT, "discount_code_data" : discount_code } ) )
+        result = requests.post( "%s/data/discount_code/add/" % ( APP_SERVER ), json.dumps( { "eventID" : SPONSOR_EVENT, "discount_code_data" : discount_code, "api_key" : APP_KEY  } ) )
 
         mail_sent = False
         try:
             # DEBUG, add in mail recipients.
             mail_recipients = ADMIN_MAIL_RECIPIENTS
+
+            # We want this mail to go out at 4 pm on the next business
+            # day.
+            today = datetime.date.today()
+            today_4pm = datetime.datetime( today.year, today.month, today.day, 16, tzinfo=pytz.timezone( 'America/Los_Angeles' ) )
+            tomorrow_4pm = today_4pm + relativedelta( bdays = +1 )
+            when = tomorrow_4pm.astimezone( pytz.utc )
+            
+            extra_headers = {
+                'X-MC-SendAt' : when.strftime( "%Y-%m-%d %H:%M:%S" )
+            }
+
             mail_message = Message( "Grace Hopper Celebration 2015 Discount Codes",
                                     sender = SEND_AS,
                                     recipients = mail_recipients,
-                                    bcc = ADMIN_MAIL_RECIPIENTS )
+                                    bcc = ADMIN_MAIL_RECIPIENTS,
+                                    extra_headers = extra_headers )
 
             discount_search_url = "%s%s?code=%s" % ( EXTERNAL_SERVER_BASE_URL, url_for( 'discount_code' ), discount_code['discount_code'] )
             mail_message.html = '<p>Your %s discount code for %d %s badges is:<br />%s</p><p>Register using this code at:<br /><a href="%s">%s</a></p><p>View a report of attendees who have redeemed this code, and remaining redemptions at:<br /><a href="%s">%s</a></p>' % (
@@ -255,6 +270,7 @@ def registration_summary():
                 badge_types[badge_type]['regonline_url'],
                 discount_search_url, 
                 discount_search_url )
+
             mail.send( mail_message )
             mail_sent = True
         except Exception as e:

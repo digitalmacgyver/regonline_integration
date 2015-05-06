@@ -16,7 +16,7 @@ from flask_mail import Mail, Message
 app = Flask(__name__)
 app.config.from_pyfile( "./config/present.default.conf" )
 #app.config.from_envvar( "DISCOUNT_CODES_CONFIG" )
-mail = Mail( app )
+mail = Mail()
 
 app.config.update( MAIL_PASSWORD = None )
 with open( app.config['MAIL_PASSWORD_FILE'], "r" ) as f:
@@ -336,6 +336,7 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes,
 
             mail_message.html = message_html
             with app.test_request_context():
+                mail.init_app( app )
                 mail.send( mail_message )
 
         except Exception as e:
@@ -385,8 +386,9 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes,
             regonline_url = badge_types[discount_code['badge_type']]['regonline_url']
             
             discount_search_url = "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], '/discount_code/', discount_code['discount_code'] )
-            message_html += '<li>%s<ul><li>Badge Type: %s</li><li>Quantity: %d</li><li>Registration Link: <a href="%s">%s</a></li><li>Registration Redemption Report: <a href="%s">%s</a></li></ul></li>' % ( 
+            message_html += '<li>%s<ul><li>Source: %s</li><li>Badge Type: %s</li><li>Quantity: %d</li><li>Registration Link: <a href="%s">%s</a></li><li>Registration Redemption Report: <a href="%s">%s</a></li></ul></li>' % ( 
                 discount_code['discount_code'],
+                discount_code['code_source'],
                 badge_type_name,
                 discount_code['quantity'],
                 regonline_url,
@@ -396,6 +398,7 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes,
 
         mail_message.html = message_html
         with app.test_request_context():
+            mail.init_app( app )
             mail.send( mail_message )
 
     except Exception as e:

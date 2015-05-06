@@ -21,7 +21,7 @@ app = Flask(__name__)
 app.config.from_pyfile( "./config/present.default.conf" )
 #app.config.from_envvar( "PRESENT_CONFIG" )
 
-mail = Mail( app )
+mail = Mail()
 
 def get_password( password_file ):
     '''Utility function to load in our various passwords.'''
@@ -227,8 +227,6 @@ def bulk_purchases():
             else:
                 bulk_group_purchase_stats[sponsor_reporting_group] = quantity
 
-    print enterprise_packs_by_sponsor.items()
-
     bulk_purchases = {
         "total_enterprise_packs" : total_enterprise_packs,
         "total_bulk_purchases"   : total_bulk_purchases,
@@ -326,6 +324,7 @@ def registration_summary():
                 discount_search_url, 
                 discount_search_url )
 
+            mail.init_app( app )
             mail.send( mail_message )
             mail_sent = True
         except Exception as e:
@@ -382,8 +381,9 @@ def registration_summary():
                 regonline_url = badge_types[discount_code['badge_type']]['regonline_url']
 
                 discount_search_url = "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code['discount_code'] )
-                message_html += '<li>%s<ul><li>Badge Type: %s</li><li>Quantity: %d</li><li>Registration Link: <a href="%s">%s</a></li><li>Registration Redemption Report: <a href="%s">%s</a></li></ul></li>' % ( 
+                message_html += '<li>%s<ul><li>Source: %s</li><li>Badge Type: %s</li><li>Quantity: %d</li><li>Registration Link: <a href="%s">%s</a></li><li>Registration Redemption Report: <a href="%s">%s</a></li></ul></li>' % ( 
                     discount_code['discount_code'],
+                    discount_code['code_source'],
                     badge_type_name,
                     discount_code['quantity'],
                     regonline_url,
@@ -394,6 +394,7 @@ def registration_summary():
             message_html += "</ul></p>"
             
             mail_message.html = message_html
+            mail.init_app( app )
             mail.send( mail_message )
             mail_sent = True
         except Exception as e:
@@ -612,8 +613,9 @@ def sponsor_summary():
                 regonline_url = badge_types[discount_code['badge_type']]['regonline_url']
 
                 discount_search_url = "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code['discount_code'] )
-                message_html += '<li>%s<ul><li>Badge Type: %s</li><li>Quantity: %d</li><li>Registration Link: <a href="%s">%s</a></li><li>Registration Redemption Report: <a href="%s">%s</a></li></ul></li>' % ( 
+                message_html += '<li>%s<ul><li>Source: %s</li><li>Badge Type: %s</li><li>Quantity: %d</li><li>Registration Link: <a href="%s">%s</a></li><li>Registration Redemption Report: <a href="%s">%s</a></li></ul></li>' % ( 
                     discount_code['discount_code'],
+                    discount_code['code_source'],
                     badge_type_name,
                     discount_code['quantity'],
                     regonline_url,
@@ -624,11 +626,14 @@ def sponsor_summary():
             message_html += "</ul></p>"
             
             mail_message.html = message_html
+            mail.init_app( app )
             mail.send( mail_message )
             mail_sent = True
         except Exception as e:
             flash( "ERROR! Failed to send discount code summary to: %s. %s" % ( email_recipients + app.config['ADMIN_MAIL_RECIPIENTS'], e ) )
-            raise Exception
+
+            import pdb
+            pdb.set_trace()
 
         if mail_sent:
             success_message = "Discount summary email sent to: %s" % ( email_recipients + app.config['ADMIN_MAIL_RECIPIENTS'] )

@@ -6,7 +6,10 @@ http://developer.regonline.com/
 
 ==
 
+To test:
 
+1. RegOnline Export of full types, and of over allocated sponsors
+email generation, and initial email generation.
 
 
 They are using Pentaho ETL to get the data out.

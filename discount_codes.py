@@ -331,7 +331,7 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes,
             
             message_html = ''
     
-            message_html += '<p>Sponsor %s has granted discount codes which exceed their entitlement: %s</p>' % ( sponsor['Company'], granted_codes - entitlements )
+            message_html += '<p>Sponsor %s with RegOnline ID %d has granted discount codes which exceed their entitlement: %s</p>' % ( sponsor['Company'], sponsor['ID'], granted_codes - entitlements )
             message_html += '<p>This may not be a problem, but it may indicate that this sponsor was upgraded, or canceled some enterprise pack purchases, and now their discount codes do not match their entitlement.  Please verify.</p>'
 
             mail_message.html = message_html
@@ -360,7 +360,7 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes,
         email_recipients = app.config['ADMIN_MAIL_RECIPIENTS']
 
         today = datetime.date.today()
-        today_4pm = datetime.datetime( today.year, today.month, today.day, 16, tzinfo=pytz.timezone( 'PST8PTD' ) )
+        today_4pm = datetime.datetime( today.year, today.month, today.day, 16, tzinfo=pytz.timezone( 'PST8PDT' ) )
         tomorrow_4pm = today_4pm + relativedelta( bdays = +1 )
         when = tomorrow_4pm.astimezone( pytz.utc )
 

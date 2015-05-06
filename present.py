@@ -545,25 +545,28 @@ def sponsor_summary():
     discount_codes = [ x for x in requests.post( "%s/data/discounts/" % ( app.config['APP_SERVER'] ), json.dumps( data ) ).json()['discount_codes'] if x['SponsorID'] in sponsors_by_id ]
     discounts_by_code = { x['discount_code']:x for x in discount_codes }
 
-    # Try to build up a list of alternate company names that
-    # registrants might have entered in the company box that all mean
-    # the same thing.
-    company_suffixes = [ 'co', 'co.', 'corp', 'corp.', 'corporation', 'inc', 'inc.', 'incorporated', 'llc', 'llc.' ]
-    companies = {}
-    for sponsor in sponsors:
-        if len( sponsor['Company'].strip() ):
-            company = sponsor['Company'].lower().strip()
-            company = ' '.join( company.split() )
-            companies[company] = True
+    include_company_data = False
+
+    if include_company_data:
+        # Try to build up a list of alternate company names that
+        # registrants might have entered in the company box that all mean
+        # the same thing.
+        company_suffixes = [ 'co', 'co.', 'corp', 'corp.', 'corporation', 'inc', 'inc.', 'incorporated', 'llc', 'llc.' ]
+        companies = {}
+        for sponsor in sponsors:
+            if len( sponsor['Company'].strip() ):
+                company = sponsor['Company'].lower().strip()
+                company = ' '.join( company.split() )
+                companies[company] = True
         
-            # Remove any suffixes and trailing commas.
-            words = company.split()
-            if len( words ) > 1:
-                if words[-1] in company_suffixes:
-                    if words[-2][-1] == ',':
-                        words[-2] = words[-2][:-1]
-                    words = [ w for w in words if len( w ) ]
-                companies[' '.join( words )] = True
+                # Remove any suffixes and trailing commas.
+                words = company.split()
+                if len( words ) > 1:
+                    if words[-1] in company_suffixes:
+                        if words[-2][-1] == ',':
+                            words[-2] = words[-2][:-1]
+                        words = [ w for w in words if len( w ) ]
+                    companies[' '.join( words )] = True
 
     data = {
         'eventID' : app.config['REGISTRANT_EVENT'],
@@ -575,8 +578,9 @@ def sponsor_summary():
     # those who come from our company.
     registrants = [ x for x in all_registrants if x['discount_code'] in discounts_by_code ]
 
-    other_registrants = [ x for x in all_registrants if x['discount_code'] not in discounts_by_code ]
-    registrants += [ x for x in other_registrants if x['Company'] in companies ]
+    if include_company_data:
+        other_registrants = [ x for x in all_registrants if x['discount_code'] not in discounts_by_code ]
+        registrants += [ x for x in other_registrants if x['Company'] in companies ]
 
     badge_types = get_badge_types( app.config['SPONSOR_EVENT'] )
 

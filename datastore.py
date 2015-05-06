@@ -4,12 +4,17 @@ import json
 import logging
 import os
 import os.path
-import pickle
+import cPickle as pickle
 
 # For now just store things in a flat file, in the future we'll make
 # this a database.
 
-# GET
+# Data directory.
+DATA_DIR = "./datastore/"
+
+# ==============================================================
+# Read values from disk.
+# ==============================================================
 
 def get_sponsors( eventID ):
     return get_data( "sponsors", eventID )
@@ -21,7 +26,7 @@ def get_discount_codes( eventID ):
     return get_data( "discount_codes", eventID )
 
 def get_data( table, eventID ):
-    data_file = "datastore/%s-%s.dat" % ( table, eventID )
+    data_file = "%s/%s-%s.dat" % ( DATA_DIR, table, eventID )
     if os.path.isfile( "%s" % ( data_file ) ):
         with open( "%s" % ( data_file ), "r" ) as f:
             logging.info( json.dumps( { 'eventID' : eventID, 
@@ -32,7 +37,13 @@ def get_data( table, eventID ):
                                     'message' : 'No prior %s data, returning empty result set.' % ( table ) } ) )
         return []
 
-# Update
+# ==============================================================
+#
+# Update values on disk, this merges the on disk data with the the
+# input new data based on ID. If a data item is defined in the disk
+# version and in the new data, the disk version wins.
+#
+# ==============================================================
 
 def add_sponsors( eventID, new_sponsors ):
     '''Takes in a list of sponsors'''
@@ -57,7 +68,7 @@ def add_data( table, eventID, new_data ):
                                             'message' : 'Adding %s data for new attendee ID: %s' % ( table, new_item['ID'] ) } ) )
                 items.append( new_item )
 
-        data_file = "datastore/%s-%s.dat" % ( table, eventID )
+        data_file = "%s/%s-%s.dat" % ( DATA_DIR, table, eventID )
         data_file_new = data_file + ".new"
         data_file_old = data_file + ".old"
 
@@ -75,7 +86,14 @@ def add_data( table, eventID, new_data ):
                                     'message' : 'Renaming data file from %s to %s' % ( data_file_new, data_file ) } ) )
         return
 
-# Overwrite
+# ==============================================================
+#
+# Overwrite the data on disk with the input values entirely - however
+# if the input value is empty this method will refuse to overwrite the
+# data.
+#
+# ==============================================================
+
 def set_sponsors( eventID, new_sponsors ):
     '''Takes in a list of sponsors'''
     return set_data( "sponsors", eventID, new_sponsors )
@@ -90,7 +108,7 @@ def set_discount_codes( eventID, new_codes ):
 
 def set_data( table, eventID, items ):
     if len( items ):
-        data_file = "datastore/%s-%s.dat" % ( table, eventID )
+        data_file = "%s/%s-%s.dat" % ( DATA_DIR, table, eventID )
         data_file_new = data_file + ".new"
         data_file_old = data_file + ".old"
 

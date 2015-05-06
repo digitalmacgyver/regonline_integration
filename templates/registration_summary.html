@@ -4,8 +4,26 @@
   {% if session.logged_in %}
     <table class="singlerow">
       <tr>
-        <td>Total Registered: {{ registration_summary.registered }}</td>
-        <td>Reserved for Sponsors: {{ registration_summary.reserved }}</td>
+	<th>Group</th>
+	<th>Registered</th>
+	<th>Reserved</th>
+      </tr>
+      {% for group_stats in registration_summary.group_attendee_stats %}
+      <tr>
+	<td>{{ group_stats.name }}</td>
+	<td>{{ group_stats.data.redeemed }}</td>
+	<td>{{ group_stats.data.reserved }}</td>
+      </tr>
+      {% endfor %}
+      <tr>
+	<td>Non-Sponsored</td>
+        <td>{{ registration_summary.nonsponsored }}</td>
+        <td>N/A</td>
+      </tr>
+      <tr>
+	<td>Grand Total:</td>
+        <td>{{ registration_summary.registered }}</td>
+        <td>{{ registration_summary.reserved }}</td>
       </tr>
     </table>
     {% if registration_summary.sponsors %}
@@ -47,7 +65,7 @@
 		 <td>
 		   <form action="{{ url_for( 'registration_summary' ) }}" method="post" class="send-email" >
 		     <input name="sponsorID" type="hidden" value="{{ sponsor.ID }}" />
-		     <input name="email_recipients" type="email" multiple="multiple" value="{{ sponsor.Email|safe }}{{ registration_summary.ADMIN_MAIL_RECIPIENTS }}" />
+		     <input name="email_recipients" type="email" multiple="multiple" value="{{ sponsor.Email|safe }}{% if sponsor.CCEmail %}, {{ sponsor.CCEmail|safe }}{% endif %}" />
 		     <input type="submit" name="send_email" value="Email Discount Summary" />
 		   </form>
 		 </td>

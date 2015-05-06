@@ -2,9 +2,10 @@
 {% block body %}
   {% if session.logged_in %}
 
-    {% for badge_type in badge_types %}
-       <h2>RegOnline Discount Code String for {{ badge_type.label }}:</h2>
-       <p>{{ badge_type.regonline_code_string }}</p>
+    {% for code in code_summary %}
+       <h2>RegOnline Discount Code String for {{ code.label }}:</h2>
+       <p>Last updated: {{ code.last_updated }}</p>
+       <p>{{ code.regonline_code_string }}</p>
     {% endfor %}
 
   {% else %}

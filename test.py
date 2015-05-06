@@ -158,3 +158,43 @@ with open( "registrations.dat", "w" ) as f:
 #response = requests.post( get_events, data, headers=headers )
 
 #print response.text
+
+import requests
+
+get_merch = 'https://www.regonline.com/api/default.asmx/GetRegistrationsMerchandiseForEvent'
+#login = 'https://www.regonline.com/api/default.asmx/Login'
+#username = 'mhayward'
+#password = '#0^Y5!qxwfvobdtI'
+
+key = '9mIRFe399oIBM0fnX5jxLtupSZlaizGgtHUEuDpUi34QWs66G6LxFDZ6wsdpgzCw'
+
+headers = {
+    "APIToken" : key,
+    "username" : username,
+    "password" : password
+}
+
+
+data = {
+    'eventID' : 1639610,
+    #'APIToken' : key,
+    "username" : username,
+    "password" : password
+}
+
+result = requests.post( get_merch, data )
+print result.text
+
+
+#response = requests.post( url, data, headers=headers )
+#response = requests.post( url, headers=headers )
+#response = requests.post( login, data )
+
+#get_events = "https://www.regonine.com/api/default.asmx/GetEvents"
+
+response = requests.post( get_events, data, headers=headers )
+
+print response.text
+
+
+

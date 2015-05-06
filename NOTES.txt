@@ -70,6 +70,25 @@ client.set_options( soapheaders=token )
 client = Client("http://localhost/wsdl.wsdl", plugins=[LogPlugin()])
 
 TODO:
+=======
+discount_codes - array of discount_code discts.
+
+A discount_code dict is:
+
+{ 
+  ID : uuid for this code,
+  SponsorID : ...,
+  RegTypeID : ...,
+  RegistrationType : ..., (of sponsor)
+  created_date : ..., (sponsor add date for default codes, time of generation for others)
+  code_source : ..., (sponsor registrationtype, or "show management" or a provided argument for custom code sources)
+  quantity : ...,
+  discount_code : ...,
+  regonline_str : '-10%',
+  badge_type : key to list of badge types, notably here the badge type determines whether or not we reserve a spot
+}
+
+==
 
 * For each code, the computed redeemed (count of registrants) and available (quantity - redeemed) in the fields 'redeemed' and 'available'
 
@@ -93,6 +112,8 @@ discount_code data structure (although it could be computed???)
 0. Make the app key actually secret (e.g. load from file not in source
 control).
 
+0. Make the admin credentials actually secret.
+
 0. Set up delay on email sending from mandrill.
 
 This costs money: 5 cents for every thousand scheduled, plus 2 cents a
@@ -106,9 +127,4 @@ To schedule a message, indicate when the message should be sent using the send_a
      messing up VIBLIO stuff.
 
    * Set up more email alerts after we set up domain.
-
-## 
-
-DEBUG: Test multiple admin mail recipients.
-DEBUG: Actually send email to sponsor.email.
 

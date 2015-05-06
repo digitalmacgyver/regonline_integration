@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 
+from bs4 import BeautifulSoup
 import datetime
 import json
 from optparse import OptionParser
 import time
 
 from suds.client import Client
+from suds.xsd.doctor import ImportDoctor, Import
+from suds.plugin import MessagePlugin
 
 import logging
 import logging.handlers
@@ -34,9 +37,67 @@ from discount_codes import generate_discount_codes
 
 regonline_api_key = '9mIRFe399oIBM0fnX5jxLtupSZlaizGgtHUEuDpUi34QWs66G6LxFDZ6wsdpgzCw'
 regonline_wsdl = "https://www.regonline.com/api/default.asmx?WSDL"
+regonline_soap_namespace = 'http://www.regonline.com/api'
 
-def export_event_data( eventID, attendee_type ):
-    client = Client( regonline_wsdl )
+def get_add_on_entitlements( eventID ):
+    '''Returns a hash of:
+    { 
+      sponsorID : [ {
+        quantity : X,
+        product_name : "Enterprise Pack" },
+        ... } ],
+      ...
+    }
+    '''
+    try:
+        # RegOnline has a malformed WSDL which blows up suds, so we
+        # have to resort to capturing the raw XML response and parsing
+        # it ourselves here.  See RegOnline case ID 02977376
+        class RawReceive( MessagePlugin ):
+            raw_result = None
+            def received( self, context ):
+                self.raw_result = context.reply
+            def get_raw( self ):
+                return self.raw_result
+
+        rr = RawReceive()
+        client = Client( regonline_wsdl )
+        token = client.factory.create( "TokenHeader" )
+        token.APIToken = regonline_api_key
+        client.set_options( soapheaders=token, plugins=[rr] )
+
+        # We know this throws an exception.
+        log.info( json.dumps( { 'message' : "About to call GetRegistrationsMerchandiseForEvent, which we know will throw an exception." } ) )
+        result = client.service.GetRegistrationsMerchandiseForEvent( eventID=eventID )
+    except Exception as e:
+        # Now we have to process the raw result as XML.
+        raw_result = rr.get_raw()
+        if raw_result is None:
+            raise Exception( "ERROR: RegOnline must have fixed their WSDL! Must re-factor reg-online-export to account for it!" )
+
+    merch = BeautifulSoup( raw_result )
+
+    result = {}
+
+    for sponsor in merch.find_all( "apiregistration" ):
+        sponsorID = int( sponsor.id.text )
+        sponsor_entitlements = []
+        for merch_items in sponsor.find_all( "merchandiseitems" ):
+            for item in merch_items.find_all( "merchandise" ):
+                sponsor_entitlements.append( { "quantity" : int( item.quantitysold.text ),
+                                               "product_name" : item.merchandisereceiptname.text } )
+                
+        log.info( json.dumps( { 'message' : "Found entitlements %s for SponsorID: %d" % ( sponsor_entitlements[-1], sponsorID ) } ) )
+        result[sponsorID] = sponsor_entitlements
+
+    return result
+
+def export_event_data( eventID, attendee_type, add_ons=None ):
+    imp = Import( 'http://schemas.xmlsoap.org/soap/encoding/' )
+    imp.filter.add( regonline_soap_namespace )
+    doctor = ImportDoctor( imp )
+
+    client = Client( regonline_wsdl, doctor=doctor )
     token = client.factory.create( "TokenHeader" )
     token.APIToken = regonline_api_key
     client.set_options( soapheaders=token )
@@ -70,6 +131,12 @@ def export_event_data( eventID, attendee_type ):
                 attendee_ids.pop( attendee['ID'] )
 
             if attendee['ID'] not in attendee_ids:
+                registration_status = attendee['StatusDescription'].encode( 'utf-8' )
+
+                if registration_status not in [ 'Confirmed', 'Attended', 'Approved' ]:
+                    log.warning( json.dumps( { 'message' : "Ignoring attendee ID %s with registration status: %s" % ( attendee['ID'], registration_status ) } ) )
+                    continue
+
                 log.info( json.dumps( { 'message' : "Adding data for attendee: %s" % ( attendee['ID'] ) } ) )
 
                 # We need to add this attendee.
@@ -89,12 +156,11 @@ def export_event_data( eventID, attendee_type ):
                     'CCEmail'           : "",
                     'Company'           : "",
                     'Email'             : "",
-                    'Phone'             : "",
                     'RegistrationType'  : "",
                     'Title'             : "",
                 }
 
-                optional_fields = [ 'CCEmail', 'Company', 'Email', 'Phone', 'RegistrationType', 'Title' ]
+                optional_fields = [ 'CCEmail', 'Company', 'Email', 'RegistrationType', 'Title' ]
                 for field in optional_fields:
                     if field in attendee and attendee[field] is not None:
                         add_attendee[field] = attendee[field].encode( 'utf-8' )
@@ -107,9 +173,7 @@ def export_event_data( eventID, attendee_type ):
                     time.sleep( 2 )
                     
                     add_attendee['registration_type'] = ''
-                    add_attendee['registration_amount'] = ''
                     add_attendee['discount_code'] = ''
-                    add_attendee['discount_amount'] = ''
 
                     custom_data5 = client.service.GetCustomFieldResponsesForRegistration( eventID=eventID, 
                                                                                           registrationID=attendee['ID'], 
@@ -130,31 +194,23 @@ def export_event_data( eventID, attendee_type ):
                         log.warning( json.dumps( { 'message' : "No detailed registration data found for attendee %s with status %s" % ( attendee['ID'], attendee['StatusDescription'] ) } ) )
                     else:
                         add_attendee['registration_type'] = custom_data5.Data.APICustomFieldResponse[0].CustomFieldNameOnReport.encode( 'utf-8' )
-                        add_attendee['registration_amount'] = custom_data5.Data.APICustomFieldResponse[0].Amount
 
                         discount_code = ""
-                        discount_amount = 0
 
                         if 'Password' in custom_data5.Data.APICustomFieldResponse[0]:
                             tmp_discount_code = custom_data5.Data.APICustomFieldResponse[0].Password
                             if tmp_discount_code is not None:
                                 discount_code = tmp_discount_code.encode( 'utf-8' )
-                            discount_amount = custom_data5.Data.APICustomFieldResponse[0].DiscountCodeCredit
 
                         add_attendee['discount_code'] = discount_code
-                        add_attendee['discount_amount'] = discount_amount
                 elif attendee_type == "sponsors":
-                    # If this sponsor already has discount codes,
-                    # don't add any new ones.
-                    sponsors_with_discounts = { x['SponsorID']:True for x in discount_codes }
-                    if attendee['ID'] in sponsors_with_discounts:
-                        log.warning( json.dumps( { 'message' : "Encountered sponsor %s who already has discount codes, skipping code generation." % ( attendee['ID'] ) } ) )
-                    else:
-                        # Otherwise generate new discount codes.
-                        try:
-                            discount_codes += generate_discount_codes( eventID, attendee, discount_codes )
-                        except Exception as e:
-                            log.error( json.dumps( { 'message' : "No discount codes found for sponsor: %s, error: %s" % ( attendee['ID'], e ) } ) )
+                    # Discount code management is a mess in part due
+                    # to bugs in RegOnline's API.
+                    #
+                    try:
+                        discount_codes += generate_discount_codes( eventID, attendee, discount_codes, add_ons )
+                    except Exception as e:
+                        log.error( json.dumps( { 'message' : "Error generating discount code for sponsor: %s, error: %s" % ( attendee['ID'], e ) } ) )
 
                 log.info( json.dumps( { 'message' : ( "Attendee data is: %s" % ( add_attendee ) ).encode( 'utf-8' ) } ) )
                 attendees.append( add_attendee )
@@ -189,30 +245,40 @@ if __name__ == "__main__":
     parser.add_option( "-c", "--continuous",
                        dest = "continuous",
                        action = "store_true",
+                       default = False,
                        help = "Run continuously, defaults to false." )
     parser.add_option( "-f", "--frequency",
                        dest = "sleep_duration",
                        help = "If running continuously, how many seconds to sleep between runs." )
     
     ( options, args ) = parser.parse_args()
-
-    registrants_id = 1438441
+    
+    # GHC 2014
+    #registrants_id = 1438441
+    # Test 2015
+    registrants_id = 1702108
     if options.registrants_id:
         registrants_id = int( options.registrants_id )
-
-    sponsors_id = 1438449
+        
+    # GHC 2014
+    #sponsors_id = 1438449
+    # GHC 2015
+    sponsors_id = 1639610
+    # Test event
+    #sponsors_id = 1711768
     if options.sponsors_id:
         sponsors_id = int( options.sponsors_id )
 
     continuous = options.continuous
 
-    sleep_duration = 1500
+    sleep_duration = 900
     if options.sleep_duration:
         sleep = int( options.sleep_duration )
 
     keep_going = True
 
     while keep_going:
+        keep_going = False
         # Get a list of all registrations for GHC 2014.
         try:
             log.info( json.dumps( { 'message' : "Exporting data for registrants." } ) )
@@ -220,14 +286,21 @@ if __name__ == "__main__":
         except Exception as e:
             log.error( json.dumps( { 'message' : "Failed to get registrants, error was: %s" % ( e ) } ) )
 
+        add_ons = None
+        try:
+            log.info( json.dumps( { 'message' : "Getting add on entitlements for sponsors." } ) )
+            add_ons = get_add_on_entitlements( sponsors_id )
+        except Exception as e:
+            log.error( json.dumps( { 'message' : "Failed to get add on entitlements for sponsors, error was: %s" % ( e ) } ) )
+
         try:
             log.info( json.dumps( { 'message' : "Exporting data for sponsors." } ) )
-            export_event_data( sponsors_id, "sponsors" )
+            export_event_data( sponsors_id, "sponsors", add_ons )
         except Exception as e:
             log.error( json.dumps( { 'message' : "Failed to get registrants, error was: %s" % ( e ) } ) )
         
-        if not continuous:
-            False
+        if continuous:
+            keep_going = True
             log.info( json.dumps( { 'message' : "Sleeping for %d seconds" % ( sleep_duration ) } ) )
             time.sleep( sleep_duration )
 

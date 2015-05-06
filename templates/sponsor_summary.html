@@ -1,8 +1,16 @@
 {% extends "layout.html" %}
 {% block body %}
 
-  {% if session.logged_in %}
+  <p>Enter the email address you used for your Grace Hopper Celebration Sponsorship registration.  <br />NOTE: only emails associated with sponsors (not registrants) may search.</p>
+  <form action="{{ url_for('sponsor_summary') }}" method="get" class="add-entry" >
+    <dl>
+      <dt>Sponsor Email:</dt>
+        <dd><input type="text" size="40" name="sponsor_email" />
+        <input type="submit" value="Search" /></dd>
+    </dl>
+  </form>
 
+  {% if sponsor_summary.sponsor_email %}
     <h2>Showing Sponsorship Data For {{ sponsor_summary.sponsor_email }}</h2>
     <table class="singlerow">
       <tr>
@@ -98,9 +106,6 @@
         {% endfor %}
       </table>
     {% endif %}
-
-  {% else %}
-    <p>Log in to access registration summary information.</p>
   {% endif %}
 
 {% endblock %}

@@ -9,6 +9,7 @@ from flask_mail import Mail, Message
 import pytz
 import requests
 import time
+from validate_email import validate_email
 
 import logging
 import logging.handlers
@@ -21,7 +22,38 @@ app = Flask(__name__)
 app.config.from_pyfile( "./config/present.default.conf" )
 #app.config.from_envvar( "PRESENT_CONFIG" )
 
+# =======================================================================================
+# Set up logging.
+# =======================================================================================
+
+logging.basicConfig( level=logging.INFO )
+
+log = app.logger
+log.setLevel( logging.DEBUG )
+
+syslog = logging.handlers.SysLogHandler( address="/dev/log" )
+
+format_string = 'present.py: { "name" : "%(name)s", "module" : "%(module)s", "lineno" : "%(lineno)s", "funcName" : "%(funcName)s", "level" : "%(levelname)s", "message" : %(message)s }'
+
+sys_formatter = logging.Formatter( format_string )
+
+syslog.setFormatter( sys_formatter )
+syslog.setLevel( logging.INFO )
+consolelog = logging.StreamHandler()
+consolelog.setLevel( logging.DEBUG )
+
+log.addHandler( syslog )
+log.addHandler( consolelog )
+
+# =======================================================================================
+# Create mail object.
+# =======================================================================================
+
 mail = Mail()
+
+# =======================================================================================
+# Set up secure tokens and passwords.
+# =======================================================================================
 
 def get_password( password_file ):
     '''Utility function to load in our various passwords.'''
@@ -46,24 +78,9 @@ app.config.update(
     MAIL_PASSWORD = get_password( app.config['MAIL_PASSWORD_FILE'] )
 )
 
-logging.basicConfig( level=logging.INFO )
-
-log = app.logger
-log.setLevel( logging.DEBUG )
-
-syslog = logging.handlers.SysLogHandler( address="/dev/log" )
-
-format_string = 'present.py: { "name" : "%(name)s", "module" : "%(module)s", "lineno" : "%(lineno)s", "funcName" : "%(funcName)s", "level" : "%(levelname)s", "message" : %(message)s }'
-
-sys_formatter = logging.Formatter( format_string )
-
-syslog.setFormatter( sys_formatter )
-syslog.setLevel( logging.INFO )
-consolelog = logging.StreamHandler()
-consolelog.setLevel( logging.DEBUG )
-
-log.addHandler( syslog )
-log.addHandler( consolelog )
+# =======================================================================================
+# Various web pages.
+# =======================================================================================
 
 # NOTE - This does nothing if DEBUG is True.
 @app.errorhandler( 500 )
@@ -83,8 +100,6 @@ def login():
             session['logged_in'] = True
             flash( 'You were logged in' )
             logging.info( json.dumps( { 'message' : '%s authenticated' % ( request.form['username'].strip() ) } ) )
-            # DEBUG - Once we integrate other users here we should
-            # redirect to the sponsor summary page.
             return redirect( url_for( 'registration_summary' ) )
 
     if error:
@@ -506,38 +521,26 @@ def registration_summary():
 def sponsor_summary():
     '''Will eventually be limited to particular sponsors, right now admin only.'''
 
-    # DEBUG - hard code this for now.
-    sponsor_email = "cindy.stanphill@hp.com"
+    sponsor_email = None
+    if 'sponsor_email' in request.values:
+        if validate_email( request.values['sponsor_email'].strip().lower() ):
+            sponsor_email = request.values['sponsor_email'].strip().lower()
 
-    if len( sponsor_email ) == 0:
-        raise Exception( "Empty email found for user." )
+    # DEBUG - hard code this for now.
+    #sponsor_email = "cindy.stanphill@hp.com"
 
     data = {
         'eventID' : app.config['SPONSOR_EVENT'],
         'api_key' : app.config['APP_KEY']
     }
-    sponsors = [ x for x in requests.post( "%s/data/sponsors/" % ( app.config['APP_SERVER'] ), json.dumps( data ) ).json()['sponsors'] if ( x['Email'] == sponsor_email or x['CCEmail'] == sponsor_email ) ]
+    sponsors = [ x for x in requests.post( "%s/data/sponsors/" % ( app.config['APP_SERVER'] ), json.dumps( data ) ).json()['sponsors'] if ( x['Email'].strip().lower() == sponsor_email or x['CCEmail'].strip().lower() == sponsor_email ) ]
     sponsors_by_id = { x['ID']:x for x in sponsors }
 
-    # Try to build up a list of alternate company names that
-    # registrants might have entered in the company box that all mean
-    # the same thing.
-    company_suffixes = [ 'co', 'co.', 'corp', 'corp.', 'corporation', 'inc', 'inc.', 'incorporated', 'llc', 'llc.' ]
-    companies = {}
-    for sponsor in sponsors:
-        if len( sponsor['Company'].strip() ):
-            company = sponsor['Company'].lower().strip()
-            company = ' '.join( company.split() )
-            companies[company] = True
-        
-            # Remove any suffixes and trailing commas.
-            words = company.split()
-            if len( words ) > 1:
-                if words[-1] in company_suffixes:
-                    if words[-2][-1] == ',':
-                        words[-2] = words[-2][:-1]
-                    words = [ w for w in words if len( w ) ]
-                companies[' '.join( words )] = True
+    if 'sponsor_email' in request.values:
+        if len( sponsors ) == 0:
+            flash( "No data found for sponsor email: %s" % ( request.values['sponsor_email'].strip() ) )
+        else:
+            flash( 'Showing data for sponsor email: %s' % ( request.values['sponsor_email'].strip() ) )
 
     discount_codes = [ x for x in requests.post( "%s/data/discounts/" % ( app.config['APP_SERVER'] ), json.dumps( data ) ).json()['discount_codes'] if x['SponsorID'] in sponsors_by_id ]
     discounts_by_code = { x['discount_code']:x for x in discount_codes }
@@ -631,9 +634,6 @@ def sponsor_summary():
             mail_sent = True
         except Exception as e:
             flash( "ERROR! Failed to send discount code summary to: %s. %s" % ( email_recipients + app.config['ADMIN_MAIL_RECIPIENTS'], e ) )
-
-            import pdb
-            pdb.set_trace()
 
         if mail_sent:
             success_message = "Discount summary email sent to: %s" % ( email_recipients + app.config['ADMIN_MAIL_RECIPIENTS'] )
@@ -735,9 +735,6 @@ def sponsor_summary():
     }
 
     return render_template( "sponsor_summary.html", sponsor_summary=sponsor_summary )
-
-
-
 
 if __name__ == '__main__':
     app.run( port=app.config['PORT'] )

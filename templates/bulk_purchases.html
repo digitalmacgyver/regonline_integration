@@ -1,0 +1,87 @@
+{% extends "layout.html" %}
+{% block body %}
+
+  {% if session.logged_in %}
+    <h2>Enterprise Packs</h2>
+    <table class="singlerow">
+      <tr>
+	<th>Group</th>
+	<th>Enterprise Packs</th>
+      </tr>
+      {% for group, purchased in bulk_purchases.enterprise_group_purchase_stats.iteritems() | sort %}
+      <tr>
+	<td>{{ group }}</td>
+	<td>{{ purchased }}</td>
+      </tr>
+      {% endfor %}
+      <tr>
+	<td>Grand Total:</td>
+        <td>{{ bulk_purchases.total_enterprise_packs }}</td>
+      </tr>
+    </table>
+    {% if bulk_purchases.enterprise_packs_by_sponsor %}
+      <table class="singlerow">
+        <tr>
+          <th>Company Name</th>
+	  <th>RegOnline ID</th>
+	  <th>Badge Type</th>
+	  <th>Registration Type</th>
+	  <th>Enterprise Packs</th>
+        </tr>
+	{% for entitlement in bulk_purchases.enterprise_packs_by_sponsor %}
+         <tr>
+	   <td>{{ entitlement.Company|safe }}</td>
+	   <td>{{ entitlement.SponsorID }}</td>
+	   <td>{{ entitlement.badge_type }}</td>
+	   <td>{{ entitlement.RegistrationType }}</td>
+	   <td>{{ entitlement.quantity }}</td>
+         </tr>
+       {% endfor %}
+      </table>
+    {% endif %}
+
+    <h2>Bulk Purchases</h2>
+    <table class="singlerow">
+      <tr>
+	<th>Group</th>
+	<th>Bulk Purchases</th>
+      </tr>
+      {% for group, purchased in bulk_purchases.bulk_group_purchase_stats.iteritems() | sort %}
+      <tr>
+	<td>{{ group }}</td>
+	<td>{{ purchased }}</td>
+      </tr>
+      {% endfor %}
+      <tr>
+	<td>Grand Total:</td>
+        <td>{{ bulk_purchases.total_bulk_purchases }}</td>
+      </tr>
+    </table>
+    {% if bulk_purchases.bulk_purchases_by_sponsor %}
+      <table class="singlerow">
+        <tr>
+          <th>Company Name</th>
+	  <th>RegOnline ID</th>
+	  <th>Purchase Type</th>
+	  <th>Badge Type</th>
+	  <th>Registration Type</th>
+	  <th>Enterprise Packs</th>
+        </tr>
+	{% for entitlement in bulk_purchases.bulk_purchases_by_sponsor %}
+         <tr>
+	   <td>{{ entitlement.Company|safe }}</td>
+	   <td>{{ entitlement.SponsorID }}</td>
+	   <td>{{ entitlement.code_source }}</td>
+	   <td>{{ entitlement.badge_type }}</td>
+	   <td>{{ entitlement.RegistrationType }}</td>
+	   <td>{{ entitlement.quantity }}</td>
+         </tr>
+       {% endfor %}
+      </table>
+    {% endif %}
+
+  {% else %}
+    <p>Log in to access bulk purchase information.</p>
+  {% endif %}
+
+{% endblock %}

@@ -9,22 +9,17 @@ import pytz
 import random
 import uuid
 
-# Mail config
-MAIL_SERVER = 'smtp.mandrillapp.com'
-MAIL_PORT = 587
-MAIL_USE_TLS = True
-MAIL_USE_SSL = False
-MAIL_DEBUG = False
-MAIL_USERNAME = 'matt@viblio.com'
-DEFAULT_MAIL_SENDER = 'matt@viblio.com'
-EXTERNAL_SERVER_BASE_URL = 'http://ec2-52-12-132-124.us-west-2.compute.amazonaws.com'
-SEND_AS = ( 'GHC 2015 Registration', 'registration@anitaborg.org' )
-ADMIN_MAIL_RECIPIENTS = [ 'kathrynb@anitaborg.org', 'matt@viblio.com' ]
+from datastore import get_discount_codes
 
-# Load out API keys from configuration.
-MAIL_PASSWORD_FILE = "./mail_password.txt"
-MAIL_PASSWORD = None
-with open( MAIL_PASSWORD_FILE, "r" ) as f:
+from flask import Flask
+from flask_mail import Mail, Message
+app = Flask(__name__)
+app.config.from_pyfile( "./config/present.default.conf" )
+#app.config.from_envvar( "DISCOUNT_CODES_CONFIG" )
+mail = Mail( app )
+
+app.config.update( MAIL_PASSWORD = None )
+with open( app.config['MAIL_PASSWORD_FILE'], "r" ) as f:
     for key in f.readlines():
         key = key.strip()
         if key.startswith( '#' ):
@@ -32,16 +27,8 @@ with open( MAIL_PASSWORD_FILE, "r" ) as f:
         elif len( key ) == 0:
             continue
         else:
-            MAIL_PASSWORD = key
+            app.config.update( MAIL_PASSWORD = key )
             break
-
-from flask import Flask
-from flask_mail import Mail, Message
-app = Flask(__name__)
-app.config.from_object(__name__)
-mail = Mail( app )
-
-from datastore import get_discount_codes
 
 # This data structure controls lots of behavior throughout the app.
 #
@@ -188,6 +175,8 @@ sponsor_entitlements_2015 = {
         { 'badge_type' : 'general_full',
           'quantity' : 1, },
     ],
+    'GHC Event Sponsorships and Enterprise Packages' : [],
+    'Show Management' : []
 }
 
 def get_badge_types( eventID=None ):
@@ -253,6 +242,10 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes,
                 badge_type = 'academic_full'
             
             entitlements.update( [ ( 'Enterprise Pack', badge_type, 10 ) ] * add_on['quantity'] )
+
+        elif add_on['product_name'].startswith( "Bulk Purchase - " ):
+            badge_type = "%s_full" % ( add_on['product_name'].lower().split()[-1] )
+            entitlements.update( [ ( add_on['product_name'], badge_type, 10 ) ] * add_on['quantity'] )
 
     # The Python Counter type allows this subtraction method to
     # calculate what this sponsor is entitled to minus what they have
@@ -330,10 +323,10 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes,
         logging.error( json.dumps( { 'message' : message } ) )
         # Send an email to admins.
         try:
-            email_recipients = ADMIN_MAIL_RECIPIENTS
+            email_recipients = app.config['ADMIN_MAIL_RECIPIENTS']
 
             mail_message = Message( "Warning: Discount Code Mismatch for %s" % ( sponsor['Company'] ),
-                                    sender = SEND_AS,
+                                    sender = app.config['SEND_AS'],
                                     recipients = email_recipients )
             
             message_html = ''
@@ -362,11 +355,11 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes,
 
     try:
         # DEBUG actually send to recipients here
-        #email_recipients = ADMIN_MAIL_RECIPIENTS + recipients
-        email_recipients = ADMIN_MAIL_RECIPIENTS
+        #email_recipients = app.config['ADMIN_MAIL_RECIPIENTS'] + recipients
+        email_recipients = app.config['ADMIN_MAIL_RECIPIENTS']
 
         today = datetime.date.today()
-        today_4pm = datetime.datetime( today.year, today.month, today.day, 16, tzinfo=pytz.timezone( 'America/Los_Angeles' ) )
+        today_4pm = datetime.datetime( today.year, today.month, today.day, 16, tzinfo=pytz.timezone( 'PST8PTD' ) )
         tomorrow_4pm = today_4pm + relativedelta( bdays = +1 )
         when = tomorrow_4pm.astimezone( pytz.utc )
 
@@ -375,9 +368,9 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes,
         }
 
         mail_message = Message( "Grace Hopper Celebration 2015 Discount Codes",
-                                sender = SEND_AS,
+                                sender = app.config['SEND_AS'],
                                 recipients = email_recipients,
-                                bcc = ADMIN_MAIL_RECIPIENTS, 
+                                bcc = app.config['ADMIN_MAIL_RECIPIENTS'], 
                                 extra_headers = extra_headers )
         
         message_html = ''
@@ -391,7 +384,7 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes,
             badge_type_name = discount_code['badge_type']
             regonline_url = badge_types[discount_code['badge_type']]['regonline_url']
             
-            discount_search_url = "%s%s?code=%s" % ( EXTERNAL_SERVER_BASE_URL, '/discount_code/', discount_code['discount_code'] )
+            discount_search_url = "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], '/discount_code/', discount_code['discount_code'] )
             message_html += '<li>%s<ul><li>Badge Type: %s</li><li>Quantity: %d</li><li>Registration Link: <a href="%s">%s</a></li><li>Registration Redemption Report: <a href="%s">%s</a></li></ul></li>' % ( 
                 discount_code['discount_code'],
                 badge_type_name,
@@ -442,7 +435,7 @@ def generate_discount_code( eventID, sponsor, badge_type, quantity, all_existing
         'SponsorID'        : sponsor['ID'],
         'RegTypeID'        : sponsor['RegTypeID'],
         'RegistrationType' : sponsor['RegistrationType'],
-        'created_date'     : datetime.datetime.utcnow()
+        'created_date'     : pytz.utc.localize( datetime.datetime.utcnow() )
     }
 
     discount_codes = []

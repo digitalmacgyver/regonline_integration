@@ -1,0 +1,106 @@
+{% extends "layout.html" %}
+{% block body %}
+
+  {% if session.logged_in %}
+
+    <h2>Showing Sponsorship Data For {{ sponsor_summary.sponsor_email }}</h2>
+    <table class="singlerow">
+      <tr>
+	<th>Group</th>
+	<th>Registered</th>
+	<th>Reserved</th>
+      </tr>
+      {% for group_stats in sponsor_summary.group_attendee_stats %}
+      <tr>
+	<td>{{ group_stats.name }}</td>
+	<td>{{ group_stats.data.redeemed }}</td>
+	<td>{{ group_stats.data.reserved }}</td>
+      </tr>
+      {% endfor %}
+      <tr>
+	<td>Non-Sponsored</td>
+        <td>{{ sponsor_summary.nonsponsored }}</td>
+        <td>N/A</td>
+      </tr>
+      <tr>
+	<td>Grand Total:</td>
+        <td>{{ sponsor_summary.registered }}</td>
+        <td>{{ sponsor_summary.reserved }}</td>
+      </tr>
+    </table>
+    {% if sponsor_summary.sponsors %}
+      <table class="singlerow">
+        <tr>
+          <th>Company Name</th>
+	  <th>Contact Email</th>
+	  <th>Sponsorship</th>
+          <th>Discount Codes
+              <table>
+		<tr>
+		  <th style="width:260px;">Discount code</th>
+		  <th style="width:30px;">Total</th>
+		  <th style="width:30px;">Redeemed</th>
+		  <th style="width:30px;">Unused</th>
+		</tr>
+	      </table>
+          </th>
+        </tr>
+       {% for sponsor in sponsor_summary.sponsors %}
+         <tr>
+	   <td>{{ sponsor.Company|safe }}</td>
+	   <td>{{ sponsor.Email|safe }}</td>
+	   <td>{{ sponsor.RegistrationType|safe }}</td>
+	   <td>
+             <table>
+             {% for discount_code in sponsor.discount_codes %}
+	       <tr>
+	         <td style="width:260px;"><a href="/discount_code/?code={{ discount_code.discount_code }}">{{ discount_code.discount_code }}</a></td>
+	         <td style="width:30px;">{{ discount_code.quantity }}</td>
+	         <td style="width:30px;">{{ discount_code.redeemed }}</td>
+	         <td style="width:30px;">{{ discount_code.available }}</td>
+               </tr>
+             {% endfor %}
+	       <tr>
+		 <td>
+		   <form action="{{ url_for( 'sponsor_summary' ) }}" method="post" class="send-email" >
+		     <input name="sponsorID" type="hidden" value="{{ sponsor.ID }}" />
+		     <input name="email_recipients" type="email" multiple="multiple" value="{{ sponsor.Email|safe }}{% if sponsor.CCEmail %}, {{ sponsor.CCEmail|safe }}{% endif %}" />
+		     <input type="submit" name="send_email" value="Email Discount Summary" />
+		   </form>
+		 </td>
+	       </tr>
+             </table>
+           </td>
+         </tr>
+       {% endfor %}
+      </table>
+    {% endif %}
+
+    {% if sponsor_summary.registrants %}
+      <table class="redeemed_codes">
+        <tr>
+          <th>Name</th>
+          <th>Company</th>
+	  <th>Title</th>
+          <th>Registration Type</th>
+          <th>Status</th>
+          <th>Registration Date</th>
+        </tr>
+        {% for attendee in redeemed_codes.redemptions %}
+          <tr>
+	    <td>{{ attendee.name|safe }}</td>
+	    <td>{{ attendee.company|safe }}</td>
+	    <td>{{ attendee.title|safe }}</td>
+	    <td>{{ attendee.registration_type|safe }}</td>
+	    <td>{{ attendee.status|safe }}</td>
+	    <td>{{ attendee.registration_date|safe }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% endif %}
+
+  {% else %}
+    <p>Log in to access registration summary information.</p>
+  {% endif %}
+
+{% endblock %}

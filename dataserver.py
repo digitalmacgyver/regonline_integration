@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-'''Simple Restful JSON server for registrant data.'''
-
 import json
 import logging
 import logging.handlers
@@ -10,13 +8,8 @@ from flask import Flask, request, jsonify, url_for, abort
 
 from datastore import get_sponsors, get_registrants, get_discount_codes, add_discount_codes
 
-# configuration
-# NOTE - No logging is sent to syslog on exceptions if DEBUG is true.
-DEBUG = True
-PORT = 5000
-
 app = Flask( __name__ )
-app.config.from_object(__name__)
+app.config.from_pyfile( "./config/dataserver.default.conf" )
 
 logging.basicConfig( level=logging.INFO )
 
@@ -38,9 +31,8 @@ log.addHandler( syslog )
 log.addHandler( consolelog )
 
 # Load out API keys from configuration.
-API_KEY_FILE = "./dataserver_valid_keys.conf"
 valid_keys = {}
-with open( API_KEY_FILE, "r" ) as f:
+with open( app.config['API_KEY_FILE'], "r" ) as f:
     for key in f.readlines():
         key = key.strip()
         if key.startswith( '#' ):
@@ -383,4 +375,4 @@ def discount_code_add():
 
 
 if __name__ == '__main__':
-    app.run( port=PORT )
+    app.run( port=app.config['PORT'] )

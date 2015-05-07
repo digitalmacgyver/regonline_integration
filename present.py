@@ -330,15 +330,14 @@ def registration_summary():
                                     extra_headers = extra_headers )
 
             discount_search_url = "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code['discount_code'] )
-            mail_message.html = '<p>Your %s discount code for %d %s badges is:<br />%s</p><p>Register using this code at:<br /><a href="%s">%s</a></p><p>View a report of attendees who have redeemed this code, and remaining redemptions at:<br /><a href="%s">%s</a></p>' % (
-                sponsor['Company'], 
-                quantity, 
-                badge_types[badge_type]['name'], 
-                discount_code['discount_code'], 
-                badge_types[badge_type]['regonline_url'],
-                badge_types[badge_type]['regonline_url'],
-                discount_search_url, 
-                discount_search_url )
+
+            mail_message.html = render_template( "email_add_discount_code.html", data={
+                'sponsor'             : sponsor,
+                'quantity'            : quantity,
+                'discount_code'       : discount_code,
+                'badge_type_name'     : badge_types[badge_type]['name'],
+                'regonline_url'       : badge_types[badge_type]['regonline_url'],
+                'discount_search_url' : discount_search_url } )
 
             mail.init_app( app )
             mail.send( mail_message )
@@ -387,29 +386,18 @@ def registration_summary():
                                     sender = app.config['SEND_AS'],
                                     recipients = email_recipients,
                                     bcc = app.config['ADMIN_MAIL_RECIPIENTS'])
-            
-            message_html = '<p>Your %s discount codes are:<ul>' % ( sponsor['Company'] )
 
             for discount_code in sorted( sponsor_discount_codes, 
                                          key = lambda x: x['discount_code'] ):
+                discount_code['badge_type_name'] = badge_types[discount_code['badge_type']]['name']
+                discount_code['regonline_url'] = badge_types[discount_code['badge_type']]['regonline_url']
+                
+                discount_code['discount_search_url'] = "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code['discount_code'] )
+        
+            mail_message.html = render_template( "email_discount_code_summary.html", data={
+                'sponsor'        : sponsor,
+                'discount_codes' : sponsor_discount_codes } )
 
-                badge_type_name = badge_types[discount_code['badge_type']]['name']
-                regonline_url = badge_types[discount_code['badge_type']]['regonline_url']
-
-                discount_search_url = "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code['discount_code'] )
-                message_html += '<li>%s<ul><li>Source: %s</li><li>Badge Type: %s</li><li>Quantity: %d</li><li>Registration Link: <a href="%s">%s</a></li><li>Registration Redemption Report: <a href="%s">%s</a></li></ul></li>' % ( 
-                    discount_code['discount_code'],
-                    discount_code['code_source'],
-                    badge_type_name,
-                    discount_code['quantity'],
-                    regonline_url,
-                    regonline_url,
-                    discount_search_url, 
-                    discount_search_url )
-
-            message_html += "</ul></p>"
-            
-            mail_message.html = message_html
             mail.init_app( app )
             mail.send( mail_message )
             mail_sent = True
@@ -612,28 +600,18 @@ def sponsor_summary():
                                     recipients = email_recipients,
                                     bcc = app.config['ADMIN_MAIL_RECIPIENTS'])
             
-            message_html = '<p>Your %s discount codes are:<ul>' % ( sponsor['Company'] )
-
             for discount_code in sorted( sponsor_discount_codes, 
                                          key = lambda x: x['discount_code'] ):
 
-                badge_type_name = badge_types[discount_code['badge_type']]['name']
-                regonline_url = badge_types[discount_code['badge_type']]['regonline_url']
+                discount_code['badge_type_name'] = badge_types[discount_code['badge_type']]['name']
+                discount_code['regonline_url'] = badge_types[discount_code['badge_type']]['regonline_url']
+                
+                discount_code['discount_search_url'] = "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code['discount_code'] )
 
-                discount_search_url = "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code['discount_code'] )
-                message_html += '<li>%s<ul><li>Source: %s</li><li>Badge Type: %s</li><li>Quantity: %d</li><li>Registration Link: <a href="%s">%s</a></li><li>Registration Redemption Report: <a href="%s">%s</a></li></ul></li>' % ( 
-                    discount_code['discount_code'],
-                    discount_code['code_source'],
-                    badge_type_name,
-                    discount_code['quantity'],
-                    regonline_url,
-                    regonline_url,
-                    discount_search_url, 
-                    discount_search_url )
+            mail_message.html = render_template( "email_discount_code_summary.html", data={
+                'sponsor'        : sponsor,
+                'discount_codes' : sponsor_discount_codes } )
 
-            message_html += "</ul></p>"
-            
-            mail_message.html = message_html
             mail.init_app( app )
             mail.send( mail_message )
             mail_sent = True

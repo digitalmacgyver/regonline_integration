@@ -11,7 +11,7 @@ import uuid
 
 from datastore import get_discount_codes
 
-from flask import Flask
+from flask import Flask, render_template
 from flask_mail import Mail, Message
 app = Flask(__name__)
 app.config.from_pyfile( "./config/present.default.conf" )
@@ -329,13 +329,14 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes,
                                     sender = app.config['SEND_AS'],
                                     recipients = email_recipients )
             
-            message_html = ''
-    
-            message_html += '<p>Sponsor %s with RegOnline ID %d has granted discount codes which exceed their entitlement: %s</p>' % ( sponsor['Company'], sponsor['ID'], granted_codes - entitlements )
-            message_html += '<p>This may not be a problem, but it may indicate that this sponsor was upgraded, or canceled some enterprise pack purchases, and now their discount codes do not match their entitlement.  Please verify.</p>'
 
-            mail_message.html = message_html
             with app.test_request_context():
+                mail_message.html = render_template( "email_abi_admin_discount_mismatch.html", data={
+                    'sponsor'          : sponsor,
+                    'differences'      : [ { 'code_source' : k[0],
+                                             'badge_type'  : k[1],
+                                             'quantity'    : k[2],
+                                             'difference'  : v } for k, v in ( granted_codes - entitlements ).items() ] } )
                 mail.init_app( app )
                 mail.send( mail_message )
 
@@ -374,30 +375,19 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes,
                                 bcc = app.config['ADMIN_MAIL_RECIPIENTS'], 
                                 extra_headers = extra_headers )
         
-        message_html = ''
-
-        if error_message is not None:
-            message_html += "<p>%s</p>" % ( error_message )
-    
-        message_html += '<p>Your %s discount codes are:<ul>' % ( sponsor['Company'] )
-
-        for discount_code in sorted( discount_codes, key = lambda x: x['discount_code'] ):
-            badge_type_name = discount_code['badge_type']
-            regonline_url = badge_types[discount_code['badge_type']]['regonline_url']
-            
-            discount_search_url = "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], '/discount_code/', discount_code['discount_code'] )
-            message_html += '<li>%s<ul><li>Source: %s</li><li>Badge Type: %s</li><li>Quantity: %d</li><li>Registration Link: <a href="%s">%s</a></li><li>Registration Redemption Report: <a href="%s">%s</a></li></ul></li>' % ( 
-                discount_code['discount_code'],
-                discount_code['code_source'],
-                badge_type_name,
-                discount_code['quantity'],
-                regonline_url,
-                regonline_url,
-                discount_search_url, 
-                discount_search_url )
-
-        mail_message.html = message_html
+        for discount_code in sorted( discount_codes, 
+                                     key = lambda x: x['discount_code'] ):
+            discount_code['badge_type_name'] = badge_types[discount_code['badge_type']]['name']
+            discount_code['regonline_url'] = badge_types[discount_code['badge_type']]['regonline_url']
+                
+            discount_code['discount_search_url'] = "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], 'discount_code/', discount_code['discount_code'] )
+        
         with app.test_request_context():
+            mail_message.html = render_template( "email_discount_code_summary.html", data={
+                'error_message'  : error_message,
+                'sponsor'        : sponsor,
+                'discount_codes' : discount_codes } )
+
             mail.init_app( app )
             mail.send( mail_message )
 

@@ -1,0 +1,27 @@
+
+<p>
+  Sponsor {{ data.sponsor.Company }} with RegOnline ID 
+  {{ data.sponsor.ID }} has granted discount codes which exceed their
+  entitlement.  They have been granted:
+  <ul>
+    {% for difference in data.differences %}
+      <li>{{ difference.difference }} more entitlements of type:
+        <ul>
+          <li>Badge Type: {{ difference.badge_type }}</li>
+          <li>Badge Source: {{ difference.code_source }}</li>
+          <li>Badge Quantity: {{ difference.quantity }}</li>
+        </ul>
+      </li>
+    {% endfor %}
+  </ul>
+  than they are entitled to.
+</p>
+
+<p>
+  This may not be a problem, but it may indicate that their
+  sponsorship tier was upgraded or downgraded, or they canceled some
+  enterprise pack purchases, and as a result now their discount codes
+  do not match their entitlement.  Please verify that their
+  entitlements are correct in RegOnline.
+</p>
+

@@ -30,7 +30,7 @@
         </tr>
 	{% for entitlement in bulk_purchases.enterprise_packs_by_sponsor %}
          <tr>
-	   <td>{{ entitlement.Company|safe }}</td>
+	   <td>{{ entitlement.Company }}</td>
 	   <td>{{ entitlement.SponsorID }}</td>
 	   <td>{{ entitlement.badge_type }}</td>
 	   <td>{{ entitlement.RegistrationType }}</td>
@@ -69,7 +69,7 @@
         </tr>
 	{% for entitlement in bulk_purchases.bulk_purchases_by_sponsor %}
          <tr>
-	   <td>{{ entitlement.Company|safe }}</td>
+	   <td>{{ entitlement.Company }}</td>
 	   <td>{{ entitlement.SponsorID }}</td>
 	   <td>{{ entitlement.code_source }}</td>
 	   <td>{{ entitlement.badge_type }}</td>

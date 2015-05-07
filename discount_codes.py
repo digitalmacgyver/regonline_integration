@@ -46,48 +46,48 @@ with open( app.config['MAIL_PASSWORD_FILE'], "r" ) as f:
 #
 badge_types = {
     "general_full"  : { 'name'          : 'General',
-                        'regonline_url' : '[To Be Determined]',
+                        'regonline_url' : 'https://www.regonline.com?eventID=1702108&rTypeID=228781',
                         'reserve_spot'  : True,
                         'regonline_str' : '-100%' },
     "student_full"  : { 'name'          : 'Student',
-                        'regonline_url' : '[To Be Determined]',
+                        'regonline_url' : 'https://www.regonline.com?eventID=1702108&rTypeID=228782',
                         'reserve_spot'  : True,
                         'regonline_str' : '-100%' },
     "academic_full" : { 'name'          : 'Academic',
-                        'regonline_url' : '[To Be Determined]',
+                        'regonline_url' : 'https://www.regonline.com?eventID=1702108&rTypeID=228783',
                         'reserve_spot'  : True,
                         'regonline_str' : '-100%' },
     "transition_full" : { 'name'          : 'Transition',
-                          'regonline_url' : '[To Be Determined]',
+                          'regonline_url' : 'https://www.regonline.com?eventID=1702108&rTypeID=228784',
                           'reserve_spot'  : True,
                         'regonline_str' : '-100%' },
     "general_1"     : { 'name'          : 'General One Day',
-                        'regonline_url' : '[To Be Determined]',
+                        'regonline_url' : 'https://www.regonline.com?eventID=1702108&rTypeID=228785',
                         'reserve_spot'  : True,
                         'regonline_str' : '-100%' },
     "speaker_full"  : { 'name'          : 'Speaker Full Conference',
-                        'regonline_url' : '[To Be Determined]',
+                        'regonline_url' : 'https://www.regonline.com?eventID=1702108&rTypeID=228786',
                         'reserve_spot'  : True,
                         'regonline_str' : '-100%' },
     "speaker_1"     : { 'name'          : 'Speaker One Day',
-                        'regonline_url' : '[To Be Determined]',
+                        'regonline_url' : 'https://www.regonline.com?eventID=1702108&rTypeID=228787',
                         'reserve_spot'  : True,
                         'regonline_str' : '-100%' },
     "booth"         : { 'name'          : 'Booth Staff Only',
-                        'regonline_url' : '[To Be Determined]',
+                        'regonline_url' : 'https://www.regonline.com?eventID=1702108&rTypeID=228807',
                         'reserve_spot'  : True,
                         'summary_group' : 'Corporate',
                         'regonline_str' : '-100%' },
     "student_20"    : { 'name'          : 'Student 20% Off',
-                        'regonline_url' : '[To Be Determined]',
+                        'regonline_url' : 'https://www.regonline.com?eventID=1702108&rTypeID=228782',
                         'reserve_spot'  : False,
                         'regonline_str' : '-20%' },
     "student_15"    : { 'name'          : 'Student 15% Off',
-                        'regonline_url' : '[To Be Determined]',
+                        'regonline_url' : 'https://www.regonline.com?eventID=1702108&rTypeID=228782',
                         'reserve_spot'  : False,
                         'regonline_str' : '-15%' },
     "student_10"    : { 'name'          : 'Student 10% Off',
-                        'regonline_url' : '[To Be Determined]',
+                        'regonline_url' : 'https://www.regonline.com?eventID=1702108&rTypeID=228782',
                         'reserve_spot'  : False,
                         'regonline_str' : '-10%' },
 }
@@ -447,7 +447,7 @@ def generate_discount_code( eventID, sponsor, badge_type, quantity, all_existing
 
     discount_code['badge_type'] = badge_type
 
-    if code_source == None:
+    if code_source is None:
         discount_code['code_source'] = 'Show Management'
     else:
         discount_code['code_source'] = code_source

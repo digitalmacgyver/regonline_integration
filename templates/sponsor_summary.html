@@ -55,9 +55,9 @@
         </tr>
        {% for sponsor in sponsor_summary.sponsors %}
          <tr>
-	   <td>{{ sponsor.Company|safe }}</td>
-	   <td>{{ sponsor.Email|safe }}</td>
-	   <td>{{ sponsor.RegistrationType|safe }}</td>
+	   <td>{{ sponsor.Company }}</td>
+	   <td>{{ sponsor.Email }}</td>
+	   <td>{{ sponsor.RegistrationType }}</td>
 	   <td>
              <table>
              {% for discount_code in sponsor.discount_codes %}
@@ -72,7 +72,8 @@
 		 <td>
 		   <form action="{{ url_for( 'sponsor_summary' ) }}" method="post" class="send-email" >
 		     <input name="sponsorID" type="hidden" value="{{ sponsor.ID }}" />
-		     <input name="email_recipients" type="email" multiple="multiple" value="{{ sponsor.Email|safe }}{% if sponsor.CCEmail %}, {{ sponsor.CCEmail|safe }}{% endif %}" />
+		     <input name="sponsor_email" type="hidden" value="{{ sponsor_summary.sponsor_email }}" />
+		     <input name="email_recipients" type="email" multiple="multiple" value="{{ sponsor.Email }}{% if sponsor.CCEmail %}, {{ sponsor.CCEmail }}{% endif %}" />
 		     <input type="submit" name="send_email" value="Email Discount Summary" />
 		   </form>
 		 </td>
@@ -94,14 +95,14 @@
           <th>Status</th>
           <th>Registration Date</th>
         </tr>
-        {% for attendee in redeemed_codes.redemptions %}
+        {% for attendee in sponsor_summary.registrants %}
           <tr>
-	    <td>{{ attendee.name|safe }}</td>
-	    <td>{{ attendee.company|safe }}</td>
-	    <td>{{ attendee.title|safe }}</td>
-	    <td>{{ attendee.registration_type|safe }}</td>
-	    <td>{{ attendee.status|safe }}</td>
-	    <td>{{ attendee.registration_date|safe }}</td>
+	    <td>{{ attendee.name }}</td>
+	    <td>{{ attendee.company }}</td>
+	    <td>{{ attendee.title }}</td>
+	    <td>{{ attendee.registration_type }}</td>
+	    <td>{{ attendee.status }}</td>
+	    <td>{{ attendee.registration_date }}</td>
           </tr>
         {% endfor %}
       </table>

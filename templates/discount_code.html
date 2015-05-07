@@ -28,12 +28,12 @@
         </tr>
         {% for attendee in redeemed_codes.redemptions %}
           <tr>
-	    <td>{{ attendee.name|safe }}</td>
-	    <td>{{ attendee.company|safe }}</td>
-	    <td>{{ attendee.title|safe }}</td>
-	    <td>{{ attendee.registration_type|safe }}</td>
-	    <td>{{ attendee.status|safe }}</td>
-	    <td>{{ attendee.registration_date|safe }}</td>
+	    <td>{{ attendee.name }}</td>
+	    <td>{{ attendee.company }}</td>
+	    <td>{{ attendee.title }}</td>
+	    <td>{{ attendee.registration_type }}</td>
+	    <td>{{ attendee.status }}</td>
+	    <td>{{ attendee.registration_date }}</td>
           </tr>
         {% endfor %}
       </table>

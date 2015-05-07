@@ -19,9 +19,13 @@ h2              { font-size: 1.2em; }
 
 table {
     border-collapse: collapse;
+    margin-bottom: 20px;
 }
 
 table, td, th {
     border: 1px solid black;
 }
 
+td, th {
+    padding: 3px;
+}

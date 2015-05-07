@@ -727,6 +727,20 @@ def sponsor_summary():
     for sponsor in sponsors:
         sponsor['discount_codes'] = codes_by_sponsor.get( sponsor['ID'], [] )
 
+    # Private function that strips down a registrant data to what we
+    # can give out publicly to someone with the code.
+    def get_fields( registrant ):
+        return {
+            "name" : "%s %s" % ( registrant['FirstName'], registrant['LastName'] ),
+            "company" : registrant['Company'],
+            "title" : registrant['Title'],
+            "status" : registrant['StatusDescription'],
+            "registration_type" : registrant['RegistrationType'],
+            "registration_date" : registrant['AddDate']
+        }
+    
+    public_registrants = [ get_fields( x ) for x in registrants ]
+
     sponsor_summary = {
         "sponsor_email"        : sponsor_email,
         "sponsors"             : sponsors,
@@ -736,7 +750,7 @@ def sponsor_summary():
         "registered"           : nonsponsored + redeemed,
         "group_attendee_stats" : [ { "name" : k, "data" : group_attendee_stats[k] } for k in sorted( group_attendee_stats.keys() ) ],
         "badge_type_names"     : [ { "value" : k, "name" : badge_types[k]['name'] } for k in sorted( badge_types.keys() ) ],
-        "registrants"          : registrants
+        "registrants"          : public_registrants
     }
 
     return render_template( "sponsor_summary.html", sponsor_summary=sponsor_summary )

@@ -37,7 +37,15 @@
       </tr>
     </table>
     {% if sponsor_summary.sponsors %}
+
       <table class="singlerow">
+         <caption>
+          <form action="{{ url_for( 'sponsor_summary' ) }}" method="post" class="download-csv" >
+            <input name="download_content" type="hidden" value="sponsor_summary_sponsors" />
+            <input name="sponsor_email" type="hidden" value="{{ sponsor_summary.sponsor_email }}" />
+            <input type="submit" name="download_csv" value="Download CSV" />
+          </form>
+        </caption>
         <tr>
           <th>Company Name</th>
 	  <th>Contact Email</th>
@@ -62,7 +70,7 @@
              <table>
              {% for discount_code in sponsor.discount_codes %}
 	       <tr>
-	         <td style="width:260px;"><a href="/discount_code/?code={{ discount_code.discount_code }}">{{ discount_code.discount_code }}</a></td>
+	         <td style="width:260px;"><a href="{{ url_for( 'discount_code' ) }}/?code={{ discount_code.discount_code }}">{{ discount_code.discount_code }}</a></td>
 	         <td style="width:30px;">{{ discount_code.quantity }}</td>
 	         <td style="width:30px;">{{ discount_code.redeemed }}</td>
 	         <td style="width:30px;">{{ discount_code.available }}</td>
@@ -87,6 +95,13 @@
 
     {% if sponsor_summary.registrants %}
       <table class="redeemed_codes">
+         <caption>
+          <form action="{{ url_for( 'sponsor_summary' ) }}" method="post" class="download-csv" >
+            <input name="download_content" type="hidden" value="sponsor_summary_registrants" />
+            <input name="sponsor_email" type="hidden" value="{{ sponsor_summary.sponsor_email }}" />
+            <input type="submit" name="download_csv" value="Download CSV" />
+          </form>
+        </caption>
         <tr>
           <th>Name</th>
           <th>Company</th>

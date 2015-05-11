@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 
 from bdateutil import relativedelta
+import csv
 import datetime
 import json
 from flask import Flask, request, session, g, redirect, url_for, \
-     abort, render_template, flash, request
+     abort, render_template, flash, request, make_response
 from flask_mail import Mail, Message
 import pytz
 import requests
+import StringIO
 import time
 from validate_email import validate_email
 
@@ -132,8 +134,6 @@ def discount_code():
         if redeemed_codes['discount_code_data'] == {}:
             flash( "No data found for code: %s" % ( request.values['code'].strip() ) )
         else:
-            flash( 'Showing data for discount code: %s' % ( request.values['code'].strip() ) )
-
             redeemed_codes['redemptions'].sort( key=lambda x: x['name'].split()[-1] )
             badge_types = get_badge_types( app.config['SPONSOR_EVENT'] )
             badge_type_name = redeemed_codes['discount_code_data']['badge_type']
@@ -142,7 +142,45 @@ def discount_code():
 
             redeemed_codes['badge_type_name'] = badge_type_name
 
-    return render_template( "discount_code.html", redeemed_codes=redeemed_codes )
+    # ==========================================================================
+    # Return the appropriate stuff for the whole HTML page, or a
+    # particular CSV table.
+    # ==========================================================================
+    if "download_csv" in request.values:
+        download_content = request.values['download_content']
+
+        if download_content == 'discount_code_search':
+
+            csv_rows = [ [ 'Name', 'Company', 'Title', 'Registration Type', 'Status', 'Registration Date' ] ]
+
+            for attendee in redeemed_codes['redemptions']:
+                csv_rows.append( [
+                    attendee.get( 'name', '' ),
+                    attendee.get( 'company', '' ),
+                    attendee.get( 'title', '' ),
+                    attendee.get( 'registration_type', '' ),
+                    attendee.get( 'status', '' ),
+                    attendee.get( 'registration_date', '' ) ] )
+
+            download_filename = "sponsor-attendees-%s.csv" % ( datetime.datetime.now().strftime( "%Y-%m-%d-%H%M%S"  ) )
+
+            si = StringIO.StringIO()
+            writer = csv.writer( si )
+            for row in csv_rows:
+                writer.writerow( row )
+            output = make_response( si.getvalue() )
+            output.headers["Content-Disposition"] = "attachment; filename=%s" % ( download_filename )
+            output.headers["Content-type"] = "text/csv"
+            return output
+
+        else:
+            raise Exception( "Unknown download_content type: %s requested." % ( download_content ) )
+
+    else:
+        if 'code' in request.values:
+            flash( 'Showing data for discount code: %s' % ( request.values['code'].strip() ) )
+
+        return render_template( "discount_code.html", redeemed_codes=redeemed_codes )
 
 @app.route( '/code_summary/', methods=[ 'GET' ] )
 def code_summary():
@@ -504,7 +542,46 @@ def registration_summary():
         "badge_type_names" : [ { "value" : k, "name" : badge_types[k]['name'] } for k in sorted( badge_types.keys() ) ]
     }
 
-    return render_template( "registration_summary.html", registration_summary=registration_summary )
+    # ==========================================================================
+    # Return the appropriate stuff for the whole HTML page, or a
+    # particular CSV table.
+    # ==========================================================================
+
+    if "download_csv" in request.values:
+        download_content = request.values['download_content']
+
+        if download_content == 'registration_summary':
+
+            csv_rows = [ [ 'Company Name', 'Contact Email', 'Sponsorship', 'Discount code', 'Discount code Report URL', 'Discount code Redemption URL', 'Total', 'Redeemed', 'Unusued' ] ]
+
+            for sponsor in registration_summary['sponsors']:
+                for discount_code in sponsor['discount_codes']:
+                    csv_rows.append( [
+                        sponsor.get( 'Company', '' ),
+                        sponsor.get( 'Email', '' ),
+                        sponsor.get( 'RegistrationType', '' ),
+                        discount_code.get( 'discount_code', '' ),
+                        "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code.get( 'discount_code', '' ) ),
+                        badge_types[discount_code['badge_type']]['regonline_url'],
+                        discount_code.get( 'quantity', 0 ),
+                        discount_code.get( 'redeemed', 0 ),
+                        discount_code.get( 'available', 0 ) ] )
+            
+            download_filename = "registration-summary-%s.csv" % ( datetime.datetime.now().strftime( "%Y-%m-%d-%H%M%S"  ) )
+
+        else:
+            raise Exception( "Unknown download_content type: %s requested." % ( download_content ) )
+                             
+        si = StringIO.StringIO()
+        writer = csv.writer( si )
+        for row in csv_rows:
+            writer.writerow( row )
+        output = make_response( si.getvalue() )
+        output.headers["Content-Disposition"] = "attachment; filename=%s" % ( download_filename )
+        output.headers["Content-type"] = "text/csv"
+        return output
+    else:
+        return render_template( "registration_summary.html", registration_summary=registration_summary )
 
 @app.route( '/sponsor_summary/', methods=[ 'GET', 'POST' ] )
 def sponsor_summary():
@@ -524,12 +601,6 @@ def sponsor_summary():
     }
     sponsors = [ x for x in requests.post( "%s/data/sponsors/" % ( app.config['APP_SERVER'] ), json.dumps( data ) ).json()['sponsors'] if ( x['Email'].strip().lower() == sponsor_email or x['CCEmail'].strip().lower() == sponsor_email ) ]
     sponsors_by_id = { x['ID']:x for x in sponsors }
-
-    if 'sponsor_email' in request.values:
-        if len( sponsors ) == 0:
-            flash( "No data found for sponsor email: %s" % ( request.values['sponsor_email'].strip() ) )
-        else:
-            flash( 'Showing data for sponsor email: %s' % ( request.values['sponsor_email'].strip() ) )
 
     discount_codes = [ x for x in requests.post( "%s/data/discounts/" % ( app.config['APP_SERVER'] ), json.dumps( data ) ).json()['discount_codes'] if x['SponsorID'] in sponsors_by_id ]
     discounts_by_code = { x['discount_code']:x for x in discount_codes }
@@ -619,6 +690,7 @@ def sponsor_summary():
             flash( "ERROR! Failed to send discount code summary to: %s. %s" % ( email_recipients + app.config['ADMIN_MAIL_RECIPIENTS'], e ) )
 
         if mail_sent:
+            # DEBUG - remove the admin mail recipients from the flash notification.
             success_message = "Discount summary email sent to: %s" % ( email_recipients + app.config['ADMIN_MAIL_RECIPIENTS'] )
             flash( success_message )
 
@@ -719,6 +791,11 @@ def sponsor_summary():
     
     public_registrants = [ get_fields( x ) for x in registrants ]
 
+    # ==========================================================================
+    # Return the appropriate stuff for the whole HTML page, or a
+    # particular CSV table.
+    # ==========================================================================
+
     sponsor_summary = {
         "sponsor_email"        : sponsor_email,
         "sponsors"             : sponsors,
@@ -731,7 +808,62 @@ def sponsor_summary():
         "registrants"          : public_registrants
     }
 
-    return render_template( "sponsor_summary.html", sponsor_summary=sponsor_summary )
+    if "download_csv" in request.values:
+        download_content = request.values['download_content']
+
+        if download_content == 'sponsor_summary_sponsors':
+
+            csv_rows = [ [ 'Company Name', 'Contact Email', 'Sponsorship', 'Discount code', 'Discount code Report URL', 'Discount code Redemption URL', 'Total', 'Redeemed', 'Unusued' ] ]
+
+            for sponsor in sponsor_summary['sponsors']:
+                for discount_code in sponsor['discount_codes']:
+                    csv_rows.append( [
+                        sponsor.get( 'Company', '' ),
+                        sponsor.get( 'Email', '' ),
+                        sponsor.get( 'RegistrationType', '' ),
+                        discount_code.get( 'discount_code', '' ),
+                        "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code.get( 'discount_code', '' ) ),
+                        badge_types[discount_code['badge_type']]['regonline_url'],
+                        discount_code.get( 'quantity', 0 ),
+                        discount_code.get( 'redeemed', 0 ),
+                        discount_code.get( 'available', 0 ) ] )
+            
+            download_filename = "sponsor-summary-%s.csv" % ( datetime.datetime.now().strftime( "%Y-%m-%d-%H%M%S"  ) )
+
+        elif download_content == 'sponsor_summary_registrants':
+            csv_rows = [ [ 'Name', 'Company', 'Title', 'Registration Type', 'Status', 'Registration Date' ] ]
+
+            for attendee in sponsor_summary['registrants']:
+                csv_rows.append( [
+                    attendee.get( 'name', '' ),
+                    attendee.get( 'company', '' ),
+                    attendee.get( 'title', '' ),
+                    attendee.get( 'registration_type', '' ),
+                    attendee.get( 'status', '' ),
+                    attendee.get( 'registration_date', '' ) ] )
+
+            download_filename = "sponsor-attendees-%s.csv" % ( datetime.datetime.now().strftime( "%Y-%m-%d-%H%M%S"  ) )
+
+        else:
+            raise Exception( "Unknown download_content type: %s requested." % ( download_content ) )
+                             
+        si = StringIO.StringIO()
+        writer = csv.writer( si )
+        for row in csv_rows:
+            writer.writerow( row )
+        output = make_response( si.getvalue() )
+        output.headers["Content-Disposition"] = "attachment; filename=%s" % ( download_filename )
+        output.headers["Content-type"] = "text/csv"
+        return output
+
+    else:
+        if 'sponsor_email' in request.values:
+            if len( sponsors ) == 0:
+                flash( "No data found for sponsor email: %s" % ( request.values['sponsor_email'].strip() ) )
+            else:
+                flash( 'Showing data for sponsor email: %s' % ( request.values['sponsor_email'].strip() ) )
+
+        return render_template( "sponsor_summary.html", sponsor_summary=sponsor_summary )
 
 if __name__ == '__main__':
     app.run( port=app.config['PORT'] )

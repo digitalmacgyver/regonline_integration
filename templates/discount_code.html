@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block body %}
-  <form action="{{ url_for('discount_code') }}" method="get" class="add-entry" >
+  <form action="{{ url_for( 'discount_code' ) }}" method="get" class="add-entry" >
     <dl>
       <dt>Discount Code:</dt>
         <dd><input type="text" size="20" name="code" />
@@ -18,6 +18,12 @@
     </ul>
     {% if redeemed_codes.redemptions %}
       <table class="redeemed_codes">
+	<caption>
+	  <form method="post" class="download-csv" >
+            <input name="download_content" type="hidden" value="discount_code_search" />
+            <input type="submit" name="download_csv" value="Download CSV" />
+          </form>
+	</caption>
         <tr>
           <th>Name</th>
           <th>Company</th>

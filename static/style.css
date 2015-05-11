@@ -17,6 +17,8 @@ h2              { font-size: 1.2em; }
                   border: 1px solid #aacbe2; }
 .error          { background: #f0d6d6; padding: 0.5em; }
 
+.download-csv   { float: right; overflow: hidden; }
+
 table {
     border-collapse: collapse;
     margin-bottom: 20px;

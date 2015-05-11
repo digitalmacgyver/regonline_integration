@@ -4,12 +4,12 @@
 <div class="page">
   <table class="navbar">
     <tr>
-      <td><a href="/discount_code/">Search Discount Codes</a></td>
-      <td><a href="/sponsor_summary/">Sponsor Summary</a></td>
+      <td><a href="{{ url_for( 'discount_code' ) }}">Search Discount Codes</a></td>
+      <td><a href="{{ url_for( 'sponsor_summary' ) }}">Sponsor Summary</a></td>
       {% if session.logged_in %}
-      <td><a href="/registration_summary/">Registration Summary</a></td>
-      <td><a href="/bulk_purchases/">Bulk Purchases</a></td>
-      <td><a href="/code_summary/">RegOnline Codes</a></td>
+      <td><a href="{{ url_for( 'registration_summary' ) }}">Registration Summary</a></td>
+      <td><a href="{{ url_for( 'bulk_purchases' ) }}">Bulk Purchases</a></td>
+      <td><a href="{{ url_for( 'code_summary' ) }}">RegOnline Codes</a></td>
       {% endif %}
     </tr>
   </table>

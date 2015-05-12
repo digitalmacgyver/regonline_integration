@@ -382,14 +382,16 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes,
                 
             discount_code['discount_search_url'] = "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], 'discount_code/', discount_code['discount_code'] )
         
-        with app.test_request_context():
-            mail_message.html = render_template( "email_discount_code_summary.html", data={
-                'error_message'  : error_message,
-                'sponsor'        : sponsor,
-                'discount_codes' : discount_codes } )
 
-            mail.init_app( app )
-            mail.send( mail_message )
+        if len( discount_codes ) > 0:
+            with app.test_request_context():
+                mail_message.html = render_template( "email_discount_code_summary.html", data={
+                    'error_message'  : error_message,
+                    'sponsor'        : sponsor,
+                    'discount_codes' : discount_codes } )
+
+                mail.init_app( app )
+                mail.send( mail_message )
 
     except Exception as e:
         logging.error( json.dumps( { 'message' : "Failed to send notification email to %s, error was: %s" % ( email_recipients, e ) } ) )

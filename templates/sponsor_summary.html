@@ -70,7 +70,7 @@
              <table>
              {% for discount_code in sponsor.discount_codes %}
 	       <tr>
-	         <td style="width:260px;"><a href="{{ url_for( 'discount_code' ) }}/?code={{ discount_code.discount_code }}">{{ discount_code.discount_code }}</a></td>
+	         <td style="width:260px;"><a href="{{ url_for( 'discount_code' ) }}?code={{ discount_code.discount_code }}">{{ discount_code.discount_code }}</a></td>
 	         <td style="width:30px;">{{ discount_code.quantity }}</td>
 	         <td style="width:30px;">{{ discount_code.redeemed }}</td>
 	         <td style="width:30px;">{{ discount_code.available }}</td>

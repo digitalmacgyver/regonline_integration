@@ -124,7 +124,8 @@ def sync_salesforce():
         else:
             # All is well, nothing to do.
             print "Sponsor %s's current grants match its entitlements." % ( sponsor['ID'] )
-            
+           
+ 
     # DEBUG
     #print new_codes
 

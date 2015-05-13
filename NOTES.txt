@@ -6,6 +6,143 @@ http://developer.regonline.com/
 
 ==
 
+Bugs: Can't handle & in password - maybe other non-websafe characters.
+
+SF bugs: eventID being stored as a floating point number, not an int.
+   * Check: Decimal or Double versus Integer or Long
+   * SF.com seems to treat the event number value as a string (must be enclosed in quotes on the param), but it ends with ".0"
+
+
+   
+
+ISSUE: Had to bump up the API version to 32 or whatever to get the latest stuff.
+
+
+Account object has a "child relationship name" of Registrations to the
+field name of "Account" on the Registrations object.  It's API name is Account__c.
+
+Child-to-parent queries use the dot notation.
+Parent-to-child queries use subqueries, no dot notation.
+SELECT LastName__c,
+  (
+    SELECT LastName__c
+    FROM Daughters__r
+  )
+FROM Mother__c
+
+GOAL: Do a one shot query on OpportunityLineItem, pulling in everything I need from:
+
+SELECT id,
+  ( SELECT id
+    FROM Registrations__c )
+FROM OpportunityLineItem
+WHERE id in ( select 
+
+
+NOTE: It looks like it doesn't like plurals on object name, you can
+descibe an OpportunityLineItem, but not OpportunityLineItems.
+
+from simple_salesforce import Salesforce
+sf = Salesforce(  instance='test.salesforce.com', username='matt@viblio.com', password='e6IoNyQ8jihZLWlf', security_token='C4N1vrEFXwGYOcz0lQ3c6waRs', sandbox=True, version='32.0' )
+
+# What is in registrations object:
+d = sf.Registrations__c.describe()
+
+fields = sf.Registrations__c.describe()['fields']
+
+the describe() method lists out the fields, URLs, and child
+relationships of all related objects, quite powerful.
+
+http://www.salesforce.com/us/developer/docs/api_rest/Content/resources_sobject_describe.htm
+
+x = sf.query_all( "select id, opportunity_c from registrations__c" )
+x.keys()
+x['done'] # Is it True?
+x['totalSize'] # Resutl set size
+x['records'] # The results
+
+x['records'][0] # The first result
+x['records'][0].keys() # Gives [u'attributes', u'Id', u'Opportunity__c']
+
+# Getting data with nested queries:
+>>> result = sf.query_all( "SELECT id, createdDate, ( SELECT id from OpportunityLineItems ) from Opportunity where Id = '00618000002LciPAAS'" )
+>>> result['records'][0]['Id']
+>>> result['records'][0]['OpportunityLineItems']['records'][2]
+
+
+TODO:
+
+Just do a big query on OpportunityLine Items with a filter / subselect.
+
+SELECT id, opportunity__c 
+   FROM Registrations__c 
+WHERE Confirmation_Number__c =: RegId 
+      AND Event_Number__c = EventNo
+
+
+SF RegOnline developer credentials:
+
+Login:
+matt@viblio.com
+
+Password:
+e6IoNyQ8jihZLWlf
+Token:
+C4N1vrEFXwGYOcz0lQ3c6waRs
+
+Query on the object Registrations__c where confirmation_number__c =: RegId && Event_Number__c =: EventNo
+
+SELECT id, opportunity__c 
+   FROM Registrations__c 
+WHERE Confirmation_Number__c =: RegId 
+      AND Event_Number__c = EventNo
+
+Get the opportunity Id.
+
+Query on object Opportunity to get the unique opportunity Id, Created date and all the discount codes (from the line items)
+SELECT id, createdDate, (Select id, discount_code__c, quantity, product2.name from OpportunityLineItems)
+FROM Opportunity
+WHERE id =: opportunity Id retrieved from Step 1).
+
+Here,
+
+id ==> represents the unique identifier of the discount code
+Discount_code__c ==> represents the discount code for the particular item
+Product2.name ==> represents the code source
+quantity ==> represents the quantity
+percent off ==> This is remaining; we’ll be adding it soon (TBD)
+Badge Type ==> we are not storing that
+
+oli.Id - The UUID of the discount code
+oli.Discount_Code__c - The code
+oli.Quantity - The quantity associated with the code
+oli.product2.name - The code source
+
+===
+
+Get all opportuntiy line items for our event:
+
+
+
+
+
+==
+
+Open questions: Where do speaker and scholar badges and discount codes fit into this system?
+
+==
+
+
+
+==
+
+
+
+simple-salesforce - https://pypi.python.org/pypi/simple-salesforce
+
+
+=
+
 To test:
 
 1. RegOnline Export of full types, and of over allocated sponsors
@@ -134,3 +271,16 @@ To schedule a message, indicate when the message should be sent using the send_a
 
    * Set up more email alerts after we set up domain.
 
+
+===
+
+id - A unique identifier of this discount code in Salesforce.com
+sponsor_event_id - The RegOnline event the sponsor is registered under​
+sponsor_id - The RegOnline ID of the sponsor who owns this code under the sponsor_event_id event
+attendee_event_id - The RegOnline event this code can be redeemed at
+discount_code - The string that attendees can use to redeem this code
+badge_type - The badge type the discount code pertains to (e.g. Student, Scholar, General, Academic, General 1 Day, ...) this would correspond to a RegOnline registration type for attendees
+quantity - The quantity the code is good for, with some sentinel value for unlimited (e.g. -1, or null, depending on language support)
+code_source - Where this code is coming from, for example via an Enterprise Pack, or a Corporate Gold Sponsorship
+percent_off - The percentage discount the code is good for, floating point
+created_date - When this code was created in some consistent format, I'd propose YYYY-MM-DD HH:MM:SS TZ

@@ -48,9 +48,11 @@
 		</tr>
 	      </table>
           </th>
+	  <!--
           <th>
             Add New Code
           </th>
+	  -->
         </tr>
        {% for sponsor in registration_summary.sponsors %}
          <tr>
@@ -78,6 +80,7 @@
 	       </tr>
              </table>
            </td>
+	  <!--
            <td>
              <form action="{{ url_for( 'registration_summary' ) }}" method="post" class="add-code" style="display:inline;" >
 	       <input name="sponsorID" type="hidden" value="{{ sponsor.ID }}" />
@@ -90,6 +93,7 @@
 	       <input type="submit" name="add_discount_code" value="Add" />
              </form>
            </td>
+	   -->
          </tr>
        {% endfor %}
       </table>

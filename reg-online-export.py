@@ -206,10 +206,11 @@ def export_event_data( eventID, attendee_type, add_ons=None ):
                     # Discount code management is a mess in part due
                     # to bugs in RegOnline's API.
                     #
-                    try:
-                        discount_codes += generate_discount_codes( eventID, attendee, discount_codes, add_ons )
-                    except Exception as e:
-                        log.error( json.dumps( { 'message' : "Error generating discount code for sponsor: %s, error: %s" % ( attendee['ID'], e ) } ) )
+                    #try:
+                    #    discount_codes += generate_discount_codes( eventID, attendee, discount_codes, add_ons )
+                    #except Exception as e:
+                    #    log.error( json.dumps( { 'message' : "Error generating discount code for sponsor: %s, error: %s" % ( attendee['ID'], e ) } ) )
+                    pass
 
                 log.info( json.dumps( { 'message' : ( "Attendee data is: %s" % ( add_attendee ) ).encode( 'utf-8' ) } ) )
                 attendees.append( add_attendee )
@@ -225,10 +226,10 @@ def export_event_data( eventID, attendee_type, add_ons=None ):
     elif attendee_type == 'sponsors':
         log.info( json.dumps( { 'message' : "Persisting data for %d sponsors." % ( len( attendees ) ) } ) )
         set_sponsors( eventID, attendees )
-        try:
-            set_discount_codes( eventID, discount_codes )
-        except:
-            log.warning( json.dumps( { 'message' : "No discount codes found." } ) )
+        #try:
+        #    set_discount_codes( eventID, discount_codes )
+        #except:
+        #    log.warning( json.dumps( { 'message' : "No discount codes found." } ) )
     else:
         raise Exception( "Unknown attendee type: '%s' - must be one of registrants or sponsors." % ( attendee_type ) )
 
@@ -285,16 +286,17 @@ if __name__ == "__main__":
         except Exception as e:
             log.error( json.dumps( { 'message' : "Failed to get registrants, error was: %s" % ( e ) } ) )
 
-        add_ons = None
-        try:
-            log.info( json.dumps( { 'message' : "Getting add on entitlements for sponsors." } ) )
-            add_ons = get_add_on_entitlements( sponsors_id )
-        except Exception as e:
-            log.error( json.dumps( { 'message' : "Failed to get add on entitlements for sponsors, error was: %s" % ( e ) } ) )
+        #add_ons = None
+        #try:
+        #    log.info( json.dumps( { 'message' : "Getting add on entitlements for sponsors." } ) )
+        #    add_ons = get_add_on_entitlements( sponsors_id )
+        #except Exception as e:
+        #    log.error( json.dumps( { 'message' : "Failed to get add on entitlements for sponsors, error was: %s" % ( e ) } ) )
 
         try:
             log.info( json.dumps( { 'message' : "Exporting data for sponsors." } ) )
-            export_event_data( sponsors_id, "sponsors", add_ons )
+            #export_event_data( sponsors_id, "sponsors", add_ons )
+            export_event_data( sponsors_id, "sponsors" )
         except Exception as e:
             log.error( json.dumps( { 'message' : "Failed to get registrants, error was: %s" % ( e ) } ) )
         

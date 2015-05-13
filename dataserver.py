@@ -307,7 +307,7 @@ def discount_code():
 
     discount_code_data = {}
     for code in discounts:
-        if search_code == code['discount_code']:
+        if search_code == code['discount_code'].lower().strip():
             discount_code_data = code
             break
 

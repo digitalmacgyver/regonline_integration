@@ -6,18 +6,59 @@ http://developer.regonline.com/
 
 ==
 
-Bugs: Can't handle & in password - maybe other non-websafe characters.
+TODO:
 
-SF bugs: eventID being stored as a floating point number, not an int.
-   * Check: Decimal or Double versus Integer or Long
-   * SF.com seems to treat the event number value as a string (must be enclosed in quotes on the param), but it ends with ".0"
+2. If we're going live with my report, talk about getting Loggly,
+MandrilApp under ABI's administrative control.
 
+3. Open questions: Where do speaker and scholar badges and discount
+codes fit into this system?
 
+==
+
+Today our logic is:
+
+1. Once they put badge type in, retrofit the rest of the code.
+2. Fix up our sf-export:
+   * Comments.
+   * Error handling.
+   * Emails to sponsors and admins.
+   * Drive it from reg-online-export? - If not it's own supervisor.
    
+
+==
+
+API Usage:
+
+Setup -> Search " System Overview"
+Or Reports -> Administrative Reports -> API Calls Made Within Last 7 Days
+
+==
 
 ISSUE: Had to bump up the API version to 32 or whatever to get the latest stuff.
 
 
+=== Simple Salesforce API Notes ===
+from simple_salesforce import Salesforce
+sf = Salesforce(  instance='test.salesforce.com', username='matt@viblio.com', password='e6IoNyQ8jihZLWlf', security_token='C4N1vrEFXwGYOcz0lQ3c6waRs', sandbox=True, version='32.0' )
+
+# What is in registrations object:
+d = sf.Registrations__c.describe()
+
+fields = sf.Registrations__c.describe()['fields']
+
+x = sf.query_all( "select id, opportunity_c from registrations__c" )
+x.keys()
+x['done'] # Is it True?
+x['totalSize'] # Resutl set size
+x['records'] # The results
+
+# Getting data with nested queries:
+>>> result = sf.query_all( "SELECT id, createdDate, ( SELECT id from OpportunityLineItems ) from Opportunity where Id = '00618000002LciPAAS'" )
+>>> result['records'][0]['Id']
+>>> result['records'][0]['OpportunityLineItems']['records'][2]
+
+==== SF API CALL REDUCTION NOTES ====
 Account object has a "child relationship name" of Registrations to the
 field name of "Account" on the Registrations object.  It's API name is Account__c.
 
@@ -38,145 +79,9 @@ SELECT id,
 FROM OpportunityLineItem
 WHERE id in ( select 
 
-
 NOTE: It looks like it doesn't like plurals on object name, you can
 descibe an OpportunityLineItem, but not OpportunityLineItems.
 
-from simple_salesforce import Salesforce
-sf = Salesforce(  instance='test.salesforce.com', username='matt@viblio.com', password='e6IoNyQ8jihZLWlf', security_token='C4N1vrEFXwGYOcz0lQ3c6waRs', sandbox=True, version='32.0' )
-
-# What is in registrations object:
-d = sf.Registrations__c.describe()
-
-fields = sf.Registrations__c.describe()['fields']
-
-the describe() method lists out the fields, URLs, and child
-relationships of all related objects, quite powerful.
-
-http://www.salesforce.com/us/developer/docs/api_rest/Content/resources_sobject_describe.htm
-
-x = sf.query_all( "select id, opportunity_c from registrations__c" )
-x.keys()
-x['done'] # Is it True?
-x['totalSize'] # Resutl set size
-x['records'] # The results
-
-x['records'][0] # The first result
-x['records'][0].keys() # Gives [u'attributes', u'Id', u'Opportunity__c']
-
-# Getting data with nested queries:
->>> result = sf.query_all( "SELECT id, createdDate, ( SELECT id from OpportunityLineItems ) from Opportunity where Id = '00618000002LciPAAS'" )
->>> result['records'][0]['Id']
->>> result['records'][0]['OpportunityLineItems']['records'][2]
-
-
-TODO:
-
-Just do a big query on OpportunityLine Items with a filter / subselect.
-
-SELECT id, opportunity__c 
-   FROM Registrations__c 
-WHERE Confirmation_Number__c =: RegId 
-      AND Event_Number__c = EventNo
-
-
-SF RegOnline developer credentials:
-
-Login:
-matt@viblio.com
-
-Password:
-e6IoNyQ8jihZLWlf
-Token:
-C4N1vrEFXwGYOcz0lQ3c6waRs
-
-Query on the object Registrations__c where confirmation_number__c =: RegId && Event_Number__c =: EventNo
-
-SELECT id, opportunity__c 
-   FROM Registrations__c 
-WHERE Confirmation_Number__c =: RegId 
-      AND Event_Number__c = EventNo
-
-Get the opportunity Id.
-
-Query on object Opportunity to get the unique opportunity Id, Created date and all the discount codes (from the line items)
-SELECT id, createdDate, (Select id, discount_code__c, quantity, product2.name from OpportunityLineItems)
-FROM Opportunity
-WHERE id =: opportunity Id retrieved from Step 1).
-
-Here,
-
-id ==> represents the unique identifier of the discount code
-Discount_code__c ==> represents the discount code for the particular item
-Product2.name ==> represents the code source
-quantity ==> represents the quantity
-percent off ==> This is remaining; we’ll be adding it soon (TBD)
-Badge Type ==> we are not storing that
-
-oli.Id - The UUID of the discount code
-oli.Discount_Code__c - The code
-oli.Quantity - The quantity associated with the code
-oli.product2.name - The code source
-
-===
-
-Get all opportuntiy line items for our event:
-
-
-
-
-
-==
-
-Open questions: Where do speaker and scholar badges and discount codes fit into this system?
-
-==
-
-
-
-==
-
-
-
-simple-salesforce - https://pypi.python.org/pypi/simple-salesforce
-
-
-=
-
-To test:
-
-1. RegOnline Export of full types, and of over allocated sponsors
-email generation, and initial email generation.
-
-
-They are using Pentaho ETL to get the data out.
-
-Email discount summary not working?
-
-We could relate the code's type on the sponsor page:
-* Enterprise add on pack
-* Gold tier sponsorship
-* ...
-
-Meet on Tuesday in order to learn about SF.com discount code
-generation - I may be able to use this to get all data, including the
-additional sponsorship opportunities things.  
-
-10:30 - 12:00 schedule - Matt to show up in Lobby 5.
-
-TODO: Email to case from our system into SF.com.
-
-There is an alias called registration - when RegOnline send email it
-CCes to registration, which is an email list to Kathryn, Carol,
-Michael, Jan, ....  Proposal - we add a sf.com case email on the
-registration alias, and then we would add registration as an
-administrator from my system.
-
-TODO: How to tag these emails to get them organized in Salesforce.com.
-
-Tuesday: Use case: Rashni wants to look at a list of scholars and see
-who has registered, or in another case has looked at who has done it
-for speakers.  Elizabeth Bowlen (used academics).
 
 ==
 
@@ -207,9 +112,6 @@ token.APIToken = regonline_api_key
 client.set_options( soapheaders=token )
 ( a, b ) = client.service.GetRegistrationsMerchandiseForEvent( eventID=1639610 )
 
-
-
-
 client = Client("http://localhost/wsdl.wsdl", plugins=[LogPlugin()])
 
 TODO:
@@ -233,19 +135,6 @@ A discount_code dict is:
 
 ==
 
-* For each code, the computed redeemed (count of registrants) and available (quantity - redeemed) in the fields 'redeemed' and 'available'
-
-* Top level stats:
-  * nonsponsored
-  * redeemed 
-  * reserved
-
-Also, a breakdown by each major category:
-  * Corporate
-  * Academic
-  * Lab & Non Profit
-  * Show Management
-
 Need a mapping of each registration type to breakdown category.
 
 Probably need to add the breakdown category as an element of the
@@ -256,21 +145,6 @@ discount_code data structure (although it could be computed???)
 control).
 
 0. Make the admin credentials actually secret.
-
-0. Set up delay on email sending from mandrill.
-
-This costs money: 5 cents for every thousand scheduled, plus 2 cents a
-day for every thousand in storage.
-
-To schedule a message, indicate when the message should be sent using the send_at parameter to the messages/send, messages/send-template, or messages/send-raw API calls. If you're using SMTP, you can provide the schedule time in the X-MC-SendAt header. Both SMTP and the API accept a UTC timestamp in YYYY-MM-DD HH:MM:SS format. The message ID returned by the send call can be used to cancel or reschedule the message.
-
-3. Loggly config: new system.
-
-   * Requires a new account, can't log to a different token without
-     messing up VIBLIO stuff.
-
-   * Set up more email alerts after we set up domain.
-
 
 ===
 

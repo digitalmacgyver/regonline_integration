@@ -57,7 +57,7 @@ def sync_salesforce():
         else:
             old_codes_by_sponsor[code['SponsorID']] = [ code ]
 
-    for sponsor in sponsors[:10]:
+    for sponsor in sponsors:
         sreg = sf.query_all( "SELECT id, opportunity__c FROM Registrations__c WHERE Confirmation_Number__c = '%s' AND Event_Number__c = '%s'" % ( sponsor['ID'], sponsor_event_id ) )
 
         # DEBUG - Re-enable this once we are working off real data, not sandbox data.
@@ -126,7 +126,7 @@ def sync_salesforce():
             print "Sponsor %s's current grants match its entitlements." % ( sponsor['ID'] )
             
     # DEBUG
-    print new_codes
+    #print new_codes
 
     # Persist discount codes to disk.
     set_discount_codes( sponsor_event_id, discount_codes )

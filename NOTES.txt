@@ -6,6 +6,13 @@ http://developer.regonline.com/
 
 ==
 
+
+Badge type ==> Registrant_Type__c (object: OpportunityLineItems)
+Percent off ==> Percent_off__c (object: OpportunityLineItems)
+Final Quantity ==> Redeemable_Quantity__c (object: OpportunityLineItems) ==> Parsed to integer dataType
+
+==
+
 TODO:
 
 2. If we're going live with my report, talk about getting Loggly,
@@ -16,15 +23,10 @@ codes fit into this system?
 
 ==
 
-Today our logic is:
-
-1. Once they put badge type in, retrofit the rest of the code.
-2. Fix up our sf-export:
+1. Fix up our sf-export:
    * Comments.
-   * Error handling.
-   * Emails to sponsors and admins.
-   * Drive it from reg-online-export? - If not it's own supervisor.
-   
+   * Emails to sponsors
+2. Test all cases - sponsor upgrade, sponsor downgrade.   
 
 ==
 

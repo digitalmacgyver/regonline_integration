@@ -34,6 +34,7 @@ log.addHandler( consolelog )
 
 from datastore import get_sponsors, get_registrants, set_sponsors, set_registrants, get_discount_codes, set_discount_codes
 from discount_codes import generate_discount_codes
+from sfexport import sync_salesforce
 
 regonline_api_key = '9mIRFe399oIBM0fnX5jxLtupSZlaizGgtHUEuDpUi34QWs66G6LxFDZ6wsdpgzCw'
 regonline_wsdl = "https://www.regonline.com/api/default.asmx?WSDL"
@@ -286,19 +287,17 @@ if __name__ == "__main__":
         except Exception as e:
             log.error( json.dumps( { 'message' : "Failed to get registrants, error was: %s" % ( e ) } ) )
 
-        #add_ons = None
-        #try:
-        #    log.info( json.dumps( { 'message' : "Getting add on entitlements for sponsors." } ) )
-        #    add_ons = get_add_on_entitlements( sponsors_id )
-        #except Exception as e:
-        #    log.error( json.dumps( { 'message' : "Failed to get add on entitlements for sponsors, error was: %s" % ( e ) } ) )
-
         try:
             log.info( json.dumps( { 'message' : "Exporting data for sponsors." } ) )
-            #export_event_data( sponsors_id, "sponsors", add_ons )
             export_event_data( sponsors_id, "sponsors" )
         except Exception as e:
             log.error( json.dumps( { 'message' : "Failed to get registrants, error was: %s" % ( e ) } ) )
+
+        try:
+            log.info( json.dumps( { 'message' : "Exporting discount data for sponsors from salesforce." } ) )
+            sync_salesforce( sponsors_id, get_sponsors( sponsors_id ) )
+        except Exception as e:
+            log.error( json.dumps( { 'message' : "Failed to sync data from salesforce, error was: %s" % ( e ) } ) )
         
         if continuous:
             keep_going = True

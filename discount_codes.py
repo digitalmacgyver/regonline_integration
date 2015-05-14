@@ -216,9 +216,6 @@ sponsor_entitlements_2015 = {
 def get_badge_types( eventID=None ):
     '''We only have one set of badge types, so ignore the eventID for now.
     '''
-    
-    # DEBUG - should this become deprecated?
-    
     return badge_types
 
 def get_sponsor_reporting_groups( eventID=None ):

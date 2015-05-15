@@ -380,7 +380,7 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes,
             discount_code['badge_type_name'] = badge_types[discount_code['badge_type']]['name']
             discount_code['regonline_url'] = badge_types[discount_code['badge_type']]['regonline_url']
                 
-            discount_code['discount_search_url'] = "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], 'discount_code/', discount_code['discount_code'] )
+            discount_code['discount_search_url'] = "%s/%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], 'discount_code/', discount_code['discount_code'] )
         
 
         if len( discount_codes ) > 0:

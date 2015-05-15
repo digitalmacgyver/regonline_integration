@@ -106,8 +106,7 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
 
         old_codes = old_codes_by_sponsor.get( sponsor['ID'], [] )
         new_codes = []
-        new_codes_by_id = {}
-
+        new_codes_by_
         opportunity_id = sreg['records'][0]['Opportunity__c']
         log.debug( json.dumps( { 'message' : "Working on opportunity %s" % ( opportunity_id ) } ) )
 

@@ -183,9 +183,13 @@ def discount_code():
         return render_template( "discount_code.html", redeemed_codes=redeemed_codes )
 
 @app.route( '/code_summary/', methods=[ 'GET' ] )
-def code_summary():
+@app.route( '/code_summary/<only_code>', methods=[ 'GET' ] )
+def code_summary( only_code=None ):
     '''Admin only - return a summary of all codes for input into RegOnline.'''
-
+    
+    if only_code is not None:
+        only_code = only_code.strip().lower()
+    
     data = {
         'eventID' : app.config['SPONSOR_EVENT'],
         'api_key' : app.config['APP_KEY']
@@ -203,18 +207,27 @@ def code_summary():
     discount_codes.sort( key=lambda x:['created_date'] )
 
     for discount_code in discount_codes:
-        if discount_code['badge_type'] in codes_by_type:
-            codes_by_type[discount_code['badge_type']] += ",%s=%s(%d)" % ( discount_code['discount_code'], discount_code['regonline_str'], discount_code['quantity'] )
+        registration_type = discount_code['badge_type']
+        if registration_type in [ 'student_10', 'student_15', 'student_20' ]:
+            registration_type = 'student_full'
 
-            if get_date( last_updated_by_type[discount_code['badge_type']] ) < get_date( discount_code['created_date'] ):
-                last_updated_by_type[discount_code['badge_type']] = discount_code['created_date']
+        if registration_type in codes_by_type:
+            codes_by_type[registration_type] += ",%s=%s(%d)" % ( discount_code['discount_code'], discount_code['regonline_str'], discount_code['quantity'] )
+
+            if get_date( last_updated_by_type[registration_type] ) < get_date( discount_code['created_date'] ):
+                last_updated_by_type[registration_type] = discount_code['created_date']
         else:
-            codes_by_type[discount_code['badge_type']] = "%s=%s(%d)" % ( discount_code['discount_code'], discount_code['regonline_str'], discount_code['quantity'] )
-            last_updated_by_type[discount_code['badge_type']] = discount_code['created_date']
+            codes_by_type[registration_type] = "%s=%s(%d)" % ( discount_code['discount_code'], discount_code['regonline_str'], discount_code['quantity'] )
+            last_updated_by_type[registration_type] = discount_code['created_date']
 
-    code_summary = sorted( [ { "label" : v['name'], "regonline_code_string" : codes_by_type.get( k, '' ), "last_updated" : last_updated_by_type.get( k, 'N/A' ) } for k, v in badge_types.items() ] )
-       
-    return render_template( "code_summary.html", code_summary=code_summary )
+    if only_code in badge_types:
+        template = "only_code.html"
+        code_summary = sorted( [ { "label" : v['name'], "regonline_code_string" : codes_by_type.get( k, '' ), "last_updated" : last_updated_by_type.get( k, 'N/A' ) } for k, v in badge_types.items() if k == only_code ] )
+    else:
+        template = "code_summary.html"
+        code_summary = sorted( [ { "label" : v['name'], "regonline_code_string" : codes_by_type.get( k, '' ), "last_updated" : last_updated_by_type.get( k, 'N/A' ) } for k, v in badge_types.items() if k not in [ 'student_10', 'student_15', 'student_20' ] ] )
+
+    return render_template( template, code_summary=code_summary )
 
 @app.route( '/bulk_purchases/', methods=[ 'GET', 'POST' ] )
 def bulk_purchases():

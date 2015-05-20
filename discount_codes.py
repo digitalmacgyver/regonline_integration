@@ -118,7 +118,7 @@ def get_badge_type( eventID, registration_type, percent_discount ):
             'One Day'                 : 'general_1',
             'Speaker Full Conference' : 'speaker_full',
             'Speaker One Day'         : 'speaker_1',
-            'Booth'                   : 'booth'
+            'Booth Staff Only'        : 'booth'
         }
              
         if registration_type in regonline_to_internal:

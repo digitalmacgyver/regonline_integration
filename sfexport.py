@@ -92,17 +92,17 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
             old_codes_by_sponsor[code['SponsorID']] = [ code ]
 
     for sponsor in sponsors:
+        log.debug( json.dumps( { 'message' : "Working on sponsor %s" % ( sponsor['ID'] ) } ) ) 
+
         sreg = sf.query_all( "SELECT id, opportunity__c FROM Registrations__c WHERE Confirmation_Number__c = '%s' AND Event_Number__c = '%s'" % ( sponsor['ID'], sponsor_event_id ) )
 
-        # DEBUG - Re-enable this once we are working off real data, not sandbox data.
-        #if sreg['totalSize'] != 1:
-        #    message = "Expected 1 sponsorship for sponsor %s at event %s, but got %d" % ( sponsor['ID'], sponsor_event_id, sreg['totalSize'] ) )
-        #    log.error( json.dumps( { 'message' : message } ) )
-        #    raise Exception( message )
-        # Remove this once doing real testing.
-        if sreg['totalSize'] != 1:
-            log.error( json.dumps( { 'message' : "Skipping sponsor %s as they did not have exactly one registration." % ( sponsor['ID'] ) } ) )
+        if sreg['totalSize'] == 0:
+            log.warning( json.dumps( { 'message' : "Skipping sponsor %s as they did not have any salesforce opportunities." % ( sponsor['ID'] ) } ) )
             continue
+        elif sreg['totalSize'] > 1:
+            message = "Expected 1 sponsorship for sponsor %s at event %s, but got %d" % ( sponsor['ID'], sponsor_event_id, sreg['totalSize'] )
+            log.error( json.dumps( { 'message' : message } ) )
+            raise Exception( message )
 
         old_codes = old_codes_by_sponsor.get( sponsor['ID'], [] )
         new_codes = []
@@ -117,6 +117,10 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
             raise Exception( "Expected 1 opportunity for opportunity ID %s, sponsor %s at event %s, but got %d" % ( opportunity_id, sponsor['ID'], sponsor_event_id, sreg['totalSize'] ) )
 
         lis = oli['records'][0]['OpportunityLineItems']
+
+        if lis is None:
+            log.debug( json.dumps( { 'message' : "No line items for opporunity: %s, skipping." % ( opportunity_id ) } ) )
+            continue
 
         for li in lis['records']:
             if li.get( 'Discount_Code__c', None ) is not None and li['Registrant_Type__c'] is not None:

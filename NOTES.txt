@@ -30,6 +30,10 @@ codes fit into this system?
 
 ==
 
+sfexport.sync_salesforce( 1639610, get_sponsors( 1639610 ) )
+
+
+
 API Usage:
 
 Setup -> Search " System Overview"

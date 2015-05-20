@@ -111,7 +111,7 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
         opportunity_id = sreg['records'][0]['Opportunity__c']
         log.debug( json.dumps( { 'message' : "Working on opportunity %s" % ( opportunity_id ) } ) )
 
-        oli = sf.query_all( "SELECT id, (Select id, discount_code__c, registrant_type__c, redeemable_quantity__c, percent_off__c, quantity, product2.name, CreatedDate from OpportunityLineItems) FROM Opportunity WHERE id = '%s'" % ( opportunity_id ) )
+        oli = sf.query_all( "SELECT id, (Select id, discount_code__c, registrant_type__c, redeemable_quantity__c, percent_off__c, quantity, product2.name, CreatedDate, redeemable_event_id__c from OpportunityLineItems) FROM Opportunity WHERE id = '%s'" % ( opportunity_id ) )
 
         if oli['totalSize'] != 1:
             raise Exception( "Expected 1 opportunity for opportunity ID %s, sponsor %s at event %s, but got %d" % ( opportunity_id, sponsor['ID'], sponsor_event_id, sreg['totalSize'] ) )
@@ -127,9 +127,9 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
                 try:
                     discount_id = li['Discount_Code__c']
                     sponsor_id = sponsor['ID']
-                    attendee_event_id = app.config['REGISTRANT_EVENT']
-                    # DEBUG - we should be getting this from salesforce.com
-                    #attendee_event_id = 'Not in SF?'
+                    # DEBUG
+                    #attendee_event_id = app.config['REGISTRANT_EVENT']
+                    attendee_event_id = li['Redeemable_Event_Id__c']
                     discount_code = li['Discount_Code__c']
                     badge_type = get_badge_type( sponsor_event_id, li['Registrant_Type__c'], li['Percent_off__c'] )
                     quantity = li['Redeemable_Quantity__c']

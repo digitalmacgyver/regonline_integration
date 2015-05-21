@@ -294,6 +294,27 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
     #import pdb
     #pdb.set_trace()
 
+    # Check if there are any discount codes that do not have a sponsor any longer.
+    sponsors_by_id = { x['ID']:x for x in sponsors }
+    obsolete_codes = [ x for x in discount_codes if x['SponsorID'] not in sponsors_by_id ]
+
+    if len( obsolete_codes ):
+        obsolete_codes_by_id = { x['ID']:x for x in obsolete_codes }
+        discount_codes = [ x for x in discount_codes if x['ID'] not in obsolete_codes_by_id ]
+
+        # Send email notification.
+        email_recipients = app.config['ADMIN_MAIL_RECIPIENTS']
+        
+        mail_message = Message( "Warning: Deleting Obsolete Discount Code for %s" % ( sponsor['Company'] ),
+                                sender = app.config['SEND_AS'],
+                                recipients = email_recipients )
+        
+        with app.test_request_context():
+            mail_message.html = render_template( "email_abi_admin_obsolete_code.html", data={
+                'obsolete_codes'      : obsolete_codes } )
+            mail.init_app( app )
+            mail.send( mail_message )
+        
     # Persist discount codes to disk.
     set_discount_codes( sponsor_event_id, discount_codes )
 

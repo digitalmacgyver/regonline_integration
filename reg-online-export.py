@@ -122,7 +122,6 @@ def export_event_data( eventID, attendee_type, add_ons=None ):
     new_attendees = result[1][0]
 
     for attendee in new_attendees:
-
         try:
             # First check if we're dealing with an updated attendee.
             if attendee['ID'] in attendee_ids and attendee['ModDate'] > attendee_ids[attendee['ID']].get( 'ModDate', datetime.datetime.min ):
@@ -131,9 +130,12 @@ def export_event_data( eventID, attendee_type, add_ons=None ):
                 attendees = [ x for x in attendees if x['ID'] != attendee['ID'] ]
                 attendee_ids.pop( attendee['ID'] )
 
+            if attendee['StatusDescription'].encode( 'utf-8' ) == 'Declined':
+                log.warning( json.dumps( { 'message' : "Ignoring attendee ID %s with registration status: %s" % ( attendee['ID'], attendee['StatusDescription'].encode( 'utf-8' ) ) } ) )
+                continue
+
             if attendee['ID'] not in attendee_ids:
                 registration_status = attendee['StatusDescription'].encode( 'utf-8' )
-
                 if registration_status not in [ 'Confirmed', 'Attended', 'Approved' ]:
                     log.warning( json.dumps( { 'message' : "Ignoring attendee ID %s with registration status: %s" % ( attendee['ID'], registration_status ) } ) )
                     continue

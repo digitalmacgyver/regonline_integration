@@ -259,6 +259,11 @@ def bulk_purchases():
     bulk_group_purchase_stats = {}
 
     for discount_code in discount_codes:
+
+        if sponsors_by_id.get( discount_code['SponsorID'], None ) is None:
+            log.error( json.dumps( { "message" : "Found discount code for SponsorID: %s, but no such sponsor exists!  Discount code is: %s" % ( discount_code['SponsorID'], discount_code ) } ) )
+            continue
+
         entitlement = ( discount_code['SponsorID'], 
                         sponsors_by_id[discount_code['SponsorID']]['Company'], 
                         discount_code['code_source'], 
@@ -484,6 +489,11 @@ def registration_summary():
     codes_by_sponsor = {}
 
     for discount_code in discount_codes:
+
+        if sponsors_by_id.get( discount_code['SponsorID'], None ) is None:
+            log.error( json.dumps( { "message" : "Found discount code for SponsorID: %s, but no such sponsor exists!  Discount code is: %s" % ( discount_code['SponsorID'], discount_code ) } ) )
+            continue
+
         discounts_by_code[discount_code['discount_code']] = discount_code
 
         if discount_code['SponsorID'] in codes_by_sponsor:
@@ -494,6 +504,10 @@ def registration_summary():
         if discount_code['badge_type'] in badge_types:
             if badge_types[discount_code['badge_type']]['reserve_spot']:
                 quantity += int( discount_code['quantity'] )
+
+                #if discount_code['SponsorID'] == 80660768:
+                #    import pdb
+                #    pdb.set_trace()
 
                 sponsor_reporting_group = sponsor_reporting_groups.get( sponsors_by_id[discount_code['SponsorID']]['RegistrationType'], 'Other Sponsored' )
                 if sponsor_reporting_group in group_attendee_stats:
@@ -731,6 +745,10 @@ def sponsor_summary():
     codes_by_sponsor = {}
 
     for discount_code in discount_codes:
+        if sponsors_by_id.get( discount_code['SponsorID'], None ) is None:
+            log.error( json.dumps( { "message" : "Found discount code for SponsorID: %s, but no such sponsor exists!  Discount code is: %s" % ( discount_code['SponsorID'], discount_code ) } ) )
+            continue
+
         if discount_code['SponsorID'] in codes_by_sponsor:
             codes_by_sponsor[discount_code['SponsorID']].append( discount_code )
         else:

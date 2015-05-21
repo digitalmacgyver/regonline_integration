@@ -90,10 +90,10 @@ badge_types = {
                         'regonline_url' : 'https://www.regonline.com?eventID=1702108&rTypeID=228782',
                         'reserve_spot'  : False,
                         'regonline_str' : '-10%' },
-    "scholar"    : { 'name'          : 'GHC Scholar',
-                     'regonline_url' : 'https://www.regonline.com?eventID=1702108&rTypeID=240108',
-                     'reserve_spot'  : True,
-                     'regonline_str' : '-100%' },
+    "scholar"       : { 'name'          : 'GHC Scholar',
+                        'regonline_url' : 'https://www.regonline.com?eventID=1702108&rTypeID=240108',
+                        'reserve_spot'  : True,
+                        'regonline_str' : '-100%' },
 }
 
 def get_badge_type( eventID, registration_type, percent_discount ):

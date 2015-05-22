@@ -305,7 +305,7 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
         # Send email notification.
         email_recipients = app.config['ADMIN_MAIL_RECIPIENTS']
         
-        mail_message = Message( "Warning: Deleting Obsolete Discount Code for %s" % ( sponsor['Company'] ),
+        mail_message = Message( "Warning: Deleting Obsolete Discount Codes",
                                 sender = app.config['SEND_AS'],
                                 recipients = email_recipients )
         

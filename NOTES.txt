@@ -13,13 +13,14 @@ Final Quantity ==> Redeemable_Quantity__c (object: OpportunityLineItems) ==> Par
 
 ==
 
-TODO:
+52.8.24.90
 
-2. If we're going live with my report, talk about getting Loggly,
-MandrilApp under ABI's administrative control.
 
-3. Open questions: Where do speaker and scholar badges and discount
-codes fit into this system?
+==
+
+Summation categories:
+
+
 
 ==
 

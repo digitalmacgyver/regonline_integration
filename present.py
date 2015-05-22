@@ -505,10 +505,6 @@ def registration_summary():
             if badge_types[discount_code['badge_type']]['reserve_spot']:
                 quantity += int( discount_code['quantity'] )
 
-                #if discount_code['SponsorID'] == 80660768:
-                #    import pdb
-                #    pdb.set_trace()
-
                 sponsor_reporting_group = sponsor_reporting_groups.get( sponsors_by_id[discount_code['SponsorID']]['RegistrationType'], 'Other Sponsored' )
                 if sponsor_reporting_group in group_attendee_stats:
                     group_attendee_stats[sponsor_reporting_group]['quantity'] += discount_code['quantity']

@@ -118,7 +118,8 @@ def get_badge_type( eventID, registration_type, percent_discount ):
             'One Day'                 : 'general_1',
             'Speaker Full Conference' : 'speaker_full',
             'Speaker One Day'         : 'speaker_1',
-            'Booth Staff Only'        : 'booth'
+            'Booth Staff Only'        : 'booth',
+            'GHC Scholar'             : 'scholar'
         }
              
         if registration_type in regonline_to_internal:
@@ -151,7 +152,7 @@ sponsor_reporting_groups = {
     'Show Management'              : 'Show Management',
      # DEBUG - this one doesn't really have an affiliation, we'll lump
      # it in with corporate.
-    'GHC Event Sponsorships and Enterprise Packages' : 'Corporate',
+    'GHC Event Sponsorships' : 'Corporate',
  }
 
 # For each RegOnline GHC 2015 sponsor RegistrationType define their

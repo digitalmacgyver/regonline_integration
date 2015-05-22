@@ -385,7 +385,7 @@ def registration_summary():
                                     bcc = app.config['ADMIN_MAIL_RECIPIENTS'],
                                     extra_headers = extra_headers )
 
-            discount_search_url = "%s/%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code['discount_code'] )
+            discount_search_url = "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code['discount_code'] )
 
             mail_message.html = render_template( "email_add_discount_code.html", data={
                 'sponsor'             : sponsor,
@@ -448,7 +448,7 @@ def registration_summary():
                 discount_code['badge_type_name'] = badge_types[discount_code['badge_type']]['name']
                 discount_code['regonline_url'] = badge_types[discount_code['badge_type']]['regonline_url']
                 
-                discount_code['discount_search_url'] = "%s/%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code['discount_code'] )
+                discount_code['discount_search_url'] = "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code['discount_code'] )
         
             mail_message.html = render_template( "email_discount_code_summary.html", data={
                 'sponsor'        : sponsor,
@@ -700,7 +700,7 @@ def sponsor_summary():
                 discount_code['badge_type_name'] = badge_types[discount_code['badge_type']]['name']
                 discount_code['regonline_url'] = badge_types[discount_code['badge_type']]['regonline_url']
                 
-                discount_code['discount_search_url'] = "%s/%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code['discount_code'] )
+                discount_code['discount_search_url'] = "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code['discount_code'] )
 
             mail_message.html = render_template( "email_discount_code_summary.html", data={
                 'sponsor'        : sponsor,

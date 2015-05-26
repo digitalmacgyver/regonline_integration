@@ -74,6 +74,9 @@ def get_password( password_file ):
     return password
 
 app.config.update(
+    # The secret_key is used for CSS protection by Flask, not by our
+    # system.
+    SECRET_KEY = get_password( app.config['SECRET_KEY_FILE'] ),
     PASSWORD = get_password( app.config['PASSWORD_FILE'] ),
     APP_KEY = get_password( app.config['APP_PASSWORD_FILE'] ),
     MAIL_PASSWORD = get_password( app.config['MAIL_PASSWORD_FILE'] )

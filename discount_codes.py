@@ -406,7 +406,7 @@ def generate_discount_codes( eventID, sponsor, all_existing_codes,
             'X-MC-SendAt' : when.strftime( "%Y-%m-%d %H:%M:%S" )
         }
 
-        mail_message = Message( "Grace Hopper Celebration 2015 Discount Codes",
+        mail_message = Message( "Grace Hopper Celebration 2015 Registration Codes",
                                 sender = app.config['SEND_AS'],
                                 recipients = email_recipients,
                                 bcc = app.config['ADMIN_MAIL_RECIPIENTS'], 

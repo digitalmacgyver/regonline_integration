@@ -379,7 +379,7 @@ def registration_summary():
                 'X-MC-SendAt' : when.strftime( "%Y-%m-%d %H:%M:%S" )
             }
 
-            mail_message = Message( "Grace Hopper Celebration 2015 Discount Codes",
+            mail_message = Message( "Grace Hopper Celebration 2015 Registration Codes",
                                     sender = app.config['SEND_AS'],
                                     recipients = mail_recipients,
                                     bcc = app.config['ADMIN_MAIL_RECIPIENTS'],
@@ -438,7 +438,7 @@ def registration_summary():
             # DEBUG, leave this variable alone here and actually send to the recipients in production.
             email_recipients = app.config['ADMIN_MAIL_RECIPIENTS']
 
-            mail_message = Message( "Grace Hopper Celebration 2015 Discount Codes",
+            mail_message = Message( "Grace Hopper Celebration 2015 Registration Codes",
                                     sender = app.config['SEND_AS'],
                                     recipients = email_recipients,
                                     bcc = app.config['ADMIN_MAIL_RECIPIENTS'])
@@ -689,7 +689,7 @@ def sponsor_summary():
             # DEBUG, leave this variable alone here and actually send to the recipients in production.
             email_recipients = app.config['ADMIN_MAIL_RECIPIENTS']
 
-            mail_message = Message( "Grace Hopper Celebration 2015 Discount Codes",
+            mail_message = Message( "Grace Hopper Celebration 2015 Registration Codes",
                                     sender = app.config['SEND_AS'],
                                     recipients = email_recipients,
                                     bcc = app.config['ADMIN_MAIL_RECIPIENTS'])

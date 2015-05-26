@@ -6,18 +6,16 @@
 {% endif %}
 
 <p>
-  Your {{ data.sponsor.Company }} discount codes are:
-  <ul>
-    {% for discount_code in data.discount_codes %}
-      <li>{{ discount_code.discount_code }}
-        <ul>
-          <li>Source: {{ discount_code.code_source }}</li>
-          <li>Badge Type: {{ discount_code.badge_type_name }}</li>
-          <li>Quantity: {{ discount_code.quantity }}</li>
-          <li>Registration Link: <a href="{{ discount_code.regonline_url }}">{{ discount_code.regonline_url }}</a></li>
-          <li>Registration Redemption Report: <a href="{{ discount_code.discount_search_url }}">{{ discount_code.discount_search_url }}</a></li>
-       </ul>
-     </li>
+  Your {{ data.sponsor.Company }} registration codes are:
+  {% for discount_code in data.discount_codes %}
+    <hr />
+    <b>{{ discount_code.discount_code }}</b>
+    <ul>
+      <li>Source: {{ discount_code.code_source }}</li>
+      <li>Badge Type: {{ discount_code.badge_type_name }}</li>
+      <li>Quantity: {{ discount_code.quantity }}</li>
+      <li>Registration Link: <a href="{{ discount_code.regonline_url }}">{{ discount_code.regonline_url }}</a></li>
+      <li>Registration Redemption Report: <a href="{{ discount_code.discount_search_url }}">{{ discount_code.discount_search_url }}</a></li>
+     </ul>
    {% endfor %}
-  </ul>
 </p>

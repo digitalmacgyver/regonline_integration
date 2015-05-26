@@ -335,44 +335,5 @@ def discount_code():
                       "redemptions" : attendees,
                       "success"  : True } )
 
-@app.route( '/data/discount_code/add/', methods=[ 'POST' ] )
-def discount_code_add():
-    '''Add a new discount code, given these parameters on a POST in JSON
-    format:
-
-    {
-      eventID : The RegOnline event of the sponsor of this code,
-      api_key : authorized_key,
-      discount_code_data : {
-        The fields of a discount code as described in the discounts function.
-      }
-    }
-
-    '''
-    data = request.get_json( force=True, silent=True )
-
-    if auth_ok( data ):
-        if 'eventID' not in data:
-            logging.error( json.dumps( { 'message' : 'No eventID in call to attendees.' } ) )
-            return jsonify( { "error" : "You must provide a valid eventID argument to this method.",
-                              "success" : False } )
-
-        if 'discount_code_data' not in data:
-            logging.error( json.dumps( { 'message' : 'No discount_code in call to attendees.' } ) )
-            return jsonify( { "error" : "You must provide a valid discount_code_data argument to this method.",
-                              "success" : False } )        
-        
-        data['discount_code_data']['discount_code'] = data['discount_code_data']['discount_code'].lower().strip()
-        
-        add_discount_codes( data['eventID'], [ data['discount_code_data'] ] )
-    
-        return jsonify( { "success" : True } )
-
-    else:
-        logging.error( json.dumps( { 'message' : 'No api_key in call to discount_code/add.' } ) )
-        return jsonify( { "error" : "You must provide a valid api_key argument to this method.",
-                          "success" : False } )
-
-
 if __name__ == '__main__':
     app.run( port=app.config['PORT'] )

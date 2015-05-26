@@ -33,7 +33,6 @@ log.addHandler( syslog )
 log.addHandler( consolelog )
 
 from datastore import get_sponsors, get_registrants, set_sponsors, set_registrants, get_discount_codes, set_discount_codes
-from discount_codes import generate_discount_codes
 from sfexport import sync_salesforce
 
 def get_password( password_file ):
@@ -57,60 +56,7 @@ regonline_api_key = get_password( regonline_password_file )
 regonline_wsdl = "https://www.regonline.com/api/default.asmx?WSDL"
 regonline_soap_namespace = 'http://www.regonline.com/api'
 
-def get_add_on_entitlements( eventID ):
-    '''Returns a hash of:
-    { 
-      sponsorID : [ {
-        quantity : X,
-        product_name : "Enterprise Pack" },
-        ... } ],
-      ...
-    }
-    '''
-    try:
-        # RegOnline has a malformed WSDL which blows up suds, so we
-        # have to resort to capturing the raw XML response and parsing
-        # it ourselves here.  See RegOnline case ID 02977376
-        class RawReceive( MessagePlugin ):
-            raw_result = None
-            def received( self, context ):
-                self.raw_result = context.reply
-            def get_raw( self ):
-                return self.raw_result
-
-        rr = RawReceive()
-        client = Client( regonline_wsdl )
-        token = client.factory.create( "TokenHeader" )
-        token.APIToken = regonline_api_key
-        client.set_options( soapheaders=token, plugins=[rr] )
-
-        # We know this throws an exception.
-        log.info( json.dumps( { 'message' : "About to call GetRegistrationsMerchandiseForEvent, which we know will throw an exception." } ) )
-        result = client.service.GetRegistrationsMerchandiseForEvent( eventID=eventID )
-    except Exception as e:
-        # Now we have to process the raw result as XML.
-        raw_result = rr.get_raw()
-        if raw_result is None:
-            raise Exception( "ERROR: RegOnline must have fixed their WSDL! Must re-factor reg-online-export to account for it!" )
-
-    merch = BeautifulSoup( raw_result )
-
-    result = {}
-
-    for sponsor in merch.find_all( "apiregistration" ):
-        sponsorID = int( sponsor.id.text )
-        sponsor_entitlements = []
-        for merch_items in sponsor.find_all( "merchandiseitems" ):
-            for item in merch_items.find_all( "merchandise" ):
-                sponsor_entitlements.append( { "quantity" : int( item.quantitysold.text ),
-                                               "product_name" : item.merchandisereceiptname.text } )
-                
-        log.info( json.dumps( { 'message' : "Found entitlements %s for SponsorID: %d" % ( sponsor_entitlements[-1], sponsorID ) } ) )
-        result[sponsorID] = sponsor_entitlements
-
-    return result
-
-def export_event_data( eventID, attendee_type, add_ons=None ):
+def export_event_data( eventID, attendee_type ):
     imp = Import( 'http://schemas.xmlsoap.org/soap/encoding/' )
     imp.filter.add( regonline_soap_namespace )
     doctor = ImportDoctor( imp )
@@ -220,18 +166,9 @@ def export_event_data( eventID, attendee_type, add_ons=None ):
                         if 'Password' in custom_data5.Data.APICustomFieldResponse[0]:
                             tmp_discount_code = custom_data5.Data.APICustomFieldResponse[0].Password
                             if tmp_discount_code is not None:
-                                discount_code = tmp_discount_code.encode( 'utf-8' )
+                                discount_code = tmp_discount_code.encode( 'utf-8' ).strip().lower()
 
                         add_attendee['discount_code'] = discount_code
-                elif attendee_type == "sponsors":
-                    # Discount code management is a mess in part due
-                    # to bugs in RegOnline's API.
-                    #
-                    #try:
-                    #    discount_codes += generate_discount_codes( eventID, attendee, discount_codes, add_ons )
-                    #except Exception as e:
-                    #    log.error( json.dumps( { 'message' : "Error generating discount code for sponsor: %s, error: %s" % ( attendee['ID'], e ) } ) )
-                    pass
 
                 log.info( json.dumps( { 'message' : ( "Attendee data is: %s" % ( add_attendee ) ).encode( 'utf-8' ) } ) )
                 attendees.append( add_attendee )
@@ -247,10 +184,6 @@ def export_event_data( eventID, attendee_type, add_ons=None ):
     elif attendee_type == 'sponsors':
         log.info( json.dumps( { 'message' : "Persisting data for %d sponsors." % ( len( attendees ) ) } ) )
         set_sponsors( eventID, attendees )
-        #try:
-        #    set_discount_codes( eventID, discount_codes )
-        #except:
-        #    log.warning( json.dumps( { 'message' : "No discount codes found." } ) )
     else:
         raise Exception( "Unknown attendee type: '%s' - must be one of registrants or sponsors." % ( attendee_type ) )
 
@@ -323,10 +256,3 @@ if __name__ == "__main__":
             keep_going = True
             log.info( json.dumps( { 'message' : "Sleeping for %d seconds" % ( sleep_duration ) } ) )
             time.sleep( sleep_duration )
-
-    #wov_sponsors_2015 = 1441015
-    #wov_registrants_2015 = 1376075
-    #logging.info( "WOV Sponsors." )
-    #export_event_data( wov_sponsors_2015, "sponsors" )
-    #logging.info( "WOV Registrants." )
-    #export_event_data( wov_registrants_2015, "registrants" )

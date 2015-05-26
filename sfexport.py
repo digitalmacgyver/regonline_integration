@@ -125,10 +125,14 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
         for li in lis['records']:
             if li.get( 'Discount_Code__c', None ) is not None and li['Registrant_Type__c'] is not None:
                 try:
-                    discount_id = li['Discount_Code__c']
+                    # RegOnline codes don't take whitespace and are
+                    # case insensitive - however RegOnline stores them
+                    # exactly as the user entered them, so we need to
+                    # store our internel representation lowercase and
+                    # without whitespace so we can match up "foo" with
+                    # "FoO "
+                    discount_id = li['Discount_Code__c'].strip().lower()
                     sponsor_id = sponsor['ID']
-                    # DEBUG
-                    #attendee_event_id = app.config['REGISTRANT_EVENT']
                     attendee_event_id = li['Redeemable_Event_Id__c']
                     discount_code = li['Discount_Code__c']
                     badge_type = get_badge_type( sponsor_event_id, li['Registrant_Type__c'], li['Percent_off__c'] )
@@ -271,7 +275,6 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
                 mail_message = Message( "Warning: Discount Code Mismatch for %s" % ( sponsor['Company'] ),
                                         sender = app.config['SEND_AS'],
                                         recipients = email_recipients )
-            
                 
                 with app.test_request_context():
                     mail_message.html = render_template( "email_abi_admin_discount_mismatch.html", data={
@@ -288,12 +291,6 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
             # All is well, nothing to do.
             log.debug( json.dumps( { 'message' : "Sponsor %s's current grants match its entitlements." % ( sponsor['ID'] ) } ) )
  
-        # DEBUG
-        #print new_codes
-
-    #import pdb
-    #pdb.set_trace()
-
     # Check if there are any discount codes that do not have a sponsor any longer.
     sponsors_by_id = { x['ID']:x for x in sponsors }
     obsolete_codes = [ x for x in discount_codes if x['SponsorID'] not in sponsors_by_id ]
@@ -335,13 +332,6 @@ if __name__ == "__main__":
     
     ( options, args ) = parser.parse_args()
     
-    # GHC 2014
-    #registrants_id = 1438441
-    # Test 2015
-    #registrants_id = 1702108
-    #if options.registrants_id:
-    #    registrants_id = int( options.registrants_id )
-        
     # GHC 2014
     #sponsors_id = 1438449
     # GHC 2015

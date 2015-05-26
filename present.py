@@ -16,7 +16,7 @@ from validate_email import validate_email
 import logging
 import logging.handlers
 
-from discount_codes import get_badge_types, generate_discount_code, get_sponsor_reporting_groups
+from discount_codes import get_badge_types, get_sponsor_reporting_groups
 
 # create our little application
 app = Flask(__name__)
@@ -346,79 +346,6 @@ def registration_summary():
     badge_types = get_badge_types( app.config['SPONSOR_EVENT'] )
 
     # ==========================================================================
-    # Handle the case where we are creating a new discount code for this sponsor.
-    # ==========================================================================
-
-    if "add_discount_code" in request.values:
-        badge_type = request.values['badge_type']
-        quantity = int( request.values['quantity'].strip() )
-        sponsorID = int( request.values['sponsorID'] )
-
-        sponsor = [ x for x in sponsors if x['ID'] == sponsorID ][0]
-    
-        discount_code = generate_discount_code( app.config['SPONSOR_EVENT'], sponsor, badge_type, quantity, discount_codes )
-
-        def get_date_string( date ):
-            return date.strftime( "%a, %d %b %Y %H:%M:%S %Z" )
-
-        discount_code['created_date'] = get_date_string( discount_code['created_date'] )
-
-        result = requests.post( "%s/data/discount_code/add/" % ( app.config['APP_SERVER'] ), json.dumps( { "eventID" : app.config['SPONSOR_EVENT'], "discount_code_data" : discount_code, "api_key" : app.config['APP_KEY']  } ) )
-
-        mail_sent = False
-        try:
-            # DEBUG, add in mail recipients.
-            mail_recipients = app.config['ADMIN_MAIL_RECIPIENTS']
-
-            # We want this mail to go out at 4 pm on the next business
-            # day.
-            today = datetime.date.today()
-            today_4pm = datetime.datetime( today.year, today.month, today.day, 16, tzinfo=pytz.timezone( 'PST8PDT' ) )
-            tomorrow_4pm = today_4pm + relativedelta( bdays = +1 )
-            when = tomorrow_4pm.astimezone( pytz.utc )
-            
-            extra_headers = {
-                'X-MC-SendAt' : when.strftime( "%Y-%m-%d %H:%M:%S" )
-            }
-
-            mail_message = Message( "Grace Hopper Celebration 2015 Registration Codes",
-                                    sender = app.config['SEND_AS'],
-                                    recipients = mail_recipients,
-                                    bcc = app.config['ADMIN_MAIL_RECIPIENTS'],
-                                    extra_headers = extra_headers )
-
-            discount_search_url = "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code['discount_code'] )
-
-            mail_message.html = render_template( "email_add_discount_code.html", data={
-                'sponsor'             : sponsor,
-                'quantity'            : quantity,
-                'discount_code'       : discount_code,
-                'badge_type_name'     : badge_types[badge_type]['name'],
-                'regonline_url'       : badge_types[badge_type]['regonline_url'],
-                'discount_search_url' : discount_search_url } )
-
-            mail.init_app( app )
-            mail.send( mail_message )
-            mail_sent = True
-        except Exception as e:
-            flash( "ERROR! Failed to send email notification of discount code creation to: %s." % ( mail_recipients ) )
-
-        if result.json()['success']:
-            discount_codes.append( discount_code )
-
-            success_message = 'Added %d %s badges to sponsor %s with discount code: %s.' % ( quantity, badge_types[badge_type]['name'], sponsor['Company'], discount_code['discount_code'] )
-
-            if mail_sent:
-                success_message += " Notification email sent to: %s" % ( mail_recipients )
-
-            flash( success_message )
-        else:
-            raise Exception( "Failed to add code!" )
-
-    # ==========================================================================
-
-
-    # ==========================================================================
     # Handle the case where we are sending an reminder discount code email.
 
     if "send_email" in request.values:
@@ -460,10 +387,10 @@ def registration_summary():
             mail.send( mail_message )
             mail_sent = True
         except Exception as e:
-            flash( "ERROR! Failed to send discount code summary to: %s." % ( email_recipients + app.config['ADMIN_MAIL_RECIPIENTS'] ) )
+            flash( "ERROR occurred while trying to send discount code summary to: %s." % ( email_recipients ) )
 
         if mail_sent:
-            success_message = "Discount summary email sent to: %s" % ( email_recipients + app.config['ADMIN_MAIL_RECIPIENTS'] )
+            success_message = "Discount summary email sent to: %s" % ( email_recipients )
             flash( success_message )
 
     # ==========================================================================
@@ -491,7 +418,6 @@ def registration_summary():
     codes_by_sponsor = {}
 
     for discount_code in discount_codes:
-
         if sponsors_by_id.get( discount_code['SponsorID'], None ) is None:
             log.error( json.dumps( { "message" : "Found discount code for SponsorID: %s, but no such sponsor exists!  Discount code is: %s" % ( discount_code['SponsorID'], discount_code ) } ) )
             continue
@@ -520,6 +446,7 @@ def registration_summary():
 
     for registrant in registrants:
         if registrant['discount_code']:
+
             discount_code = discounts_by_code.get( registrant['discount_code'], {} )
 
             if discount_code.get( 'badge_type', None ) in badge_types:
@@ -577,7 +504,7 @@ def registration_summary():
 
         if download_content == 'registration_summary':
 
-            csv_rows = [ [ 'Company Name', 'Contact Email', 'Sponsorship', 'Discount code', 'Discount code Report URL', 'Discount code Redemption URL', 'Total', 'Redeemed', 'Unusued' ] ]
+            csv_rows = [ [ 'Company Name', 'Contact Email', 'Sponsorship', 'Discount code', 'Discount code Report URL', 'Discount code Redemption URL', 'Total', 'Redeemed', 'Unused' ] ]
 
             for sponsor in registration_summary['sponsors']:
                 for discount_code in sponsor['discount_codes']:
@@ -616,9 +543,6 @@ def sponsor_summary():
     if 'sponsor_email' in request.values:
         if validate_email( request.values['sponsor_email'].strip().lower() ):
             sponsor_email = request.values['sponsor_email'].strip().lower()
-
-    # DEBUG - hard code this for now.
-    #sponsor_email = "cindy.stanphill@hp.com"
 
     data = {
         'eventID' : app.config['SPONSOR_EVENT'],
@@ -712,11 +636,10 @@ def sponsor_summary():
             mail.send( mail_message )
             mail_sent = True
         except Exception as e:
-            flash( "ERROR! Failed to send discount code summary to: %s. %s" % ( email_recipients + app.config['ADMIN_MAIL_RECIPIENTS'], e ) )
+            flash( "ERROR occurred while trying to send discount code summary to: %s. %s" % ( email_recipients, e ) )
 
         if mail_sent:
-            # DEBUG - remove the admin mail recipients from the flash notification.
-            success_message = "Discount summary email sent to: %s" % ( email_recipients + app.config['ADMIN_MAIL_RECIPIENTS'] )
+            success_message = "Discount summary email sent to: %s" % ( email_recipients )
             flash( success_message )
 
     # ==========================================================================
@@ -842,7 +765,7 @@ def sponsor_summary():
 
         if download_content == 'sponsor_summary_sponsors':
 
-            csv_rows = [ [ 'Company Name', 'Contact Email', 'Sponsorship', 'Discount code', 'Discount code Report URL', 'Discount code Redemption URL', 'Total', 'Redeemed', 'Unusued' ] ]
+            csv_rows = [ [ 'Company Name', 'Contact Email', 'Sponsorship', 'Discount code', 'Discount code Report URL', 'Discount code Redemption URL', 'Total', 'Redeemed', 'Unused' ] ]
 
             for sponsor in sponsor_summary['sponsors']:
                 for discount_code in sponsor['discount_codes']:

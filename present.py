@@ -74,7 +74,6 @@ def get_password( password_file ):
     return password
 
 app.config.update(
-    SECRET_KEY = get_password( app.config['SECRET_KEY_FILE'] ),
     PASSWORD = get_password( app.config['PASSWORD_FILE'] ),
     APP_KEY = get_password( app.config['APP_PASSWORD_FILE'] ),
     MAIL_PASSWORD = get_password( app.config['MAIL_PASSWORD_FILE'] )

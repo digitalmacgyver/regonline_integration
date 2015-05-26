@@ -7,6 +7,20 @@ http://developer.regonline.com/
 ==
 
 
+1. RegOnline keys (done)
+2. MandrillApp (done)
+3. Salesforce - will be handled when we switch to production.
+4. App key (done)
+
+
+
+==
+		           
+x = client.service.GetCustomFieldResponsesForRegistration( eventID=eventID, registrationID=attendee['ID'], pageSectionID=1 )
+	                                                                                       
+                                                                                  
+
+
 Badge type ==> Registrant_Type__c (object: OpportunityLineItems)
 Percent off ==> Percent_off__c (object: OpportunityLineItems)
 Final Quantity ==> Redeemable_Quantity__c (object: OpportunityLineItems) ==> Parsed to integer dataType
@@ -14,6 +28,10 @@ Final Quantity ==> Redeemable_Quantity__c (object: OpportunityLineItems) ==> Par
 ==
 
 52.8.24.90
+
+matt@52.8.24.90:/home/matt/regonline_integration/config/
+
+
 
 ==
 

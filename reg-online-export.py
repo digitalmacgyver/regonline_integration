@@ -36,7 +36,24 @@ from datastore import get_sponsors, get_registrants, set_sponsors, set_registran
 from discount_codes import generate_discount_codes
 from sfexport import sync_salesforce
 
-regonline_api_key = '9mIRFe399oIBM0fnX5jxLtupSZlaizGgtHUEuDpUi34QWs66G6LxFDZ6wsdpgzCw'
+def get_password( password_file ):
+    '''Utility function to load in our various passwords.'''
+    password = None
+    with open( password_file, "r" ) as f:
+        for key in f.readlines():
+            key = key.strip()
+            if key.startswith( '#' ):
+                continue
+            elif len( key ) == 0:
+                continue
+            else:
+                password = key
+                break
+
+    return password
+
+regonline_password_file = './config/regonline_api_key.txt'
+regonline_api_key = get_password( regonline_password_file )
 regonline_wsdl = "https://www.regonline.com/api/default.asmx?WSDL"
 regonline_soap_namespace = 'http://www.regonline.com/api'
 

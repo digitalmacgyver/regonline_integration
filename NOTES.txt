@@ -15,25 +15,11 @@ Final Quantity ==> Redeemable_Quantity__c (object: OpportunityLineItems) ==> Par
 
 52.8.24.90
 
-
-==
-
-Summation categories:
-
-
-
-==
-
-1. Fix up our sf-export:
-   * Comments.
-   * Emails to sponsors
-2. Test all cases - sponsor upgrade, sponsor downgrade.   
-
 ==
 
 sfexport.sync_salesforce( 1639610, get_sponsors( 1639610 ) )
 
-
+==
 
 API Usage:
 
@@ -43,7 +29,6 @@ Or Reports -> Administrative Reports -> API Calls Made Within Last 7 Days
 ==
 
 ISSUE: Had to bump up the API version to 32 or whatever to get the latest stuff.
-
 
 === Simple Salesforce API Notes ===
 from simple_salesforce import Salesforce

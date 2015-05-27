@@ -272,6 +272,7 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
                     differences.append( { 'discount_code' : new_code['discount_code'],
                                           'code_source'   : new_code['code_source'],
                                           'badge_type'    : new_code['badge_type'],
+                                          'product_name'  : new_code['product_name'],
                                           'quantity'      : old_code['quantity'] - new_code['quantity'] } )
 
                 mail_message = Message( "Warning: Registration Code Mismatch for %s" % ( sponsor['Company'] ),

@@ -133,28 +133,30 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
                     discount_id = li['Discount_Code__c'].strip().lower()
                     sponsor_id = sponsor['ID']
                     attendee_event_id = li['Redeemable_Event_Id__c']
-                    discount_code = li['Discount_Code__c']
+                    discount_code = li['Discount_Code__c'].strip().lower()
                     badge_type = get_badge_type( sponsor_event_id, li['Registrant_Type__c'], li['Percent_off__c'] )
                     quantity = li['Redeemable_Quantity__c']
-                    code_source = li['Product2']['Name']
+                    product_name = li['Product2']['Name']
                     percent_off = li['Percent_off__c']
                     created_date = li['CreatedDate']
                     
+                    code_source = li['Product2']['Name']
                     if code_source not in [ 'Enterprise Pack', 'Bulk Purchase' ]:
                         code_source = sponsor['RegistrationType']
 
                     new_code = {
-                        'ID' : discount_id,
-                        'SponsorID' : sponsor['ID'],
-                        'RegTypeID' : sponsor['RegTypeID'],
-                        'RegistrationType' : sponsor['RegistrationType'],
+                        'ID'                : discount_id,
+                        'SponsorID'         : sponsor['ID'],
+                        'RegTypeID'         : sponsor['RegTypeID'],
+                        'RegistrationType'  : sponsor['RegistrationType'],
                         'attendee_event_id' : attendee_event_id,
-                        'discount_code' : discount_code,
-                        'quantity' : int( quantity ),
-                        'badge_type' : badge_type,
-                        'code_source' : code_source,
-                        'regonline_str' : "-%d%%" % ( int( percent_off ) ),
-                        'created_date' : pytz.utc.localize( datetime.datetime.strptime( created_date, "%Y-%m-%dT%H:%M:%S.000+0000" ) ).strftime( "%a, %d %b %Y %H:%M:%S %Z" )
+                        'product_name'      : product_name,
+                        'discount_code'     : discount_code,
+                        'quantity'          : int( quantity ),
+                        'badge_type'        : badge_type,
+                        'code_source'       : code_source,
+                        'regonline_str'     : "-%d%%" % ( int( percent_off ) ),
+                        'created_date'      : pytz.utc.localize( datetime.datetime.strptime( created_date, "%Y-%m-%dT%H:%M:%S.000+0000" ) ).strftime( "%a, %d %b %Y %H:%M:%S %Z" )
                     }
 
                     new_codes.append( new_code )
@@ -180,7 +182,7 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
                                                     'old_code' : old_code } )
                 elif new_code['quantity'] < old_code['quantity']:
                     downgraded_entitlements.append( { 'new_code' : new_code, 
-                                                    'old_code' : old_code } )
+                                                      'old_code' : old_code } )
 
 
         if len( added_entitlements ) or len( upgraded_entitlements ):
@@ -259,16 +261,16 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
 
             try:
                 differences = [ { 'discount_code' : x['discount_code'],
-                                  'code_source' : x['code_source'],
-                                  'badge_type'  : x['badge_type'],
-                                  'quantity'    : x['quantity'] } for x in extra_entitlements ]
+                                  'code_source'   : x['code_source'],
+                                  'badge_type'    : x['badge_type'],
+                                  'quantity'      : x['quantity'] } for x in extra_entitlements ]
                 for code_pair in downgraded_entitlements:
                     new_code = code_pair['new_code']
                     old_code = code_pair['old_code']
-                    differences.append( { 'discount_code' : x['discount_code'],
-                                          'code_source' : new_code['code_source'],
-                                          'badge_type'  : new_code['badge_type'],
-                                          'quantity'    : old_code['quantity'] - new_code['quantity'] } )
+                    differences.append( { 'discount_code' : new_code['discount_code'],
+                                          'code_source'   : new_code['code_source'],
+                                          'badge_type'    : new_code['badge_type'],
+                                          'quantity'      : old_code['quantity'] - new_code['quantity'] } )
 
                 email_recipients = app.config['ADMIN_MAIL_RECIPIENTS']
 

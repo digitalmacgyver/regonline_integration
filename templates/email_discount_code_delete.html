@@ -8,7 +8,8 @@
     <hr />
     <b>{{ discount_code.discount_code }}</b>
     <ul>
-      <li>Source: {{ discount_code.code_source }}</li>
+      <li>Sponsorship: {{ discount_code.code_source }}</li>
+      <li>Product: {{ discount_code.product_name }}</li>
       <li>Badge Type: {{ discount_code.badge_type_name }}</li>
       <li>Quantity: {{ discount_code.quantity }}</li>
       <li>Registration Link: <a href="{{ discount_code.regonline_url }}">{{ discount_code.regonline_url }}</a></li>

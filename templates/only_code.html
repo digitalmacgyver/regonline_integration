@@ -1,0 +1,15 @@
+<!doctype html>
+<title>Registration Code String</title>
+{% block body %}
+  {% if session.logged_in %}
+
+    {% for code in code_summary %}
+       <p id="{{ code_summary.label }}">{{ code.regonline_code_string }}</p>
+    {% endfor %}
+
+  {% else %}
+    <p>Log in to access registration code summary information.</p>
+  {% endif %}
+
+{% endblock %}
+</html>

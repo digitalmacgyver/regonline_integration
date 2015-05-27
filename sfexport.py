@@ -260,6 +260,8 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
             log.warning( json.dumps( { 'message' : "Sponsor %s has: %s extra entitlements and %s downgraded entitlements." % ( sponsor['ID'], granted_codes - entitled_codes, downgraded_entitlements ) } ) )
 
             try:
+                email_recipients = app.config['ADMIN_MAIL_RECIPIENTS']
+
                 differences = [ { 'discount_code' : x['discount_code'],
                                   'code_source'   : x['code_source'],
                                   'badge_type'    : x['badge_type'],
@@ -271,8 +273,6 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
                                           'code_source'   : new_code['code_source'],
                                           'badge_type'    : new_code['badge_type'],
                                           'quantity'      : old_code['quantity'] - new_code['quantity'] } )
-
-                email_recipients = app.config['ADMIN_MAIL_RECIPIENTS']
 
                 mail_message = Message( "Warning: Registration Code Mismatch for %s" % ( sponsor['Company'] ),
                                         sender = app.config['SEND_AS'],

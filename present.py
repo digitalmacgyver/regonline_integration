@@ -387,11 +387,71 @@ def registration_summary():
             mail.send( mail_message )
             mail_sent = True
         except Exception as e:
-            flash( "ERROR occurred while trying to send discount code summary to: %s." % ( email_recipients ) )
+            flash( "ERROR occurred while trying to send registration code summary to: %s." % ( email_recipients ) )
 
         if mail_sent:
-            success_message = "Discount summary email sent to: %s" % ( email_recipients )
+            success_message = "Registration summary email sent to: %s" % ( email_recipients )
             flash( success_message )
+
+    # ==========================================================================
+    # Handle the case where we are deleting a code.
+    if "delete_code" in request.values:
+        delete_discount_code = request.values['delete_discount_code'].lower().strip()
+
+        dc = [ x for x in discount_codes if x['discount_code'] == delete_discount_code ]
+
+        if len( dc ) == 0:
+            flash( "Error, no code found to delete for: %s" % ( delete_discount_code ) )
+        elif len( dc ) > 1:
+            flash( "Error, more than one code found to delete for: %s, contact reporting tool administrator." % ( delete_discount_code ) )
+        else:
+            dc = dc[0]
+
+            data = {
+                'discount_code'      : delete_discount_code,
+                'eventID'   : app.config['SPONSOR_EVENT'],
+                'api_key' : app.config['APP_KEY']
+            }
+
+            deletion_status = requests.post( "%s/data/discount_code/delete/" % ( app.config['APP_SERVER'] ), json.dumps( data ) ).json()
+
+            message = ""
+
+            if 'success' in deletion_status and deletion_status['success']:
+                message = "Discount code %s deleted." % ( delete_discount_code )
+                flash( message )
+                discount_codes = [ x for x in discount_codes if x['discount_code'] != delete_discount_code ]
+            else:
+                message = "Failed to delete discount code: %s, error was: %s" % ( delete_discount_code, deletion_status.get( 'error', 'Internal Error' ) )
+                flash( message )
+
+            mail_sent = False
+            try:
+                email_recipients = app.config['ADMIN_MAIL_RECIPIENTS']
+
+                mail_message = Message( message,
+                                        sender = app.config['SEND_AS'],
+                                        recipients = email_recipients )
+
+                for discount_code in [ dc ]:
+                    discount_code['badge_type_name'] = badge_types[discount_code['badge_type']]['name']
+                    discount_code['regonline_url'] = badge_types[discount_code['badge_type']]['regonline_url']
+                
+                mail_message.html = render_template( "email_discount_code_delete.html", data={
+                    'sponsor'        : [ x for x in sponsors if x['ID'] == dc['SponsorID']][0],
+                    'message'        : message,
+                    'discount_codes' : [ dc ] } )
+
+                mail.init_app( app )
+                mail.send( mail_message )
+                mail_sent = True
+            except Exception as e:
+                flash( "ERROR %s occurred while trying to send discount code deletion notice to: %s." % ( e, email_recipients ) )
+
+            if mail_sent:
+                success_message = "Registration code deletion notification sent to: %s" % ( email_recipients )
+                flash( success_message )
+
 
     # ==========================================================================
     # Now display all the summary data.
@@ -504,7 +564,7 @@ def registration_summary():
 
         if download_content == 'registration_summary':
 
-            csv_rows = [ [ 'Company Name', 'Contact Email', 'Sponsorship', 'Discount code', 'Discount code Report URL', 'Discount code Redemption URL', 'Total', 'Redeemed', 'Unused' ] ]
+            csv_rows = [ [ 'Company Name', 'Contact Email', 'Sponsorship', 'Registration code', 'Registration code Report URL', 'Registration code Redemption URL', 'Total', 'Redeemed', 'Unused' ] ]
 
             for sponsor in registration_summary['sponsors']:
                 for discount_code in sponsor['discount_codes']:
@@ -636,10 +696,10 @@ def sponsor_summary():
             mail.send( mail_message )
             mail_sent = True
         except Exception as e:
-            flash( "ERROR occurred while trying to send discount code summary to: %s. %s" % ( email_recipients, e ) )
+            flash( "ERROR occurred while trying to send registration code summary to: %s. %s" % ( email_recipients, e ) )
 
         if mail_sent:
-            success_message = "Discount summary email sent to: %s" % ( email_recipients )
+            success_message = "Registration summary email sent to: %s" % ( email_recipients )
             flash( success_message )
 
     # ==========================================================================
@@ -765,7 +825,7 @@ def sponsor_summary():
 
         if download_content == 'sponsor_summary_sponsors':
 
-            csv_rows = [ [ 'Company Name', 'Contact Email', 'Sponsorship', 'Discount code', 'Discount code Report URL', 'Discount code Redemption URL', 'Total', 'Redeemed', 'Unused' ] ]
+            csv_rows = [ [ 'Company Name', 'Contact Email', 'Sponsorship', 'Registration code', 'Registration code Report URL', 'Registration code Redemption URL', 'Total', 'Redeemed', 'Unused' ] ]
 
             for sponsor in sponsor_summary['sponsors']:
                 for discount_code in sponsor['discount_codes']:

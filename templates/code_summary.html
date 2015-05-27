@@ -3,13 +3,13 @@
   {% if session.logged_in %}
 
     {% for code in code_summary %}
-       <h2>RegOnline Discount Code String for {{ code.label }}:</h2>
+       <h2>RegOnline Registration Code String for {{ code.label }}:</h2>
        <p>Last updated: {{ code.last_updated }}</p>
        <p>{{ code.regonline_code_string }}</p>
     {% endfor %}
 
   {% else %}
-    <p>Log in to access discount code summary information.</p>
+    <p>Log in to access registration code summary information.</p>
   {% endif %}
 
 {% endblock %}

@@ -12,23 +12,9 @@ import uuid
 from datastore import get_discount_codes
 
 from flask import Flask, render_template
-from flask_mail import Mail, Message
 app = Flask(__name__)
 app.config.from_pyfile( "./config/present.default.conf" )
 #app.config.from_envvar( "DISCOUNT_CODES_CONFIG" )
-mail = Mail()
-
-app.config.update( MAIL_PASSWORD = None )
-with open( app.config['MAIL_PASSWORD_FILE'], "r" ) as f:
-    for key in f.readlines():
-        key = key.strip()
-        if key.startswith( '#' ):
-            continue
-        elif len( key ) == 0:
-            continue
-        else:
-            app.config.update( MAIL_PASSWORD = key )
-            break
 
 # This data structure controls lots of behavior throughout the app.
 #

@@ -50,10 +50,10 @@
           <th>Company Name</th>
 	  <th>Contact Email</th>
 	  <th>Sponsorship</th>
-          <th>Discount Codes
+          <th>Registration Codes
               <table>
 		<tr>
-		  <th style="width:260px;">Discount code</th>
+		  <th style="width:260px;">Registration code</th>
 		  <th style="width:30px;">Total</th>
 		  <th style="width:30px;">Redeemed</th>
 		  <th style="width:30px;">Unused</th>
@@ -82,7 +82,7 @@
 		     <input name="sponsorID" type="hidden" value="{{ sponsor.ID }}" />
 		     <input name="sponsor_email" type="hidden" value="{{ sponsor_summary.sponsor_email }}" />
 		     <input name="email_recipients" type="email" multiple="multiple" value="{{ sponsor.Email }}{% if sponsor.CCEmail %}, {{ sponsor.CCEmail }}{% endif %}" />
-		     <input type="submit" name="send_email" value="Email Discount Summary" />
+		     <input type="submit" name="send_email" value="Email Registration Summary" />
 		   </form>
 		 </td>
 	       </tr>

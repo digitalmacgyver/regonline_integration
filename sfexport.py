@@ -82,7 +82,6 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
     discount_codes = get_discount_codes( sponsor_event_id )
 
     discount_codes_by_id = { x['ID']:x for x in discount_codes }
-
     # Make a data structure for comparing discount codes:
     old_codes_by_sponsor = {}
     for code in discount_codes:
@@ -149,6 +148,7 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
                         'SponsorID' : sponsor['ID'],
                         'RegTypeID' : sponsor['RegTypeID'],
                         'RegistrationType' : sponsor['RegistrationType'],
+                        'attendee_event_id' : attendee_event_id,
                         'discount_code' : discount_code,
                         'quantity' : int( quantity ),
                         'badge_type' : badge_type,
@@ -272,7 +272,7 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
 
                 email_recipients = app.config['ADMIN_MAIL_RECIPIENTS']
 
-                mail_message = Message( "Warning: Discount Code Mismatch for %s" % ( sponsor['Company'] ),
+                mail_message = Message( "Warning: Registration Code Mismatch for %s" % ( sponsor['Company'] ),
                                         sender = app.config['SEND_AS'],
                                         recipients = email_recipients )
                 
@@ -302,7 +302,7 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
         # Send email notification.
         email_recipients = app.config['ADMIN_MAIL_RECIPIENTS']
         
-        mail_message = Message( "Warning: Deleting Obsolete Discount Codes",
+        mail_message = Message( "Warning: Deleting Obsolete Registration Codes",
                                 sender = app.config['SEND_AS'],
                                 recipients = email_recipients )
         

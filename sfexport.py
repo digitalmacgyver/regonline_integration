@@ -91,6 +91,15 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
             old_codes_by_sponsor[code['SponsorID']] = [ code ]
 
     for sponsor in sponsors:
+
+        # DEBUG
+        #if sponsor['ID'] != 82177039:
+        #    continue
+        #else:
+            #import pdb
+            #pdb.set_trace()
+            #pass
+
         log.debug( json.dumps( { 'message' : "Working on sponsor %s" % ( sponsor['ID'] ) } ) ) 
 
         sreg = sf.query_all( "SELECT id, opportunity__c FROM Registrations__c WHERE Confirmation_Number__c = '%s' AND Event_Number__c = '%s'" % ( sponsor['ID'], sponsor_event_id ) )
@@ -265,6 +274,7 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
                 differences = [ { 'discount_code' : x['discount_code'],
                                   'code_source'   : x['code_source'],
                                   'badge_type'    : x['badge_type'],
+                                  'product_name'  : x['product_name'],
                                   'quantity'      : x['quantity'] } for x in extra_entitlements ]
                 for code_pair in downgraded_entitlements:
                     new_code = code_pair['new_code']

@@ -312,7 +312,7 @@ def discount_code():
             break
 
     if discount_code_data == {}:
-        logging.warning( json.dumps( { 'message' : 'No attendees found for discount code: %s' % ( search_code ) } ) )
+        logging.warning( json.dumps( { 'message' : 'No discount_code data structure found for discount code: %s' % ( search_code ) } ) )
 
     # Private function that strips down a registrant data to what we
     # can give out publicly to someone with the code.

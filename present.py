@@ -133,6 +133,7 @@ def discount_code():
         }
         redeemed_codes = requests.post( "%s/data/discount_code/" % ( app.config['APP_SERVER'] ), json.dumps( data ) ).json()
 
+
         if redeemed_codes['discount_code_data'] == {}:
             flash( "No data found for code: %s" % ( request.values['code'].strip() ) )
         else:
@@ -155,14 +156,15 @@ def discount_code():
 
             csv_rows = [ [ 'Name', 'Company', 'Title', 'Registration Type', 'Status', 'Registration Date' ] ]
 
-            for attendee in redeemed_codes['redemptions']:
-                csv_rows.append( [
-                    attendee.get( 'name', '' ),
-                    attendee.get( 'company', '' ),
-                    attendee.get( 'title', '' ),
-                    attendee.get( 'registration_type', '' ),
-                    attendee.get( 'status', '' ),
-                    attendee.get( 'registration_date', '' ) ] )
+            if redeemed_codes['discount_code_data'] != {}:
+                for attendee in redeemed_codes['redemptions']:
+                    csv_rows.append( [
+                        attendee.get( 'name', '' ),
+                        attendee.get( 'company', '' ),
+                        attendee.get( 'title', '' ),
+                        attendee.get( 'registration_type', '' ),
+                        attendee.get( 'status', '' ),
+                        attendee.get( 'registration_date', '' ) ] )
 
             download_filename = "sponsor-attendees-%s.csv" % ( datetime.datetime.now().strftime( "%Y-%m-%d-%H%M%S"  ) )
 

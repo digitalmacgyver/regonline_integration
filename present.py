@@ -550,7 +550,7 @@ def registration_summary():
     sponsors.sort( key=lambda x: x['Company'] )
 
     for sponsor in sponsors:
-        sponsor['discount_codes'] = codes_by_sponsor.get( sponsor['ID'], [] )
+        sponsor['discount_codes'] = sorted( codes_by_sponsor.get( sponsor['ID'], [] ), key=lambda x: x['discount_code'] )
 
     registration_summary = {
         "sponsors" : sponsors,

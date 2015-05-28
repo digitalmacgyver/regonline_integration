@@ -1,22 +1,18 @@
-
-{% if data.error_message %}
 <p>
-   {{ data.error_message }}
+  An administrator tried to delete a registration code for 
+  {{ data.sponsor.Company }}.  The result was:<br /> {{ data.message }}
 </p>
-{% endif %}
-
 <p>
-  Your {{ data.sponsor.Company }} registration codes are:
+  The registration code was:
   {% for discount_code in data.discount_codes %}
     <hr />
     <b>{{ discount_code.discount_code }}</b>
     <ul>
       <li>Sponsorship: {{ discount_code.code_source }}</li>
-      <li>Source: {{ discount_code.product_name }}</li>
+      <li>Product: {{ discount_code.product_name }}</li>
       <li>Badge Type: {{ discount_code.badge_type_name }}</li>
       <li>Quantity: {{ discount_code.quantity }}</li>
       <li>Registration Link: <a href="{{ discount_code.regonline_url }}">{{ discount_code.regonline_url }}</a></li>
-      <li>Registration Redemption Report: <a href="{{ discount_code.discount_search_url }}">{{ discount_code.discount_search_url }}</a></li>
      </ul>
    {% endfor %}
 </p>

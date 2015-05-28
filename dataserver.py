@@ -6,7 +6,7 @@ import logging.handlers
 
 from flask import Flask, request, jsonify, url_for, abort
 
-from datastore import get_sponsors, get_registrants, get_discount_codes, add_discount_codes
+from datastore import get_sponsors, get_registrants, get_discount_codes, set_discount_codes
 
 app = Flask( __name__ )
 app.config.from_pyfile( "./config/dataserver.default.conf" )
@@ -312,7 +312,7 @@ def discount_code():
             break
 
     if discount_code_data == {}:
-        logging.warning( json.dumps( { 'message' : 'No attendees found for discount code: %s' % ( search_code ) } ) )
+        logging.warning( json.dumps( { 'message' : 'No discount_code data structure found for discount code: %s' % ( search_code ) } ) )
 
     # Private function that strips down a registrant data to what we
     # can give out publicly to someone with the code.
@@ -334,6 +334,46 @@ def discount_code():
                       "available" : discount_code_data.get( 'quantity', 0 ) - len( attendees ),
                       "redemptions" : attendees,
                       "success"  : True } )
+
+@app.route( '/data/discount_code/delete/', methods=[ 'POST' ] )
+def discount_code_delete():
+    '''Delete an existing discount code, given these parameters on a POST in JSON
+    format:
+
+    {
+      eventID : The RegOnline event of the sponsor of this code,
+      api_key : authorized_key,
+      discount_code : A string of the discount code to be deleted
+    }
+    '''
+
+    data = request.get_json( force=True, silent=True )
+
+    if auth_ok( data ):
+        if 'eventID' not in data:
+            logging.error( json.dumps( { 'message' : 'No eventID in call to discount_code_delete.' } ) )
+            return jsonify( { "error" : "You must provide a valid eventID argument to this method.",
+                              "success" : False } )
+
+        if 'discount_code' not in data:
+            logging.error( json.dumps( { 'message' : 'No discount_code in call to discount_code_delete.' } ) )
+            return jsonify( { "error" : "You must provide a valid discount_code argument to this method.",
+                              "success" : False } )        
+        
+
+        discount_code_delete = data['discount_code'].lower().strip()
+    
+        discounts = get_discount_codes( data['eventID'] )
+        discounts = [ x for x in discounts if x['discount_code'] != discount_code_delete ]
+
+        set_discount_codes( data['eventID'], discounts )
+
+        return jsonify( { "success" : True } )
+
+    else:
+        logging.error( json.dumps( { 'message' : 'No api_key in call to discount_code/add.' } ) )
+        return jsonify( { "error" : "You must provide a valid api_key argument to this method.",
+                          "success" : False } )
 
 if __name__ == '__main__':
     app.run( port=app.config['PORT'] )

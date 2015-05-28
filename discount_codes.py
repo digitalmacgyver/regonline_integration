@@ -12,23 +12,9 @@ import uuid
 from datastore import get_discount_codes
 
 from flask import Flask, render_template
-from flask_mail import Mail, Message
 app = Flask(__name__)
 app.config.from_pyfile( "./config/present.default.conf" )
 #app.config.from_envvar( "DISCOUNT_CODES_CONFIG" )
-mail = Mail()
-
-app.config.update( MAIL_PASSWORD = None )
-with open( app.config['MAIL_PASSWORD_FILE'], "r" ) as f:
-    for key in f.readlines():
-        key = key.strip()
-        if key.startswith( '#' ):
-            continue
-        elif len( key ) == 0:
-            continue
-        else:
-            app.config.update( MAIL_PASSWORD = key )
-            break
 
 # This data structure controls lots of behavior throughout the app.
 #
@@ -102,30 +88,23 @@ def get_badge_type( eventID, registration_type, percent_discount ):
     if int( percent_discount ) in [ 10, 15, 20 ]:
         if registration_type == 'Student':
             return "student_%d" % ( int( percent_discount ) )
-        else:
-            raise Exception( "Unknown badge type for RegOnline RegistrationType: %s and Discount Percent: %d" % ( registration_type, int( percent_discount ) ) )
-    else:
-        if int( percent_discount ) != 100:
-            # DEBUG - They need to fix the percent discount.
-            pass
-            #raise Exception( "Unknown badge type for RegOnline RegistrationType: %s and Discount Percent: %d" % ( registration_type, int( percent_discount ) ) )
 
-        regonline_to_internal = {
-            'General'                 : 'general_full',
-            'Student'                 : 'student_full',
-            'Academic'                : 'academic_full',
-            'Transition'              : 'transition_full',
-            'One Day'                 : 'general_1',
-            'Speaker Full Conference' : 'speaker_full',
-            'Speaker One Day'         : 'speaker_1',
-            'Booth Staff Only'        : 'booth',
-            'GHC Scholar'             : 'scholar'
-        }
+    regonline_to_internal = {
+        'General'                 : 'general_full',
+        'Student'                 : 'student_full',
+        'Academic'                : 'academic_full',
+        'Transition'              : 'transition_full',
+        'One Day'                 : 'general_1',
+        'Speaker Full Conference' : 'speaker_full',
+        'Speaker One Day'         : 'speaker_1',
+        'Booth Staff Only'        : 'booth',
+        'GHC Scholar'             : 'scholar'
+    }
              
-        if registration_type in regonline_to_internal:
-            return regonline_to_internal[registration_type]
-        else:
-            raise Exception( "Unknown badge type for RegOnline RegistrationType: %s and Discount Percent: %d" % ( registration_type, int( percent_discount ) ) )
+    if registration_type in regonline_to_internal:
+        return regonline_to_internal[registration_type]
+    else:
+        raise Exception( "Unknown badge type for RegOnline RegistrationType: %s and Discount Percent: %d" % ( registration_type, int( percent_discount ) ) )
 
 
 

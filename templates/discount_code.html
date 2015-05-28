@@ -2,7 +2,7 @@
 {% block body %}
   <form action="{{ url_for( 'discount_code' ) }}" method="get" class="add-entry" >
     <dl>
-      <dt>Discount Code:</dt>
+      <dt>Registration Code:</dt>
         <dd><input type="text" size="20" name="code" />
         <input type="submit" value="Search" /></dd>
     </dl>
@@ -10,7 +10,8 @@
 
   {% if redeemed_codes %}
     <ul>
-      <li>Code Source: {{ redeemed_codes.discount_code_data.code_source }}</li>
+      <li>Sponsorship: {{ redeemed_codes.discount_code_data.code_source }}</li>
+      <li>Source: {{ redeemed_codes.discount_code_data.product_name }}</li>
       <li>Badge Type: {{ redeemed_codes.badge_type_name }}</li>
       <li>Total: {{ redeemed_codes.total }}</li>
       <li>Redeemed: {{ redeemed_codes.redeemed }}</li>
@@ -45,7 +46,7 @@
       </table>
     {% endif %}
   {% else %}
-    <em>Enter discount code to show redemptions.</em>
+    <em>Enter registration code to show redemptions.</em>
   {% endif %}
 
   <div class="metanav">

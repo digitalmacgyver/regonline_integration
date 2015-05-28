@@ -1,14 +1,15 @@
 
 <p>
   Sponsor {{ data.sponsor.Company }} with RegOnline ID 
-  {{ data.sponsor.ID }} has granted discount codes which exceed their
+  {{ data.sponsor.ID }} has been granted registration codes which exceed their
   entitlement.
   <ul>
     {% for difference in data.differences %}
       <li>Code {{ difference.discount_code }} entitlement mismatch:
         <ul>
           <li>Badge Type: {{ difference.badge_type }}</li>
-          <li>Badge Source: {{ difference.code_source }}</li>
+          <li>Sponsorship: {{ difference.code_source }}</li>
+          <li>Product: {{ difference.product_name }}</li>
           <li>Badge Quantity Beyond Entitlement: {{ difference.quantity }}</li>
         </ul>
       </li>
@@ -19,8 +20,8 @@
 <p>
   This may not be a problem, but it may indicate that their
   sponsorship tier was upgraded or downgraded, or they canceled some
-  enterprise pack purchases, and as a result now their discount codes
-  do not match their entitlement.  Please verify that their
+  enterprise pack purchases, and as a result now their registration
+  codes do not match their entitlement.  Please verify that their
   entitlements are correct in Salesforce.
 </p>
 

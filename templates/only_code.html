@@ -1,11 +1,10 @@
-{% extends "layout.html" %}
+<!doctype html>
+<title>Registration Code String</title>
 {% block body %}
   {% if session.logged_in %}
 
     {% for code in code_summary %}
-       <h2>RegOnline Registration Code String for {{ code.label }}:</h2>
-       <p>Last updated: {{ code.last_updated }}</p>
-       <p>{{ code.regonline_code_string }}</p>
+       <p id="{{ code_summary.label }}">{{ code.regonline_code_string }}</p>
     {% endfor %}
 
   {% else %}
@@ -13,3 +12,4 @@
   {% endif %}
 
 {% endblock %}
+</html>

@@ -31,3 +31,46 @@ table, td, th {
 td, th {
     padding: 3px;
 }
+
+body, .page {
+  background: #fff;
+  border: 0 none;
+  padding: 0;
+  margin: 0;
+}
+body {
+  margin: 10px;
+}
+table.navbar {
+  border: 0 none;
+  border-collapse: separate;
+  border-spacing: 14px 0;
+  margin-left: -13px;
+}
+.navbar td {
+  background: #53bbeb;
+  border: 0 none;
+  margin-right: 10px;
+  padding: 10px 20px;
+}
+.navbar a {
+  color: white;
+  font: 400 15px 'freight-sans-pro',arial;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.navbar a:hover {
+  font-weight: bold;
+}
+td, th {
+  word-wrap: break-word;
+}
+.singlerow > tbody > tr > td:first-child {
+  max-width: 100px;
+}
+.singlerow > tbody > tr > td:nth-child(2) {
+  max-width: 205px;
+}
+.singlerow > tbody > tr > td:nth-child(3) {
+  max-width: 100px;
+}

@@ -1,6 +1,9 @@
 <!doctype html>
-<title>Grace Hopper Celebration 2015 Registration Reports</title>
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}" />
+<head>
+  <title>Grace Hopper Celebration 2015 Registration Reports</title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
 <div class="page">
   <table class="navbar">
     <tr>
@@ -25,4 +28,4 @@
   {% endfor %}
   {% block body %}{% endblock %}
 </div>
-
+</body>

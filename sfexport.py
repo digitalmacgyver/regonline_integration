@@ -91,9 +91,8 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
             old_codes_by_sponsor[code['SponsorID']] = [ code ]
 
     for sponsor in sponsors:
-
         # DEBUG
-        #if sponsor['ID'] != 82177039:
+        #if sponsor['ID'] != 79052836:
         #    continue
         #else:
             #import pdb
@@ -224,13 +223,13 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
 
             try:
                 # DEBUG actually send to recipients here
-                #email_recipients = app.config['ADMIN_MAIL_RECIPIENTS'] + recipients
-                email_recipients = app.config['ADMIN_MAIL_RECIPIENTS']
+                #email_recipients = app.config['ADMIN_MAIL_RECIPIENTS']
+                email_recipients = recipients
 
                 today = datetime.date.today()
-                today_4pm = datetime.datetime( today.year, today.month, today.day, 16, tzinfo=pytz.timezone( 'PST8PDT' ) )
-                tomorrow_4pm = today_4pm + relativedelta( bdays = +1 )
-                when = tomorrow_4pm.astimezone( pytz.utc )
+                today_6pm = datetime.datetime( today.year, today.month, today.day, 17, tzinfo=pytz.timezone( 'PST8PDT' ) )
+                tomorrow_6pm = today_6pm + relativedelta( bdays = +1 )
+                when = tomorrow_6pm.astimezone( pytz.utc )
 
                 extra_headers = {
                     'X-MC-SendAt' : when.strftime( "%Y-%m-%d %H:%M:%S" )
@@ -259,7 +258,12 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
                             'discount_codes' : mail_codes } )
 
                         mail.init_app( app )
-                        mail.send( mail_message )
+
+                        if app.config['SEND_EMAIL']:
+                            mail.send( mail_message )
+                        else:
+                            log.debug( json.dumps( { 'message' : 'Skipping sending of email to %s due to SEND_EMAIL configuration.' % ( email_recipients ) } ) )
+
 
             except Exception as e:
                 logging.error( json.dumps( { 'message' : "Failed to send notification email to %s, error was: %s" % ( email_recipients, e ) } ) )
@@ -294,7 +298,11 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
                         'sponsor'          : sponsor,
                         'differences'      : differences } )
                     mail.init_app( app )
-                    mail.send( mail_message )
+
+                    if app.config['SEND_EMAIL']:
+                        mail.send( mail_message )
+                    else:
+                        log.debug( json.dumps( { 'message' : 'Skipping sending of email to %s due to SEND_EMAIL configuration.' % ( email_recipients ) } ) )
 
             except Exception as e:
                 logging.error( json.dumps( { 'message' : "Failed to send notification email to %s, error was: %s" % ( email_recipients, e ) } ) )
@@ -323,7 +331,11 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
             mail_message.html = render_template( "email_abi_admin_obsolete_code.html", data={
                 'obsolete_codes'      : obsolete_codes } )
             mail.init_app( app )
-            mail.send( mail_message )
+
+            if app.config['SEND_EMAIL']:
+                mail.send( mail_message )
+            else:
+                log.debug( json.dumps( { 'message' : 'Skipping sending of email to %s due to SEND_EMAIL configuration.' % ( email_recipients ) } ) )
         
     # Persist discount codes to disk.
     set_discount_codes( sponsor_event_id, discount_codes )

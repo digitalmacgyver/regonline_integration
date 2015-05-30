@@ -373,7 +373,7 @@ def registration_summary():
         mail_sent = False
         try:
             # DEBUG, leave this variable alone here and actually send to the recipients in production.
-            email_recipients = app.config['ADMIN_MAIL_RECIPIENTS']
+            #email_recipients = app.config['ADMIN_MAIL_RECIPIENTS']
 
             mail_message = Message( "Grace Hopper Celebration 2015 Registration Codes",
                                     sender = app.config['SEND_AS'],
@@ -392,7 +392,10 @@ def registration_summary():
                 'discount_codes' : sponsor_discount_codes } )
 
             mail.init_app( app )
-            mail.send( mail_message )
+            if app.config['SEND_EMAIL']:
+                mail.send( mail_message )
+            else:
+                log.debug( json.dumps( { 'message' : 'Skipping sending of email to %s due to SEND_EMAIL configuration.' % ( email_recipients ) } ) )
             mail_sent = True
         except Exception as e:
             flash( "ERROR occurred while trying to send registration code summary to: %s." % ( email_recipients ) )
@@ -451,10 +454,19 @@ def registration_summary():
                     'discount_codes' : [ dc ] } )
 
                 mail.init_app( app )
-                mail.send( mail_message )
-                mail_sent = True
+
+                if app.config['SEND_EMAIL']:
+                    mail.send( mail_message )
+                else:
+                    log.debug( json.dumps( { 'message' : 'Skipping sending of email to %s due to SEND_EMAIL configuration.' % ( email_recipients ) } ) )
             except Exception as e:
                 flash( "ERROR %s occurred while trying to send discount code deletion notice to: %s." % ( e, email_recipients ) )
+
+                # Note - we set this to true even when we're not
+                # actually sending mail due to configuration, as this
+                # controls website messaging, and we want it to appear
+                # we're sending email even during testing.
+                mail_sent = True
 
             if mail_sent:
                 success_message = "Registration code deletion notification sent to: %s" % ( email_recipients )
@@ -581,7 +593,7 @@ def registration_summary():
                         sponsor.get( 'Email', '' ),
                         sponsor.get( 'RegistrationType', '' ),
                         discount_code.get( 'discount_code', '' ),
-                        "%s/%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code.get( 'discount_code', '' ) ),
+                        "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code.get( 'discount_code', '' ) ),
                         badge_types[discount_code['badge_type']]['regonline_url'],
                         discount_code.get( 'quantity', 0 ),
                         discount_code.get( 'redeemed', 0 ),
@@ -681,7 +693,7 @@ def sponsor_summary():
         mail_sent = False
         try:
             # DEBUG, leave this variable alone here and actually send to the recipients in production.
-            email_recipients = app.config['ADMIN_MAIL_RECIPIENTS']
+            #email_recipients = app.config['ADMIN_MAIL_RECIPIENTS']
 
             mail_message = Message( "Grace Hopper Celebration 2015 Registration Codes",
                                     sender = app.config['SEND_AS'],
@@ -701,7 +713,10 @@ def sponsor_summary():
                 'discount_codes' : sponsor_discount_codes } )
 
             mail.init_app( app )
-            mail.send( mail_message )
+            if app.config['SEND_EMAIL']:
+                mail.send( mail_message )
+            else:
+                log.debug( json.dumps( { 'message' : 'Skipping sending of email to %s due to SEND_EMAIL configuration.' % ( email_recipients ) } ) )
             mail_sent = True
         except Exception as e:
             flash( "ERROR occurred while trying to send registration code summary to: %s. %s" % ( email_recipients, e ) )
@@ -842,7 +857,7 @@ def sponsor_summary():
                         sponsor.get( 'Email', '' ),
                         sponsor.get( 'RegistrationType', '' ),
                         discount_code.get( 'discount_code', '' ),
-                        "%s/%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code.get( 'discount_code', '' ) ),
+                        "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code.get( 'discount_code', '' ) ),
                         badge_types[discount_code['badge_type']]['regonline_url'],
                         discount_code.get( 'quantity', 0 ),
                         discount_code.get( 'redeemed', 0 ),

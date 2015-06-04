@@ -66,7 +66,7 @@ td, th {
   word-wrap: break-word;
 }
 .singlerow > tbody > tr > td:first-child {
-  max-width: 100px;
+  max-width: 130px;
 }
 .singlerow > tbody > tr > td:nth-child(2) {
   max-width: 205px;

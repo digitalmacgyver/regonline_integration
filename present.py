@@ -478,6 +478,8 @@ def registration_summary():
 
     # Attendees who did not redeem a code.
     nonsponsored = 0
+    # Attendees who did reserve a code, but it's not a reserved code.
+    nonreserved = 0
     # Attendees who did use a code.
     redeemed = 0
     # Code entitlements not accounted for.
@@ -531,7 +533,6 @@ def registration_summary():
 
             if discount_code.get( 'badge_type', None ) in badge_types:
                 if badge_types[discount_code['badge_type']]['reserve_spot']:
-
                     sponsor_reporting_group = 'Other Sponsored'
                     if 'SponsorID' in discount_code:
                         if discount_code['SponsorID'] in sponsors_by_id:
@@ -540,6 +541,8 @@ def registration_summary():
           
                     redeemed += 1
                     group_attendee_stats[sponsor_reporting_group]['redeemed'] += 1
+                else:
+                    nonreserved += 1
 
                 if registrant['discount_code'] in redemptions_by_code:
                     redemptions_by_code[registrant['discount_code']] += 1
@@ -558,6 +561,8 @@ def registration_summary():
             if code['discount_code'] in redemptions_by_code:
                 code['redeemed'] = redemptions_by_code[code['discount_code']]
                 code['available'] = code['quantity'] - redemptions_by_code[code['discount_code']]
+            else:
+                code['available'] = code['quantity']
 
     sponsors.sort( key=lambda x: x['Company'] )
 
@@ -569,7 +574,8 @@ def registration_summary():
         "reserved" : quantity - redeemed,
         "redeemed" : redeemed,
         "nonsponsored" : nonsponsored,
-        "registered" : nonsponsored + redeemed,
+        "nonreserved" : nonreserved,
+        "registered" : nonsponsored + redeemed + nonreserved,
         "group_attendee_stats" : [ { "name" : k, "data" : group_attendee_stats[k] } for k in sorted( group_attendee_stats.keys() ) ],
         "badge_type_names" : [ { "value" : k, "name" : badge_types[k]['name'] } for k in sorted( badge_types.keys() ) ]
     }
@@ -730,6 +736,8 @@ def sponsor_summary():
 
     # Attendees who did not redeem a code.
     nonsponsored = 0
+    # Attendees who redeemed a code, but the code is not reserved.
+    nonreserved = 0
     # Attendees who did use a code.
     redeemed = 0
     # Code entitlements not accounted for.
@@ -788,6 +796,8 @@ def sponsor_summary():
           
                     redeemed += 1
                     group_attendee_stats[sponsor_reporting_group]['redeemed'] += 1
+                else:
+                    nonreserved += 1
 
                 if registrant['discount_code'] in redemptions_by_code:
                     redemptions_by_code[registrant['discount_code']] += 1
@@ -806,6 +816,8 @@ def sponsor_summary():
             if code['discount_code'] in redemptions_by_code:
                 code['redeemed'] = redemptions_by_code[code['discount_code']]
                 code['available'] = code['quantity'] - redemptions_by_code[code['discount_code']]
+            else:
+                code['available'] = code['quantity']
 
     sponsors.sort( key=lambda x: x['Company'] )
 
@@ -837,7 +849,8 @@ def sponsor_summary():
         "reserved"             : quantity - redeemed,
         "redeemed"             : redeemed,
         "nonsponsored"         : nonsponsored,
-        "registered"           : nonsponsored + redeemed,
+        "nonreserved"          : nonreserved,
+        "registered"           : nonsponsored + redeemed + nonreserved,
         "group_attendee_stats" : [ { "name" : k, "data" : group_attendee_stats[k] } for k in sorted( group_attendee_stats.keys() ) ],
         "badge_type_names"     : [ { "value" : k, "name" : badge_types[k]['name'] } for k in sorted( badge_types.keys() ) ],
         "registrants"          : public_registrants

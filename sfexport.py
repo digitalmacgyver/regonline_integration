@@ -91,14 +91,6 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
             old_codes_by_sponsor[code['SponsorID']] = [ code ]
 
     for sponsor in sponsors:
-        # DEBUG
-        #if sponsor['ID'] != 79052836:
-        #    continue
-        #else:
-            #import pdb
-            #pdb.set_trace()
-            #pass
-
         log.debug( json.dumps( { 'message' : "Working on sponsor %s" % ( sponsor['ID'] ) } ) ) 
 
         sreg = sf.query_all( "SELECT id, opportunity__c FROM Registrations__c WHERE Confirmation_Number__c = '%s' AND Event_Number__c = '%s'" % ( sponsor['ID'], sponsor_event_id ) )

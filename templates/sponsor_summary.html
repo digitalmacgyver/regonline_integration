@@ -25,6 +25,13 @@
 	<td>{{ group_stats.data.reserved }}</td>
       </tr>
       {% endfor %}
+      {% if sponsor_summary.nonreserved %}
+      <tr>
+	<td>Non-Reserved Codes</td>
+        <td>{{ sponsor_summary.nonreserved }}</td>
+        <td>N/A</td>
+      </tr>
+      {% endif %}
       <tr>
 	<td>Non-Sponsored</td>
         <td>{{ sponsor_summary.nonsponsored }}</td>

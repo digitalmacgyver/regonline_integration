@@ -89,16 +89,16 @@ def export_event_data( eventID, attendee_type ):
             # First check if we're dealing with an updated attendee.
             if attendee['ID'] in attendee_ids and attendee['ModDate'] > attendee_ids[attendee['ID']].get( 'ModDate', datetime.datetime.min ):
                 # Delete our old view of this attendee.
-                log.info( json.dumps( { 'message' : ( "Deleting old version of attendee: %s" % ( attendee_ids[attendee['ID']] ) ).encode( 'utf-8' ) } ) )
+                log.info( json.dumps( { 'message' : "Deleting old version of attendee: %s" % unicode( attendee_ids[attendee['ID']] ) } ) )
                 attendees = [ x for x in attendees if x['ID'] != attendee['ID'] ]
                 attendee_ids.pop( attendee['ID'] )
 
-            if attendee['StatusDescription'].encode( 'utf-8' ) == 'Declined':
-                log.warning( json.dumps( { 'message' : "Ignoring attendee ID %s with registration status: %s" % ( attendee['ID'], attendee['StatusDescription'].encode( 'utf-8' ) ) } ) )
+            if unicode( attendee['StatusDescription'] ) == 'Declined':
+                log.warning( json.dumps( { 'message' : "Ignoring attendee ID %s with registration status: %s" % ( attendee['ID'], unicode( attendee['StatusDescription'] ) ) } ) )
                 continue
 
             if attendee['ID'] not in attendee_ids:
-                registration_status = attendee['StatusDescription'].encode( 'utf-8' )
+                registration_status = unicode( attendee['StatusDescription'] )
                 if registration_status not in [ 'Confirmed', 'Attended', 'Approved' ]:
                     log.warning( json.dumps( { 'message' : "Ignoring attendee ID %s with registration status: %s" % ( attendee['ID'], registration_status ) } ) )
                     continue
@@ -110,9 +110,9 @@ def export_event_data( eventID, attendee_type ):
                     'ID'                : attendee['ID'],
                     'RegTypeID'         : attendee['RegTypeID'],
                     'StatusID'          : attendee['StatusID'],
-                    'StatusDescription' : attendee['StatusDescription'].encode( 'utf-8' ),
-                    'FirstName'         : attendee['FirstName'].encode( 'utf-8' ),
-                    'LastName'          : attendee['LastName'].encode( 'utf-8' ),
+                    'StatusDescription' : unicode( attendee['StatusDescription'] ),
+                    'FirstName'         : unicode( attendee['FirstName'] ),
+                    'LastName'          : unicode( attendee['LastName'] ),
                     'CancelDate'        : attendee['CancelDate'],
                     'IsSubstitute'      : attendee['IsSubstitute'],
                     'AddBy'             : attendee['AddBy'],
@@ -129,7 +129,7 @@ def export_event_data( eventID, attendee_type ):
                 optional_fields = [ 'CCEmail', 'Company', 'Email', 'RegistrationType', 'Title' ]
                 for field in optional_fields:
                     if field in attendee and attendee[field] is not None:
-                        add_attendee[field] = attendee[field].encode( 'utf-8' )
+                        add_attendee[field] = unicode( attendee[field] )
 
                 if attendee_type == "registrants":
                     # Since they are a registrant we need to get some custom
@@ -159,18 +159,18 @@ def export_event_data( eventID, attendee_type ):
                     if custom_data5.Data == '':
                         log.warning( json.dumps( { 'message' : "No detailed registration data found for attendee %s with status %s" % ( attendee['ID'], attendee['StatusDescription'] ) } ) )
                     else:
-                        add_attendee['registration_type'] = custom_data5.Data.APICustomFieldResponse[0].CustomFieldNameOnReport.encode( 'utf-8' )
+                        add_attendee['registration_type'] = unicode( custom_data5.Data.APICustomFieldResponse[0].CustomFieldNameOnReport )
 
                         discount_code = ""
 
                         if 'Password' in custom_data5.Data.APICustomFieldResponse[0]:
                             tmp_discount_code = custom_data5.Data.APICustomFieldResponse[0].Password
                             if tmp_discount_code is not None:
-                                discount_code = tmp_discount_code.encode( 'utf-8' ).strip().lower()
+                                discount_code = unicode( tmp_discount_code ).strip().lower()
 
                         add_attendee['discount_code'] = discount_code
 
-                log.info( json.dumps( { 'message' : ( "Attendee data is: %s" % ( add_attendee ) ).encode( 'utf-8' ) } ) )
+                log.info( json.dumps( { 'message' : unicode( "Attendee data is: %s" % ( add_attendee ) ) } ) )
                 attendees.append( add_attendee )
             else:
                 log.info( json.dumps( { 'message' : "Skipping known attendee: %s" % ( attendee['ID'] ) } ) )

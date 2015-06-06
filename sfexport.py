@@ -9,7 +9,7 @@ import pytz
 from simple_salesforce import Salesforce
 import time
 
-from datastore import get_sponsors, get_registrants, set_sponsors, set_registrants, get_discount_codes, set_discount_codes
+from datastore import get_sponsors, get_registrants, set_sponsors, set_registrants, get_discount_codes, set_discount_codes, get_last_updated, set_last_updated
 
 from discount_codes import get_badge_type, get_badge_types
 
@@ -292,7 +292,17 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
                     mail.init_app( app )
 
                     if app.config['SEND_EMAIL']:
-                        mail.send( mail_message )
+                        current_time = datetime.datetime.now()
+
+                        last_update = get_last_updated( __name__ )
+                        if last_update is None:
+                            last_update = current_time
+                        
+                        if ( current_time - last_update ).seconds >= app.config['ADMIN_ALERT_MAIL_FREQUENCY']:
+                            mail.send( mail_message )
+                            set_last_updated( __name__, current_time )
+                        else:
+                            log.debug( json.dumps( { 'message' : 'Skipping sending of email because it has been %d seconds since we last sent mismatch emails and we send only every %d seconds' % ( ( current_time - last_update ).seconds, app.config['ADMIN_ALERT_MAIL_FREQUENCY'] ) } ) )
                     else:
                         log.debug( json.dumps( { 'message' : 'Skipping sending of email to %s due to SEND_EMAIL configuration.' % ( email_recipients ) } ) )
 

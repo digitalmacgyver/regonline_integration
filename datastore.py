@@ -28,7 +28,7 @@ def get_discount_codes( eventID ):
 def get_data( table, eventID ):
     data_file = "%s/%s-%s.dat" % ( DATA_DIR, table, eventID )
     if os.path.isfile( "%s" % ( data_file ) ):
-        with open( "%s" % ( data_file ), "r" ) as f:
+        with open( "%s" % ( data_file ), "rb" ) as f:
             logging.info( json.dumps( { 'eventID' : eventID, 
                                         'message' : 'Loading %s data from data file %s' % ( table, data_file ) } ) )
             return pickle.load( f )
@@ -36,6 +36,19 @@ def get_data( table, eventID ):
         logging.info( json.dumps( { 'eventID' : eventID,
                                     'message' : 'No prior %s data, returning empty result set.' % ( table ) } ) )
         return []
+
+def get_last_updated( objectID ):
+    data_file = "%s/%s-last-updated.dat" % ( DATA_DIR, objectID )
+    if os.path.isfile( "%s" % ( data_file ) ):
+        with open( "%s" % ( data_file ), "rb" ) as f:
+            logging.info( json.dumps( { 'objectID' : objectID, 
+                                        'message' : 'Loading data from data file %s' % ( data_file ) } ) )
+            return pickle.load( f )
+    else:
+        logging.info( json.dumps( { 'objectID' : objectID,
+                                    'message' : 'No prior %s data.' % ( objectID ) } ) )
+        return None
+    
 
 # ==============================================================
 #
@@ -73,7 +86,7 @@ def add_data( table, eventID, new_data ):
         data_file_old = data_file + ".old"
 
         # Create new.
-        with open( "%s.new" % ( data_file ), "w" ) as f:
+        with open( "%s.new" % ( data_file ), "wb" ) as f:
             pickle.dump( items, f )
 
         # Rename existing if any.
@@ -113,7 +126,7 @@ def set_data( table, eventID, items ):
         data_file_old = data_file + ".old"
 
         # Create new.
-        with open( "%s" % ( data_file_new ), "w" ) as f:
+        with open( "%s" % ( data_file_new ), "wb" ) as f:
             pickle.dump( items, f )
 
         # Rename existing if any.
@@ -131,3 +144,24 @@ def set_data( table, eventID, items ):
         logging.warning( json.dumps( { 'eventID' : eventID, 
                                        'message' : error_message } ) )
         raise Exception( error_message )
+
+
+def set_last_updated( objectID, data ):
+    data_file = "%s/%s-last-updated.dat" % ( DATA_DIR, objectID )
+    data_file_new = data_file + ".new"
+    data_file_old = data_file + ".old"
+
+    # Create new.
+    with open( "%s" % ( data_file_new ), "wb" ) as f:
+        pickle.dump( data, f )
+
+    # Rename existing if any.
+    if os.path.isfile( "%s" % ( data_file ) ):
+        os.rename( "%s" % ( data_file ), "%s" % ( data_file_old ) )
+
+    # Rename new to current.
+    os.rename( "%s" % ( data_file_new ), "%s" % ( data_file ) )
+    logging.info( json.dumps( { 'objectID' : objectID, 
+                                'message' : 'Renaming data file from %s to %s' % ( data_file_new, data_file ) } ) )
+
+    return

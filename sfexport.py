@@ -297,6 +297,7 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
                         last_update = get_last_updated( __name__ )
                         if last_update is None:
                             last_update = current_time
+                            set_last_updated( __name__, current_time )
                         
                         if ( current_time - last_update ).seconds >= app.config['ADMIN_ALERT_MAIL_FREQUENCY']:
                             mail.send( mail_message )

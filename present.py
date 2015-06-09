@@ -159,9 +159,9 @@ def discount_code():
             if redeemed_codes['discount_code_data'] != {}:
                 for attendee in redeemed_codes['redemptions']:
                     csv_rows.append( [
-                        attendee.get( 'name', '' ),
-                        attendee.get( 'company', '' ),
-                        attendee.get( 'title', '' ),
+                        attendee.get( 'name', '' ).encode( 'utf-8' ),
+                        attendee.get( 'company', '' ).encode( 'utf-8' ),
+                        attendee.get( 'title', '' ).encode( 'utf-8' ),
                         attendee.get( 'registration_type', '' ),
                         attendee.get( 'status', '' ),
                         attendee.get( 'registration_date', '' ) ] )
@@ -595,8 +595,8 @@ def registration_summary():
             for sponsor in registration_summary['sponsors']:
                 for discount_code in sponsor['discount_codes']:
                     csv_rows.append( [
-                        sponsor.get( 'Company', '' ),
-                        sponsor.get( 'Email', '' ),
+                        sponsor.get( 'Company', '' ).encode( 'utf-8' ),
+                        sponsor.get( 'Email', '' ).encode( 'utf-8' ),
                         sponsor.get( 'RegistrationType', '' ),
                         discount_code.get( 'discount_code', '' ),
                         "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code.get( 'discount_code', '' ) ),
@@ -866,8 +866,8 @@ def sponsor_summary():
             for sponsor in sponsor_summary['sponsors']:
                 for discount_code in sponsor['discount_codes']:
                     csv_rows.append( [
-                        sponsor.get( 'Company', '' ),
-                        sponsor.get( 'Email', '' ),
+                        sponsor.get( 'Company', '' ).encode( 'utf-8' ),
+                        sponsor.get( 'Email', '' ).encode( 'utf-8' ),
                         sponsor.get( 'RegistrationType', '' ),
                         discount_code.get( 'discount_code', '' ),
                         "%s%s?code=%s" % ( app.config['EXTERNAL_SERVER_BASE_URL'], url_for( 'discount_code' ), discount_code.get( 'discount_code', '' ) ),
@@ -883,9 +883,9 @@ def sponsor_summary():
 
             for attendee in sponsor_summary['registrants']:
                 csv_rows.append( [
-                    attendee.get( 'name', '' ),
-                    attendee.get( 'company', '' ),
-                    attendee.get( 'title', '' ),
+                    attendee.get( 'name', '' ).encode( 'utf-8' ),
+                    attendee.get( 'company', '' ).encode( 'utf-8' ),
+                    attendee.get( 'title', '' ).encode( 'utf-8' ),
                     attendee.get( 'registration_type', '' ),
                     attendee.get( 'status', '' ),
                     attendee.get( 'registration_date', '' ) ] )

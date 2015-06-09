@@ -6,21 +6,8 @@ http://developer.regonline.com/
 
 ==
 
-
-1. RegOnline keys (done)
-2. MandrillApp (done)
-3. Salesforce - will be handled when we switch to production.
-4. App key (done)
-
-
-
-==
-		           
 x = client.service.GetCustomFieldResponsesForRegistration( eventID=eventID, registrationID=attendee['ID'], pageSectionID=1 )
 	                                                                                       
-                                                                                  
-
-
 Badge type ==> Registrant_Type__c (object: OpportunityLineItems)
 Percent off ==> Percent_off__c (object: OpportunityLineItems)
 Final Quantity ==> Redeemable_Quantity__c (object: OpportunityLineItems) ==> Parsed to integer dataType
@@ -31,7 +18,42 @@ Final Quantity ==> Redeemable_Quantity__c (object: OpportunityLineItems) ==> Par
 
 matt@52.8.24.90:/home/matt/regonline_integration/config/
 
+Code anitap718ddawa entitlement mismatch:
+Badge Type: general_1
+Badge Source: Show Management
+Badge Quantity Beyond Entitlement: 1
+Code anitap718osd entitlement mismatch:
+Badge Type: general_1
+Badge Source: Show Management
+Badge Quantity Beyond Entitlement: 2
 
+Code anitap718ent entitlement mismatch:
+Badge Type: general_full
+Badge Source: Enterprise Pack
+Badge Quantity Beyond Entitlement: 200
+
+Code anitap718bwrec entitlement mismatch:
+Badge Type: general_1
+Badge Source: Show Management
+Badge Quantity Beyond Entitlement: 1
+
+Code anitap718tef entitlement mismatch:
+Badge Type: general_1
+Badge Source: Show Management
+Badge Quantity Beyond Entitlement: 2
+
+Code anitap718larec entitlement mismatch:
+Badge Type: general_1
+Badge Source: Show Management
+Badge Quantity Beyond Entitlement: 1
+Code anitap718schl entitlement mismatch:
+Badge Type: general_1
+Badge Source: Show Management
+Badge Quantity Beyond Entitlement: 1
+Code anitap718caawa entitlement mismatch:
+Badge Type: general_1
+Badge Source: Show Management
+Badge Quantity Beyond Entitlement: 1
 
 ==
 
@@ -49,6 +71,7 @@ Or Reports -> Administrative Reports -> API Calls Made Within Last 7 Days
 ISSUE: Had to bump up the API version to 32 or whatever to get the latest stuff.
 
 === Simple Salesforce API Notes ===
+
 from simple_salesforce import Salesforce
 sf = Salesforce(  instance='test.salesforce.com', username='matt@viblio.com', password='e6IoNyQ8jihZLWlf', security_token='C4N1vrEFXwGYOcz0lQ3c6waRs', sandbox=True, version='32.0' )
 

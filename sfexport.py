@@ -90,6 +90,7 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
         else:
             old_codes_by_sponsor[code['SponsorID']] = [ code ]
 
+    sent_email = False
     for sponsor in sponsors:
         log.debug( json.dumps( { 'message' : "Working on sponsor %s" % ( sponsor['ID'] ) } ) ) 
 
@@ -300,7 +301,9 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
                             set_last_updated( __name__, current_time )
                         
                         if ( current_time - last_update ).seconds >= app.config['ADMIN_ALERT_MAIL_FREQUENCY']:
-                            mail.send( mail_message )
+                            mail.send( mail_message  )
+                            sent_email = True
+
                         else:
                             log.debug( json.dumps( { 'message' : 'Skipping sending of email because it has been %d seconds since we last sent mismatch emails and we send only every %d seconds' % ( ( current_time - last_update ).seconds, app.config['ADMIN_ALERT_MAIL_FREQUENCY'] ) } ) )
                     else:
@@ -341,8 +344,9 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
         
 
     # Reset mail nagging timeline.
-    current_time = datetime.datetime.now()
-    set_last_updated( __name__, current_time )
+    if sent_email:
+        current_time = datetime.datetime.now()
+        set_last_updated( __name__, current_time )
 
     # Persist discount codes to disk.
     set_discount_codes( sponsor_event_id, discount_codes )

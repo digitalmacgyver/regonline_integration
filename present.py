@@ -286,7 +286,7 @@ def bulk_purchases():
                 enterprise_packs_by_sponsor[entitlement] += quantity
             else:
                 enterprise_packs_by_sponsor[entitlement] = quantity
-        elif discount_code['code_source'].startswith( 'Bulk Purchase' ):
+        elif discount_code['code_source'].startswith( 'Bulk' ):
             total_bulk_purchases += quantity
             if entitlement in bulk_purchases_by_sponsor:
                 bulk_purchases_by_sponsor[entitlement] += quantity

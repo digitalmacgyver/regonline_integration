@@ -92,7 +92,7 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
 
     sent_email = False
     for sponsor in sponsors:
-        log.debug( json.dumps( { 'message' : "Working on sponsor %s" % ( sponsor['ID'] ) } ) ) 
+        log.info( json.dumps( { 'message' : "Working on sponsor %s" % ( sponsor['ID'] ) } ) ) 
 
         sreg = sf.query_all( "SELECT id, opportunity__c FROM Registrations__c WHERE Confirmation_Number__c = '%s' AND Event_Number__c = '%s'" % ( sponsor['ID'], sponsor_event_id ) )
 
@@ -119,7 +119,7 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
         lis = oli['records'][0]['OpportunityLineItems']
 
         if lis is None:
-            log.debug( json.dumps( { 'message' : "No line items for opporunity: %s, skipping." % ( opportunity_id ) } ) )
+            log.info( json.dumps( { 'message' : "No line items for opporunity: %s, skipping." % ( opportunity_id ) } ) )
             continue
 
         for li in lis['records']:
@@ -255,7 +255,7 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
                         if app.config['SEND_EMAIL']:
                             mail.send( mail_message )
                         else:
-                            log.debug( json.dumps( { 'message' : 'Skipping sending of email to %s due to SEND_EMAIL configuration.' % ( email_recipients ) } ) )
+                            log.info( json.dumps( { 'message' : 'Skipping sending of email to %s due to SEND_EMAIL configuration.' % ( email_recipients ) } ) )
 
 
             except Exception as e:
@@ -305,9 +305,9 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
                             sent_email = True
 
                         else:
-                            log.debug( json.dumps( { 'message' : 'Skipping sending of email because it has been %d seconds since we last sent mismatch emails and we send only every %d seconds' % ( ( current_time - last_update ).seconds, app.config['ADMIN_ALERT_MAIL_FREQUENCY'] ) } ) )
+                            log.info( json.dumps( { 'message' : 'Skipping sending of email because it has been %d seconds since we last sent mismatch emails and we send only every %d seconds' % ( ( current_time - last_update ).seconds, app.config['ADMIN_ALERT_MAIL_FREQUENCY'] ) } ) )
                     else:
-                        log.debug( json.dumps( { 'message' : 'Skipping sending of email to %s due to SEND_EMAIL configuration.' % ( email_recipients ) } ) )
+                        log.info( json.dumps( { 'message' : 'Skipping sending of email to %s due to SEND_EMAIL configuration.' % ( email_recipients ) } ) )
 
             except Exception as e:
                 logging.error( json.dumps( { 'message' : "Failed to send notification email to %s, error was: %s" % ( email_recipients, e ) } ) )
@@ -315,7 +315,7 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
 
         else:
             # All is well, nothing to do.
-            log.debug( json.dumps( { 'message' : "Sponsor %s's current grants match its entitlements." % ( sponsor['ID'] ) } ) )
+            log.info( json.dumps( { 'message' : "Sponsor %s's current grants match its entitlements." % ( sponsor['ID'] ) } ) )
  
     # Check if there are any discount codes that do not have a sponsor any longer.
     sponsors_by_id = { x['ID']:x for x in sponsors }
@@ -340,7 +340,7 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
             if app.config['SEND_EMAIL']:
                 mail.send( mail_message )
             else:
-                log.debug( json.dumps( { 'message' : 'Skipping sending of email to %s due to SEND_EMAIL configuration.' % ( email_recipients ) } ) )
+                log.info( json.dumps( { 'message' : 'Skipping sending of email to %s due to SEND_EMAIL configuration.' % ( email_recipients ) } ) )
         
 
     # Reset mail nagging timeline.

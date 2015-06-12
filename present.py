@@ -213,7 +213,7 @@ def code_summary( only_code=None ):
     for discount_code in discount_codes:
         registration_type = discount_code['badge_type']
         if registration_type in [ 'student_10', 'student_15', 'student_20' ]:
-            registration_type = 'student_full'
+            registration_type = 'student_discount'
 
         if registration_type in codes_by_type:
             codes_by_type[registration_type] += ",%s=%s(%d)" % ( discount_code['discount_code'], discount_code['regonline_str'], discount_code['quantity'] )
@@ -226,10 +226,12 @@ def code_summary( only_code=None ):
 
             
     if only_code in badge_types or only_code == 'student':
-        if only_code and only_code in [ 'student', 'student_full', 'student_10', 'student_15', 'student_20' ]:
-            only_code = [ 'student_full', 'student_10', 'student_15', 'student_20' ]
-        else:
-            only_code = [ only_code ]
+        # DEBUG - Disable this logic now that we're partitioning full and student discounts.
+        #if only_code and only_code in [ 'student', 'student_full', 'student_10', 'student_15', 'student_20' ]:
+        #    only_code = [ 'student_full', 'student_10', 'student_15', 'student_20' ]
+        #else:
+        #    only_code = [ only_code ]
+        
 
         template = "only_code.html"
         code_summary = sorted( [ { "label" : v['name'], "regonline_code_string" : codes_by_type.get( k, '' ), "last_updated" : last_updated_by_type.get( k, 'N/A' ) } for k, v in badge_types.items() if k in only_code ] )

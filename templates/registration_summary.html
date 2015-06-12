@@ -2,36 +2,67 @@
 {% block body %}
 
   {% if session.logged_in %}
+    <h3>Attendance and Reservations By Category</h3>
+    <p>Registered includes paid attendees.  Reserved includes any spots that are reserved due to sponsorship entitlements but are not yet redeemed.</p>
     <table class="singlerow">
       <tr>
 	<th>Group</th>
 	<th>Registered</th>
 	<th>Reserved</th>
+	<th>Total</th>
       </tr>
       {% for group_stats in registration_summary.group_attendee_stats %}
       <tr>
 	<td>{{ group_stats.name }}</td>
 	<td>{{ group_stats.data.redeemed }}</td>
 	<td>{{ group_stats.data.reserved }}</td>
+	<td>{{ group_stats.data.redeemed + group_stats.data.reserved }}</td>
       </tr>
       {% endfor %}
       <tr>
 	<td>Non-Reserved Code</td>
         <td>{{ registration_summary.nonreserved }}</td>
         <td>N/A</td>
+        <td>{{ registration_summary.nonreserved }}</td>
       </tr>
       <tr>
 	<td>Non-Sponsored</td>
         <td>{{ registration_summary.nonsponsored }}</td>
         <td>N/A</td>
+        <td>{{ registration_summary.nonsponsored }}</td>
       </tr>
       <tr>
-	<td>Grand Total:</td>
+	<td>Totals:</td>
         <td>{{ registration_summary.registered }}</td>
         <td>{{ registration_summary.reserved }}</td>
+        <td>{{ registration_summary.registered + registration_summary.reserved }}</td>
       </tr>
     </table>
+
+    <h3>Attendance and Reservations By Discount Code Type</h3>
+    <p>Registered includes paid attendees.  Allotted includes any codes distributed which have not been redeemed, but does not imply these are reserved codes.</li>
+    <table class="singlerow">
+      <tr>
+	<th>Discount Type</th>
+	<th>Registered</th>
+	<th>Allotted</th>
+	<th>Total</th>
+      </tr>
+      {% for discount_type in registration_summary.discount_type_stats %}
+      <tr>
+	<td>{{ discount_type.name }}</td>
+	<td>{{ discount_type.data.redeemed }}</td>
+	<td>{{ discount_type.data.allotted }}</td>
+	<td>{{ discount_type.data.redeemed + discount_type.data.allotted }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+
+
+
     {% if registration_summary.sponsors %}
+    <h3>Discount Code Details By Sponsor</h3>
+      <p>Note: Deleted codes will come back if they are present in Salesforce still, the delete functionality is for cleaning a code out of this reporting tool once it is removed from Salesforce.</p>
       <table class="singlerow">
         <caption>
           <form action="{{ url_for( 'registration_summary' ) }}" method="post" class="download-csv" >

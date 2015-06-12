@@ -237,6 +237,8 @@ def code_summary( only_code=None ):
         code_summary = sorted( [ { "label" : v['name'], "regonline_code_string" : codes_by_type.get( k, '' ), "last_updated" : last_updated_by_type.get( k, 'N/A' ) } for k, v in badge_types.items() if k in only_code ] )
     else:
         template = "code_summary.html"
+        # This is how we used to handle things when we didn't partition full student discounts.
+        # code_summary = sorted( [ { "label" : v['name'], "regonline_code_string" : codes_by_type.get( k, '' ), "last_updated" : last_updated_by_type.get( k, 'N/A' ) } for k, v in badge_types.items() if k not in [ 'student_10', 'student_15', 'student_20' ] ] )
         code_summary = sorted( [ { "label" : v['name'], "regonline_code_string" : codes_by_type.get( k, '' ), "last_updated" : last_updated_by_type.get( k, 'N/A' ) } for k, v in badge_types.items() if k not in [ 'student_10', 'student_15', 'student_20' ] ] )
 
     return render_template( template, code_summary=code_summary )
@@ -497,6 +499,11 @@ def registration_summary():
                               'quantity' : 0 },
     }
 
+    # We want a report that breaks down things by discount code type.
+    # The discount code type is the tuple of: ( badge_type,
+    # regonline_str )
+    discount_code_types = {}
+
     # Used to compute redeemed / available for each particular sponsor
     # code.
     codes_by_sponsor = {}
@@ -512,6 +519,16 @@ def registration_summary():
             codes_by_sponsor[discount_code['SponsorID']].append( discount_code )
         else:
             codes_by_sponsor[discount_code['SponsorID']] = [ discount_code ]
+
+
+        discount_code_type = ( discount_code['badge_type'], discount_code['regonline_str'] )
+        if discount_code_type in discount_code_types:
+            discount_code_types[discount_code_type]['quantity'] += discount_code['quantity']
+        else:
+            discount_code_types[discount_code_type] = { 
+                'quantity' : discount_code['quantity'],
+                'redeemed' : 0
+            }
 
         if discount_code['badge_type'] in badge_types:
             if badge_types[discount_code['badge_type']]['reserve_spot']:
@@ -533,6 +550,13 @@ def registration_summary():
 
             discount_code = discounts_by_code.get( registrant['discount_code'], {} )
 
+            # Only count up codes that match to an existing discount
+            # code.
+            if discount_code.get( 'badge_type', False ):
+                discount_code_type = ( discount_code['badge_type'], discount_code['regonline_str'] )
+                if discount_code_type in discount_code_types:
+                    discount_code_types[discount_code_type]['redeemed'] += 1
+
             if discount_code.get( 'badge_type', None ) in badge_types:
                 if badge_types[discount_code['badge_type']]['reserve_spot']:
                     sponsor_reporting_group = 'Other Sponsored'
@@ -550,6 +574,7 @@ def registration_summary():
                     redemptions_by_code[registrant['discount_code']] += 1
                 else:
                     redemptions_by_code[registrant['discount_code']] = 1
+
             else:
                 nonsponsored += 1
         else:
@@ -557,6 +582,9 @@ def registration_summary():
 
     for group_name, group_stats in group_attendee_stats.items():
         group_stats['reserved'] = group_stats['quantity'] - group_stats['redeemed']
+
+    for discount_code_type, stats in discount_code_types.items():
+        stats['allotted'] = stats['quantity'] - stats['redeemed']
             
     for sponsor, codes in codes_by_sponsor.items():
         for code in codes:
@@ -579,6 +607,7 @@ def registration_summary():
         "nonreserved" : nonreserved,
         "registered" : nonsponsored + redeemed + nonreserved,
         "group_attendee_stats" : [ { "name" : k, "data" : group_attendee_stats[k] } for k in sorted( group_attendee_stats.keys() ) ],
+        "discount_type_stats" : [ { "name" : "%s %s" % ( k ), "data" : discount_code_types[k] } for k in sorted( discount_code_types.keys() ) ],
         "badge_type_names" : [ { "value" : k, "name" : badge_types[k]['name'] } for k in sorted( badge_types.keys() ) ]
     }
 

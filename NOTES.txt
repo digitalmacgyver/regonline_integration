@@ -12,7 +12,33 @@ Badge type ==> Registrant_Type__c (object: OpportunityLineItems)
 Percent off ==> Percent_off__c (object: OpportunityLineItems)
 Final Quantity ==> Redeemable_Quantity__c (object: OpportunityLineItems) ==> Parsed to integer dataType
 
+
+/wintmp/abi/speaker_images/input/pan130s2-auth2_pic_0.jpg
 ==
+
+Workflow for image fixing:
+
+1. Manually download speakers list.
+
+2. Manually download images zip.
+
+3. Run a script to finess the images in the zip to the desired size and format, and copy them up to the server.
+
+560x620 png
+
+Conversion mechanism - center their existing image.
+
+4. The server serves them.
+
+Image server:
+
+Very simple web server, serves up images at:
+
+base/secret/key_from_linklings.png
+
+
+
+
 
 
 ==

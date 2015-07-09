@@ -13,6 +13,31 @@ Percent off ==> Percent_off__c (object: OpportunityLineItems)
 Final Quantity ==> Redeemable_Quantity__c (object: OpportunityLineItems) ==> Parsed to integer dataType
 
 
+==
+
+ONCE AND FOR ALL: DOCUMENT THE INTERACTION / BEHAVIOR OF product name,
+code source, etc.
+
+TEF General One Day – registrant type General One Day, used in GHC Indiv reg as registration code
+TEF General Full Conference – registrant type General, used in GHC indiv reg as registration code
+
+
+==
+
+for thing in jd:
+    for eps in thing.get( 'externalProfiles', [] ):
+    	if type( eps ) == list:
+            for ep in eps:
+                print type( ep ), ep, eps
+                if ep.get( 'externalProfileType', '' ) == 'LinkedIn':
+                    td.append( ( thing['emails'], ep ) )
+        else:
+            if eps.get( 'externalProfileType', '' ) == 'LinkedIn':
+                td.append( ( thing['emails'], eps ) )
+
+
+
+
 /wintmp/abi/speaker_images/input/pan130s2-auth2_pic_0.jpg
 ==
 
@@ -46,43 +71,6 @@ base/secret/key_from_linklings.png
 52.8.24.90
 
 matt@52.8.24.90:/home/matt/regonline_integration/config/
-
-Code anitap718ddawa entitlement mismatch:
-Badge Type: general_1
-Badge Source: Show Management
-Badge Quantity Beyond Entitlement: 1
-Code anitap718osd entitlement mismatch:
-Badge Type: general_1
-Badge Source: Show Management
-Badge Quantity Beyond Entitlement: 2
-
-Code anitap718ent entitlement mismatch:
-Badge Type: general_full
-Badge Source: Enterprise Pack
-Badge Quantity Beyond Entitlement: 200
-
-Code anitap718bwrec entitlement mismatch:
-Badge Type: general_1
-Badge Source: Show Management
-Badge Quantity Beyond Entitlement: 1
-
-Code anitap718tef entitlement mismatch:
-Badge Type: general_1
-Badge Source: Show Management
-Badge Quantity Beyond Entitlement: 2
-
-Code anitap718larec entitlement mismatch:
-Badge Type: general_1
-Badge Source: Show Management
-Badge Quantity Beyond Entitlement: 1
-Code anitap718schl entitlement mismatch:
-Badge Type: general_1
-Badge Source: Show Management
-Badge Quantity Beyond Entitlement: 1
-Code anitap718caawa entitlement mismatch:
-Badge Type: general_1
-Badge Source: Show Management
-Badge Quantity Beyond Entitlement: 1
 
 ==
 

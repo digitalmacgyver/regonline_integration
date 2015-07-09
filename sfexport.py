@@ -119,52 +119,51 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
         lis = oli['records'][0]['OpportunityLineItems']
 
         if lis is None:
-            log.info( json.dumps( { 'message' : "No line items for opporunity: %s, skipping." % ( opportunity_id ) } ) )
-            continue
+            log.warning( json.dumps( { 'message' : "No line items for opportunity: %s" % ( opportunity_id ) } ) )
+        else:
+            for li in lis['records']:
+                if li.get( 'Discount_Code__c', None ) is not None and li['Registrant_Type__c'] is not None:
+                    try:
+                        # RegOnline codes don't take whitespace and are
+                        # case insensitive - however RegOnline stores them
+                        # exactly as the user entered them, so we need to
+                        # store our internal representation lowercase and
+                        # without whitespace so we can match up "foo" with
+                        # "FoO "
+                        discount_id = li['Discount_Code__c'].strip().lower()
+                        sponsor_id = sponsor['ID']
+                        attendee_event_id = li['Redeemable_Event_Id__c']
+                        discount_code = li['Discount_Code__c'].strip().lower()
+                        badge_type = get_badge_type( sponsor_event_id, li['Registrant_Type__c'], li['Percent_off__c'] )
+                        quantity = li['Redeemable_Quantity__c']
+                        product_name = li['Product2']['Name']
+                        percent_off = li['Percent_off__c']
+                        created_date = li['CreatedDate']
+                        
+                        code_source = li['Product2']['Name']
+                        if code_source not in [ 'Enterprise Pack' ] and not code_source.startswith( 'Bulk' ):
+                            code_source = sponsor['RegistrationType']
+                            
+                        new_code = {
+                            'ID'                : discount_id,
+                            'SponsorID'         : sponsor['ID'],
+                            'RegTypeID'         : sponsor['RegTypeID'],
+                            'RegistrationType'  : sponsor['RegistrationType'],
+                            'attendee_event_id' : attendee_event_id,
+                            'product_name'      : product_name,
+                            'discount_code'     : discount_code,
+                            'quantity'          : int( quantity ),
+                            'badge_type'        : badge_type,
+                            'code_source'       : code_source,
+                            'regonline_str'     : "-%d%%" % ( int( percent_off ) ),
+                            'created_date'      : pytz.utc.localize( datetime.datetime.strptime( created_date, "%Y-%m-%dT%H:%M:%S.000+0000" ) ).strftime( "%a, %d %b %Y %H:%M:%S %Z" )
+                        }
 
-        for li in lis['records']:
-            if li.get( 'Discount_Code__c', None ) is not None and li['Registrant_Type__c'] is not None:
-                try:
-                    # RegOnline codes don't take whitespace and are
-                    # case insensitive - however RegOnline stores them
-                    # exactly as the user entered them, so we need to
-                    # store our internel representation lowercase and
-                    # without whitespace so we can match up "foo" with
-                    # "FoO "
-                    discount_id = li['Discount_Code__c'].strip().lower()
-                    sponsor_id = sponsor['ID']
-                    attendee_event_id = li['Redeemable_Event_Id__c']
-                    discount_code = li['Discount_Code__c'].strip().lower()
-                    badge_type = get_badge_type( sponsor_event_id, li['Registrant_Type__c'], li['Percent_off__c'] )
-                    quantity = li['Redeemable_Quantity__c']
-                    product_name = li['Product2']['Name']
-                    percent_off = li['Percent_off__c']
-                    created_date = li['CreatedDate']
-                    
-                    code_source = li['Product2']['Name']
-                    if code_source not in [ 'Enterprise Pack' ] and not code_source.startswith( 'Bulk' ):
-                        code_source = sponsor['RegistrationType']
+                        new_codes.append( new_code )
 
-                    new_code = {
-                        'ID'                : discount_id,
-                        'SponsorID'         : sponsor['ID'],
-                        'RegTypeID'         : sponsor['RegTypeID'],
-                        'RegistrationType'  : sponsor['RegistrationType'],
-                        'attendee_event_id' : attendee_event_id,
-                        'product_name'      : product_name,
-                        'discount_code'     : discount_code,
-                        'quantity'          : int( quantity ),
-                        'badge_type'        : badge_type,
-                        'code_source'       : code_source,
-                        'regonline_str'     : "-%d%%" % ( int( percent_off ) ),
-                        'created_date'      : pytz.utc.localize( datetime.datetime.strptime( created_date, "%Y-%m-%dT%H:%M:%S.000+0000" ) ).strftime( "%a, %d %b %Y %H:%M:%S %Z" )
-                    }
-
-                    new_codes.append( new_code )
-
-                    new_codes_by_id[discount_id] = new_code
-                except Exception as e:
-                    log.error( json.dumps( { 'message' : "Failed to process line item: %s due to error %s proceeding." % ( li, e ) } ) )
+                        new_codes_by_id[discount_id] = new_code
+                    except Exception as e:
+                        log.error( json.dumps( { 'message' : "Failed to process line item: %s due to error %s proceeding." % ( li, e ) } ) )
 
         granted_codes = Counter( [ code['ID'] for code in old_codes ] ) 
         entitled_codes = Counter( [ code['ID'] for code in new_codes ] )
@@ -389,7 +388,7 @@ if __name__ == "__main__":
         keep_going = False
         # Get a list of all registrations for GHC 2014.
         try:
-            log.info( json.dumps( { 'message' : "Sycning with salesforce.com" } ) )
+            log.info( json.dumps( { 'message' : "Syncing with salesforce.com" } ) )
             sync_salesforce( sponsors_id )
         except Exception as e:
             log.error( json.dumps( { 'message' : "Failed to sync discount code data with salesforce.com, error was: %s" % ( e ) } ) )

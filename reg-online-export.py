@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from bs4 import BeautifulSoup
 import datetime
 import json
 from optparse import OptionParser

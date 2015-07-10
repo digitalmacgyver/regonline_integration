@@ -527,6 +527,8 @@ def registration_summary():
         else:
             discount_code_types[discount_code_type] = { 
                 'quantity' : discount_code['quantity'],
+                'is_reserved' : "%s" % ( badge_types[discount_code['badge_type']].get( 'reserve_spot', True ) ),
+                'cost' : badge_types[discount_code['badge_type']].get( 'cost', 0 ) * float( 100 + int( discount_code['regonline_str'][:-1] ) ) / 100 ,
                 'redeemed' : 0
             }
 
@@ -598,6 +600,9 @@ def registration_summary():
 
     for sponsor in sponsors:
         sponsor['discount_codes'] = sorted( codes_by_sponsor.get( sponsor['ID'], [] ), key=lambda x: x['discount_code'] )
+
+    #import pdb
+    #pdb.set_trace()
 
     registration_summary = {
         "sponsors" : sponsors,

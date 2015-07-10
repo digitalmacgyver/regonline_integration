@@ -43,10 +43,13 @@
     <p>Registered includes paid attendees.  Allotted includes any codes distributed which have not been redeemed, but does not imply these are reserved codes.</li>
     <table class="singlerow">
       <tr>
-	<th>Discount Type</th>
+	<th>Discount Code Type</th>
 	<th>Registered</th>
 	<th>Allotted</th>
-	<th>Total</th>
+	<th>Registered + Allotted</th>
+	<th>Is Reserved?</th>
+	<th>Full Price</th>
+	<th>Max Remaining Sales</th>
       </tr>
       {% for discount_type in registration_summary.discount_type_stats %}
       <tr>
@@ -54,6 +57,9 @@
 	<td>{{ discount_type.data.redeemed }}</td>
 	<td>{{ discount_type.data.allotted }}</td>
 	<td>{{ discount_type.data.redeemed + discount_type.data.allotted }}</td>
+	<td>{{ discount_type.data.is_reserved }}</td>
+	<td>{{ "${:,.2f}".format( discount_type.data.cost ) }}</td>
+	<td>{{ "${:,.2f}".format( discount_type.data.allotted * discount_type.data.cost ) }}</td>
       </tr>
       {% endfor %}
     </table>

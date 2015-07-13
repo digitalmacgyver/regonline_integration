@@ -15,6 +15,17 @@ Final Quantity ==> Redeemable_Quantity__c (object: OpportunityLineItems) ==> Par
 
 ==
 
+DISABLE EMAIL SEND
+from datastore import *
+discount_codes = get_discount_codes( 1639610 )
+non_spay = [ x for x in discount_codes if x['ID'][-4:] != 'spay' ]
+set_discount_codes( 1639610, non_spay )
+
+./reg-online-export.py
+ENABLE EMAIL SEND
+
+===
+
 ONCE AND FOR ALL: DOCUMENT THE INTERACTION / BEHAVIOR OF product name,
 code source, etc.
 

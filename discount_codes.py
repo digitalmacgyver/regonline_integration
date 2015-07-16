@@ -39,7 +39,7 @@ badge_types = {
     "student_full"  : { 'name'          : 'Student',
                         'regonline_url' : 'https://www.regonline.com?eventID=1702108&rTypeID=228782',
                         'reserve_spot'  : True,
-                        'cost'          : 255,
+                        'cost'          : 300,
                         'regonline_str' : '-100%' },
     "academic_full" : { 'name'          : 'Academic',
                         'regonline_url' : 'https://www.regonline.com?eventID=1702108&rTypeID=228783',

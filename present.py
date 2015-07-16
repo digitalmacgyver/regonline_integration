@@ -341,7 +341,7 @@ def bulk_purchases():
 
 @app.route( '/registration_summary/', methods=[ 'GET', 'POST' ] )
 def registration_summary():
-    '''Admin only, summaries all registration counts and sponsor data.'''
+    '''Admin only, summarises all registration counts and sponsor data.'''
 
     data = {
         'eventID' : app.config['SPONSOR_EVENT'],
@@ -524,19 +524,26 @@ def registration_summary():
             codes_by_sponsor[discount_code['SponsorID']] = [ discount_code ]
 
 
-        discount_code_type = ( discount_code['badge_type'], discount_code['regonline_str'] )
+        registration_type = discount_code['badge_type']
+        if registration_type in [ 'student_10', 'student_15', 'student_20' ]:
+            if discount_code.get( 'ID', '' )[-4:] != 'spay':
+                registration_type = 'student_discount'
+            else:
+                registration_type = 'student_full'
+
+        discount_code_type = ( registration_type, discount_code['regonline_str'] )
         if discount_code_type in discount_code_types:
             discount_code_types[discount_code_type]['quantity'] += discount_code['quantity']
         else:
             discount_code_types[discount_code_type] = { 
                 'quantity' : discount_code['quantity'],
-                'is_reserved' : "%s" % ( badge_types[discount_code['badge_type']].get( 'reserve_spot', True ) ),
-                'cost' : badge_types[discount_code['badge_type']].get( 'cost', 0 ) * float( 100 + int( discount_code['regonline_str'][:-1] ) ) / 100 ,
+                'is_reserved' : "%s" % ( badge_types[registration_type].get( 'reserve_spot', True ) ),
+                'cost' : badge_types[registration_type].get( 'cost', 0 ) * float( 100 + int( discount_code['regonline_str'][:-1] ) ) / 100 ,
                 'redeemed' : 0
             }
 
-        if discount_code['badge_type'] in badge_types:
-            if badge_types[discount_code['badge_type']]['reserve_spot']:
+        if registration_type in badge_types:
+            if badge_types[registration_type]['reserve_spot']:
                 quantity += int( discount_code['quantity'] )
 
                 sponsor_reporting_group = sponsor_reporting_groups.get( sponsors_by_id[discount_code['SponsorID']]['RegistrationType'], 'Other Sponsored' )
@@ -546,7 +553,7 @@ def registration_summary():
                     group_attendee_stats[sponsor_reporting_group] = { 'quantity' : discount_code['quantity'],
                                                                       'redeemed' : 0 }
         else:
-            logging.warning( json.dumps( { 'message' : 'Unknown badge_type: %s found in discount codes.' % ( discount_code['badge_type'] ) } ) )
+            logging.warning( json.dumps( { 'message' : 'Unknown badge_type: %s found in discount codes.' % ( registration_type ) } ) )
 
     redemptions_by_code = {}
 
@@ -558,12 +565,28 @@ def registration_summary():
             # Only count up codes that match to an existing discount
             # code.
             if discount_code.get( 'badge_type', False ):
-                discount_code_type = ( discount_code['badge_type'], discount_code['regonline_str'] )
+
+                registration_type = discount_code['badge_type']
+                if registration_type in [ 'student_10', 'student_15', 'student_20' ]:
+                    if discount_code.get( 'ID', '' )[-4:] != 'spay':
+                        registration_type = 'student_discount'
+                    else:
+                        registration_type = 'student_full'
+
+                discount_code_type = ( registration_type, discount_code['regonline_str'] )
                 if discount_code_type in discount_code_types:
                     discount_code_types[discount_code_type]['redeemed'] += 1
 
             if discount_code.get( 'badge_type', None ) in badge_types:
-                if badge_types[discount_code['badge_type']]['reserve_spot']:
+
+                registration_type = discount_code['badge_type']
+                if registration_type in [ 'student_10', 'student_15', 'student_20' ]:
+                    if discount_code.get( 'ID', '' )[-4:] != 'spay':
+                        registration_type = 'student_discount'
+                    else:
+                        registration_type = 'student_full'
+
+                if badge_types[registration_type]['reserve_spot']:
                     sponsor_reporting_group = 'Other Sponsored'
                     if 'SponsorID' in discount_code:
                         if discount_code['SponsorID'] in sponsors_by_id:

@@ -38,7 +38,7 @@ def process_images( speakers_csv, indir, outdir, prefix='http://52.8.24.90/z3rbr
         except Exception as e:
             print "ERROR: %s" % ( e )
     
-speakers_csv = '/wintmp/abi/speaker_images/speakers.csv'
+speakers_csv = '/wintmp/abi/speakers/speakers.csv'
 indir  = '/wintmp/abi/speaker_images/input'
 outdir = '/wintmp/abi/speaker_images/output'
 

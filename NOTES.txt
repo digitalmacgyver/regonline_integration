@@ -7,30 +7,16 @@ http://developer.regonline.com/
 ==
 
 x = client.service.GetCustomFieldResponsesForRegistration( eventID=eventID, registrationID=attendee['ID'], pageSectionID=1 )
-	                                                                                       
+
 Badge type ==> Registrant_Type__c (object: OpportunityLineItems)
 Percent off ==> Percent_off__c (object: OpportunityLineItems)
 Final Quantity ==> Redeemable_Quantity__c (object: OpportunityLineItems) ==> Parsed to integer dataType
 
-
 ==
 
-DISABLE EMAIL SEND
-from datastore import *
-discount_codes = get_discount_codes( 1639610 )
-non_spay = [ x for x in discount_codes if x['ID'][-4:] != 'spay' ]
-set_discount_codes( 1639610, non_spay )
+Mobile app tasks:
 
-./reg-online-export.py
-ENABLE EMAIL SEND
-
-===
-
-ONCE AND FOR ALL: DOCUMENT THE INTERACTION / BEHAVIOR OF product name,
-code source, etc.
-
-TEF General One Day – registrant type General One Day, used in GHC Indiv reg as registration code
-TEF General Full Conference – registrant type General, used in GHC indiv reg as registration code
+1. Get attendee groups encodeed.
 
 
 ==
@@ -45,9 +31,6 @@ for thing in jd:
         else:
             if eps.get( 'externalProfileType', '' ) == 'LinkedIn':
                 td.append( ( thing['emails'], eps ) )
-
-
-
 
 /wintmp/abi/speaker_images/input/pan130s2-auth2_pic_0.jpg
 ==
@@ -73,10 +56,6 @@ Very simple web server, serves up images at:
 base/secret/key_from_linklings.png
 
 
-
-
-
-
 ==
 
 52.8.24.90
@@ -85,137 +64,3 @@ matt@52.8.24.90:/home/matt/regonline_integration/config/
 
 ==
 
-sfexport.sync_salesforce( 1639610, get_sponsors( 1639610 ) )
-
-==
-
-API Usage:
-
-Setup -> Search " System Overview"
-Or Reports -> Administrative Reports -> API Calls Made Within Last 7 Days
-
-==
-
-ISSUE: Had to bump up the API version to 32 or whatever to get the latest stuff.
-
-=== Simple Salesforce API Notes ===
-
-from simple_salesforce import Salesforce
-sf = Salesforce(  instance='test.salesforce.com', username='matt@viblio.com', password='e6IoNyQ8jihZLWlf', security_token='C4N1vrEFXwGYOcz0lQ3c6waRs', sandbox=True, version='32.0' )
-
-# What is in registrations object:
-d = sf.Registrations__c.describe()
-
-fields = sf.Registrations__c.describe()['fields']
-
-x = sf.query_all( "select id, opportunity_c from registrations__c" )
-x.keys()
-x['done'] # Is it True?
-x['totalSize'] # Resutl set size
-x['records'] # The results
-
-# Getting data with nested queries:
->>> result = sf.query_all( "SELECT id, createdDate, ( SELECT id from OpportunityLineItems ) from Opportunity where Id = '00618000002LciPAAS'" )
->>> result['records'][0]['Id']
->>> result['records'][0]['OpportunityLineItems']['records'][2]
-
-==== SF API CALL REDUCTION NOTES ====
-Account object has a "child relationship name" of Registrations to the
-field name of "Account" on the Registrations object.  It's API name is Account__c.
-
-Child-to-parent queries use the dot notation.
-Parent-to-child queries use subqueries, no dot notation.
-SELECT LastName__c,
-  (
-    SELECT LastName__c
-    FROM Daughters__r
-  )
-FROM Mother__c
-
-GOAL: Do a one shot query on OpportunityLineItem, pulling in everything I need from:
-
-SELECT id,
-  ( SELECT id
-    FROM Registrations__c )
-FROM OpportunityLineItem
-WHERE id in ( select 
-
-NOTE: It looks like it doesn't like plurals on object name, you can
-descibe an OpportunityLineItem, but not OpportunityLineItems.
-
-
-==
-
-uscB2014abi
-
-==
-
-from suds.client import Client
-import logging
-import logging.handlers
-logging.basicConfig( level=logging.INFO )
-consolelog = logging.StreamHandler()
-consolelog.setLevel( logging.DEBUG )
-log.addHandler( consolelog )
-
-regonline_api_key = '9mIRFe399oIBM0fnX5jxLtupSZlaizGgtHUEuDpUi34QWs66G6LxFDZ6wsdpgzCw'
-regonline_wsdl = "https://www.regonline.com/api/default.asmx?WSDL"
-regonline_soap_namespace = 'http://www.regonline.com/api'
-from suds.plugin import MessagePlugin
-class LogPlugin(MessagePlugin):
-    def sending(self, context):
-        print(str(context.envelope))
-    def received(self, context):
-        print(str(context.reply))
-client = Client( regonline_wsdl, plugings=[LogPlugin()] )
-token = client.factory.create( "TokenHeader" )
-token.APIToken = regonline_api_key
-client.set_options( soapheaders=token )
-( a, b ) = client.service.GetRegistrationsMerchandiseForEvent( eventID=1639610 )
-
-client = Client("http://localhost/wsdl.wsdl", plugins=[LogPlugin()])
-
-TODO:
-=======
-discount_codes - array of discount_code discts.
-
-A discount_code dict is:
-
-{ 
-  ID : uuid for this code,
-  SponsorID : ...,
-  RegTypeID : ...,
-  RegistrationType : ..., (of sponsor)
-  created_date : ..., (sponsor add date for default codes, time of generation for others)
-  code_source : ..., (sponsor registrationtype, or "show management" or a provided argument for custom code sources)
-  quantity : ...,
-  discount_code : ...,
-  regonline_str : '-10%',
-  badge_type : key to list of badge types, notably here the badge type determines whether or not we reserve a spot
-}
-
-==
-
-Need a mapping of each registration type to breakdown category.
-
-Probably need to add the breakdown category as an element of the
-discount_code data structure (although it could be computed???)
-
-
-0. Make the app key actually secret (e.g. load from file not in source
-control).
-
-0. Make the admin credentials actually secret.
-
-===
-
-id - A unique identifier of this discount code in Salesforce.com
-sponsor_event_id - The RegOnline event the sponsor is registered under​
-sponsor_id - The RegOnline ID of the sponsor who owns this code under the sponsor_event_id event
-attendee_event_id - The RegOnline event this code can be redeemed at
-discount_code - The string that attendees can use to redeem this code
-badge_type - The badge type the discount code pertains to (e.g. Student, Scholar, General, Academic, General 1 Day, ...) this would correspond to a RegOnline registration type for attendees
-quantity - The quantity the code is good for, with some sentinel value for unlimited (e.g. -1, or null, depending on language support)
-code_source - Where this code is coming from, for example via an Enterprise Pack, or a Corporate Gold Sponsorship
-percent_off - The percentage discount the code is good for, floating point
-created_date - When this code was created in some consistent format, I'd propose YYYY-MM-DD HH:MM:SS TZ

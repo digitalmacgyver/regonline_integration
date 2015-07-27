@@ -507,6 +507,8 @@ def registration_summary():
     # regonline_str )
     discount_code_types = {}
 
+    product_name_types = {}
+
     # Used to compute redeemed / available for each particular sponsor
     # code.
     codes_by_sponsor = {}
@@ -539,6 +541,16 @@ def registration_summary():
                 'quantity' : discount_code['quantity'],
                 'is_reserved' : "%s" % ( badge_types[registration_type].get( 'reserve_spot', True ) ),
                 'cost' : badge_types[registration_type].get( 'cost', 0 ) * float( 100 + int( discount_code['regonline_str'][:-1] ) ) / 100 ,
+                'redeemed' : 0
+            }
+
+        product_name_type = discount_code['product_name']
+        if product_name_type in product_name_types:
+            product_name_types[product_name_type]['quantity'] += discount_code['quantity']
+        else:
+            product_name_types[product_name_type] = { 
+                'quantity' : discount_code['quantity'],
+                'is_reserved' : "%s" % ( badge_types[registration_type].get( 'reserve_spot', True ) ),
                 'redeemed' : 0
             }
 
@@ -577,6 +589,10 @@ def registration_summary():
                 if discount_code_type in discount_code_types:
                     discount_code_types[discount_code_type]['redeemed'] += 1
 
+                product_name_type = discount_code['product_name']
+                if product_name_type in product_name_types:
+                    product_name_types[product_name_type]['redeemed'] += 1
+
             if discount_code.get( 'badge_type', None ) in badge_types:
 
                 registration_type = discount_code['badge_type']
@@ -613,6 +629,9 @@ def registration_summary():
 
     for discount_code_type, stats in discount_code_types.items():
         stats['allotted'] = stats['quantity'] - stats['redeemed']
+
+    for product_name_type, stats in product_name_types.items():
+        stats['allotted'] = stats['quantity'] - stats['redeemed']
             
     for sponsor, codes in codes_by_sponsor.items():
         for code in codes:
@@ -639,6 +658,7 @@ def registration_summary():
         "registered" : nonsponsored + redeemed + nonreserved,
         "group_attendee_stats" : [ { "name" : k, "data" : group_attendee_stats[k] } for k in sorted( group_attendee_stats.keys() ) ],
         "discount_type_stats" : [ { "name" : "%s %s" % ( k ), "data" : discount_code_types[k] } for k in sorted( discount_code_types.keys() ) ],
+        "product_name_stats" : [ { "name" : k, "data" : product_name_types[k] } for k in sorted( product_name_types.keys() ) ],
         "badge_type_names" : [ { "value" : k, "name" : badge_types[k]['name'] } for k in sorted( badge_types.keys() ) ]
     }
 

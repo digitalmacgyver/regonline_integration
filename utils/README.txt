@@ -75,7 +75,6 @@ In the URL Prefix box.
 
 merge_attendees.py -f /wintmp/abi/speakers/attendee.csv
 
-
 Upload merged-attendees.csv as attendees to DoubleDutch.
 
 

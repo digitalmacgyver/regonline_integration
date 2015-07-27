@@ -3,6 +3,7 @@
 import json
 from optparse import OptionParser
 import os
+import time
 import unicodecsv
 import uuid
 
@@ -97,6 +98,7 @@ def merge_registrants( eventID, attendee_file, output_file ):
                 phone_number = phone_number[:20]
                 # Conform to RegOnline allowed characters for this field
                 phone_number = ''.join( [ x for x in phone_number if x in [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '(', ')', ' ', '+', '.', 'x' ] ] )
+        return phone_number
 
     # Get data from the file.
     with open( attendee_file, 'rb' ) as f:
@@ -137,6 +139,7 @@ def merge_registrants( eventID, attendee_file, output_file ):
 
     attendees = result[1][0]
 
+    # DEBUG
     for attendee in attendees:
         try:
             if unicode( attendee['StatusDescription'] ) == 'Declined':
@@ -185,6 +188,90 @@ def merge_registrants( eventID, attendee_file, output_file ):
 
             # If we get here, we need to add the attendee.
 
+            # Avoid rate limiting.
+            time.sleep( 2 )
+                    
+            custom_data1 = client.service.GetCustomFieldResponsesForRegistration( eventID=eventID, 
+                                                                                  registrationID=attendee['ID'], 
+                                                                                  pageSectionID=1 )
+
+            group_labels = [
+                'Professional Affiliation: Academic',
+                'Professional Affiliation: Government',
+                'Professional Affiliation: Industry',
+                'Professional Affiliation: National Lab',
+                'Professional Affiliation: Non-Profit',
+                'Professioanl Affiliation: Unaffiliated',
+                'Professional Affiliation: Other',
+                'Interest: ABI.Locals',
+                'Interest: ACM',
+                'Interest: Artificial Intelligence',
+                'Interest: Being a Mentor',
+                'Interest: Being Mentored',
+                'Interest: CRA-W',
+                'Interest: Data Science',
+                'Interest: Entrepreneurship',
+                'Interest: Graphic Effects / Gaming',
+                'Interest: Human-Computer Interactions',
+                'Interest: IEEE',
+                'Interest: Internet of Things',
+                'Interest: ISOC',
+                'Interest: Lean-In Circles',
+                'Interest: NCWIT',
+                'Interest: Open Source',
+                'Interest: Organizational Change',
+                'Interest: Privacy',
+                'Interest: Productization',
+                'Interest: Security',
+                'Interest: Systers',
+                'Interest: Wearables',
+                'Ethnicity: African or African-American/Black',
+                'Ethnicity: Alaska Native or American Indian/Native American',
+                'Ethnicity: Asian or Asian-American',
+                'Ethnicity: European or Euro-American/White',
+                'Ethnicity: Native Hawaiian or Pacific Islander',
+                'Ethnicity: Hispanic or Latina/o',
+                'Ethnicity: Other',
+                'Gender: Female',
+                'Gender: Male',
+                'Gender: Transgender',
+                'Gender: Nonbinary',
+                'Gender: Other',
+                'Gender: Decline to state',
+                'Agenda: Fall Partner Meeting',
+                'Agenda: Global Women Technical Leaders Program',
+                'Agenda: Private Reception',
+                "Agenda: Senior Women's Program and Luncheon",
+                'Agenda: Technical Executive Forum'
+            ]
+            
+            groups_of_interest = [ x[x.find( ':' )+2:] for x in group_labels ]
+
+            user_group_labels = [ "Registration: %s" % ( attendee.RegistrationType ) ]
+
+            if custom_data1.Success != True:
+                log.error( json.dumps( { 'message' : "Failed to extract custom field data for eventID: %s, registrationID %s.  StatusCode=%s, Authority=%s" % ( eventID, attendee['ID'], custom_data1.StatusCode, custom_data1.Authority ) } ) )
+                # DEBUG - perhaps our client is getting corrupted somehow after much use? 
+                # Get a new client and keep trying.
+                client = Client( regonline_wsdl )
+                token = client.factory.create( "TokenHeader" )
+                token.APIToken = regonline_api_key
+                client.set_options( soapheaders=token )
+                continue
+
+            for thing in custom_data1.Data.APICustomFieldResponse:
+                field = thing.CustomFieldNameOnReport
+                if 'ItemDescription' in thing:
+                    value = thing.ItemDescription
+                elif thing.Response == "True":
+                    value = thing.CustomFieldNameOnForm
+                else:
+                    value = thing.Response
+
+                if value in groups_of_interest:
+                    user_group_labels.append( group_labels[groups_of_interest.index( value )] )
+
+
             known_attendees.append( [
                 add_attendee['FirstName'],
                 add_attendee['LastName'],
@@ -195,7 +282,7 @@ def merge_registrants( eventID, attendee_file, output_file ):
                 '',
                 sanitize_phone( add_attendee['Phone'] ),
                 '',
-                '',
+                ",".join( user_group_labels ),
                 '',
                 '',
                 '',
@@ -212,6 +299,74 @@ def merge_registrants( eventID, attendee_file, output_file ):
         writer.writerow( attendee_headers )
         for attendee in sorted( known_attendees ):
             writer.writerow( attendee )
+
+'''
+ABI.Locals
+ACM
+African or African-American/Black
+Age
+Alaska Native or American Indian/Native American
+Artificial Intelligence
+Asian or Asian-American
+Being Mentored
+Being a Mentor
+CRA-W
+Data Science
+Degree Currently Pursuing
+Entrepreneurship
+European or Euro-American/White
+GHC 1994
+GHC 1997
+GHC 2000
+GHC 2002
+GHC 2004
+GHC 2006
+GHC 2007
+GHC 2008
+GHC 2009
+GHC 2010
+GHC 2011
+GHC 2012
+GHC 2013
+GHC 2014
+Gender specified
+Gender.
+Gluten-Free
+Graphic Effects / Gaming
+Hispanic or Latina/o
+Human-Computer Interactions
+IEEE
+ISOC
+Internet of Things
+Job Role - Academic
+Job Role - Govt/Lab/Unaffiliated
+Job Role - Industry
+Lean-In Circles
+NCWIT
+Native Hawaiian or Pacific Islander
+Open Source
+Organizational Change
+Other Affiliation
+Other Degree
+Other Job Role
+Other Race
+Previous Attendee
+Privacy
+Productization
+Professional Affiliation
+RegistrationType
+Security
+State
+StatusDescription
+Syster
+Systers
+Title
+Vegetarian or Vegan
+Visual
+Waitlist Type
+Wearables
+'''
+
 
 
 if __name__ == "__main__":
@@ -238,7 +393,7 @@ if __name__ == "__main__":
     if options.registrants_id:
         registrants_id = int( options.registrants_id )
         
-    attendee_file = '/wintmp/abi/speaker_images/attendee.csv'
+    attendee_file = '/wintmp/abi/speakers/attendee.csv'
     if options.attendee_file and os.path.isfile( options.attendee_file ):
         attendee_file  = options.attendee_file
 

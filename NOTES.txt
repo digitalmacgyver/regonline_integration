@@ -64,3 +64,38 @@ matt@52.8.24.90:/home/matt/regonline_integration/config/
 
 ==
 
+Agenda: Fall Partner Meeting
+Agenda: Global Women Technical Leaders Program
+Agenda: Private Reception
+Agenda: Senior Women's Program and Luncheon
+Agenda: Technical Executive Forum
+Ethnicity: African or African-American/Black
+Ethnicity: Alaska Native or American Indian/Native American
+Ethnicity: Asian or Asian-American
+Ethnicity: European or Euro-American/White
+Ethnicity: Native Hawaiian or Pacific Islander
+Ethnicity: Hispanic or Latina/o
+Ethnicity: Other
+Interest: ABI.Locals
+Interest: ACM
+Interest: Artificial Intelligence
+Interest: Being a Mentor
+Interest: Being Mentored
+Interest: CRA-W
+Interest: Data Science
+Interest: Entrepreneurship
+Interest: Graphic Effects / Gaming
+Interest: Human-Computer Interactions
+Interest: IEEE
+Interest: Internet of Things
+Interest: ISOC
+Interest: Lean-In Circles
+Interest: NCWIT
+Interest: Open Source
+Interest: Organizational Change
+Interest: Privacy
+Interest: Productization
+Interest: Security
+Interest: Systers
+Interest: Wearables
+

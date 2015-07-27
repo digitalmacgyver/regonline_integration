@@ -65,6 +65,27 @@
     </table>
 
 
+    <h3>Attendance and Reservations By Salesforce Product Name</h3>
+    <table class="singlerow">
+      <tr>
+	<th>Discount Code Product Name</th>
+	<th>Registered</th>
+	<th>Allotted</th>
+	<th>Registered + Allotted</th>
+	<th>Is Reserved?</th>
+      </tr>
+      {% for product_name in registration_summary.product_name_stats %}
+      <tr>
+	<td>{{ product_name.name }}</td>
+	<td>{{ product_name.data.redeemed }}</td>
+	<td>{{ product_name.data.allotted }}</td>
+	<td>{{ product_name.data.redeemed + product_name.data.allotted }}</td>
+	<td>{{ product_name.data.is_reserved }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+
+
 
     {% if registration_summary.sponsors %}
     <h3>Discount Code Details By Sponsor</h3>

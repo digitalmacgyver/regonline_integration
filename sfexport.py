@@ -150,6 +150,7 @@ def sync_salesforce( sponsor_event_id=default_sponsor_event_id, sponsors=None ):
                             'RegTypeID'         : sponsor['RegTypeID'],
                             'RegistrationType'  : sponsor['RegistrationType'],
                             'attendee_event_id' : attendee_event_id,
+                            'attendee_registration_type' : li['Registrant_Type__c'],
                             'product_name'      : product_name,
                             'discount_code'     : discount_code,
                             'quantity'          : int( quantity ),

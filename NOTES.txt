@@ -14,6 +14,16 @@ Final Quantity ==> Redeemable_Quantity__c (object: OpportunityLineItems) ==> Par
 
 ==
 
+0. Update registration report to include breakout for registration
+type by registered no code, non-reserved code, reserved code, and
+reserved code outstanding.
+
+I DELETED ALL DISCOUNT CODES AND REPOPULATED, LEAVING SPONSORS AND
+ATTENDEES IN PLACE.
+
+==
+
+
 Mobile app tasks:
 
 1. Get attendee groups encodeed.

@@ -39,8 +39,33 @@
       </tr>
     </table>
 
+    <h3>Attendance and Reservations By Registration Type</h3>
+    <table class="singlerow">
+      <tr>
+	<th>Registration Type</th>
+	<th>Registered No Code</th>
+	<th>Registered Non-Reserved Code</th>
+	<th>Registered Reserved Code</th>
+	<th>Total Registered</th>
+	<th>Outstanding Reserved</th>
+	<th>Total Registered + Reserved</th>
+      </tr>
+      {% for badge_stats in registration_summary.badge_type_stats %}
+      <tr>
+	<td>{{ badge_stats.name }}</td>
+	<td>{{ badge_stats.data.noncode }}</td>
+	<td>{{ badge_stats.data.nonreservedredeemed }}</td>
+	<td>{{ badge_stats.data.reservedredeemed }}</td>
+	<td><b>{{ badge_stats.data.noncode + badge_stats.data.nonreservedredeemed + badge_stats.data.reservedredeemed }}</b></td>
+	<td>{{ badge_stats.data.outstanding }}</td>
+	<td><b>{{ badge_stats.data.noncode + badge_stats.data.nonreservedredeemed + badge_stats.data.reservedredeemed + badge_stats.data.outstanding }}</b></td>
+      </tr>
+      {% endfor %}
+    </table>
+
+
     <h3>Attendance and Reservations By Discount Code Type</h3>
-    <p>Registered includes paid attendees.  Allotted includes any codes distributed which have not been redeemed, but does not imply these are reserved codes.</li>
+    <p>Registered includes paid attendees.  Allotted includes any codes distributed which have not been redeemed, but does not imply these are reserved codes.</p>
     <table class="singlerow">
       <tr>
 	<th>Discount Code Type</th>

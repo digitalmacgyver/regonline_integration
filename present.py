@@ -502,6 +502,10 @@ def registration_summary():
                               'quantity' : 0 },
     }
 
+
+    # We want a report that breaks things down by attendee type.
+    badge_type_stats = {}
+
     # We want a report that breaks down things by discount code type.
     # The discount code type is the tuple of: ( badge_type,
     # regonline_str )
@@ -525,13 +529,24 @@ def registration_summary():
         else:
             codes_by_sponsor[discount_code['SponsorID']] = [ discount_code ]
 
-
         registration_type = discount_code['badge_type']
         if registration_type in [ 'student_10', 'student_15', 'student_20' ]:
             if discount_code.get( 'ID', '' )[-4:] != 'spay':
                 registration_type = 'student_discount'
             else:
                 registration_type = 'student_full'
+
+        if discount_code['attendee_registration_type'] in badge_type_stats:
+            if badge_types[registration_type].get( 'reserve_spot', True ):
+                badge_type_stats[discount_code['attendee_registration_type']]['reserved'] += discount_code['quantity']
+            else:
+                badge_type_stats[discount_code['attendee_registration_type']]['nonreserved'] += discount_code['quantity']
+        else:
+            badge_type_stats[discount_code['attendee_registration_type']] = { 'reserved' : 0, 'nonreserved' : 0, 'reservedredeemed' : 0, 'nonreservedredeemed' : 0, 'noncode' : 0 }
+            if badge_types[registration_type].get( 'reserve_spot', True ):
+                badge_type_stats[discount_code['attendee_registration_type']]['reserved'] += discount_code['quantity']
+            else:
+                badge_type_stats[discount_code['attendee_registration_type']]['nonreserved'] += discount_code['quantity']
 
         discount_code_type = ( registration_type, discount_code['regonline_str'] )
         if discount_code_type in discount_code_types:
@@ -611,8 +626,10 @@ def registration_summary():
           
                     redeemed += 1
                     group_attendee_stats[sponsor_reporting_group]['redeemed'] += 1
+                    badge_type_stats[registrant['RegistrationType']]['reservedredeemed'] += 1
                 else:
                     nonreserved += 1
+                    badge_type_stats[registrant['RegistrationType']]['nonreservedredeemed'] += 1
 
                 if registrant['discount_code'] in redemptions_by_code:
                     redemptions_by_code[registrant['discount_code']] += 1
@@ -621,8 +638,14 @@ def registration_summary():
 
             else:
                 nonsponsored += 1
+                badge_type_stats[registrant['RegistrationType']]['nonreservedredeemed'] += 1
         else:
             nonsponsored += 1
+            badge_type_stats[registrant['RegistrationType']]['noncode'] += 1
+
+
+    for badge_name, badge_stats in badge_type_stats.items():
+        badge_stats['outstanding'] = badge_stats['reserved'] - badge_stats['reservedredeemed']
 
     for group_name, group_stats in group_attendee_stats.items():
         group_stats['reserved'] = group_stats['quantity'] - group_stats['redeemed']
@@ -659,7 +682,8 @@ def registration_summary():
         "group_attendee_stats" : [ { "name" : k, "data" : group_attendee_stats[k] } for k in sorted( group_attendee_stats.keys() ) ],
         "discount_type_stats" : [ { "name" : "%s %s" % ( k ), "data" : discount_code_types[k] } for k in sorted( discount_code_types.keys() ) ],
         "product_name_stats" : [ { "name" : k, "data" : product_name_types[k] } for k in sorted( product_name_types.keys() ) ],
-        "badge_type_names" : [ { "value" : k, "name" : badge_types[k]['name'] } for k in sorted( badge_types.keys() ) ]
+        "badge_type_names" : [ { "value" : k, "name" : badge_types[k]['name'] } for k in sorted( badge_types.keys() ) ],
+        "badge_type_stats" : [ { "name" : k, "data" : badge_type_stats[k] } for k in sorted( badge_type_stats.keys() ) ],
     }
 
     # ==========================================================================

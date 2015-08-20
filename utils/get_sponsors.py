@@ -81,6 +81,8 @@ def get_sponsors( eventID, output_dir ):
         'Phone Number',
         'Email',
         'Image URL',
+        'Targeted Offers Access',
+	'Lead Scanning Access',
         'Exhibitor ID'
     ]
 
@@ -193,6 +195,8 @@ def get_sponsors( eventID, output_dir ):
                 '',
                 '',
                 '',
+                'off',
+                'off',
                 get_attendee_id( add_attendee['Company'][:99] + add_attendee['Email'] )
             ] )
 

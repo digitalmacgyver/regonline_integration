@@ -86,6 +86,34 @@ def merge_registrants( eventID, attendee_file, output_file ):
         'Attendee ID'
     ]
 
+    # Output file format
+    output_headers = [ 
+        'First Name (required)',	
+        'Last Name (required)',	
+        'Email Address (required)',	
+        'Password (required)',	
+        'Title',	
+        'Company',	
+        'Biography',	
+        'Phone Number',	
+        'Image URL',	
+        'Address',	
+        'Address (ext)',	
+        'City',	
+        'State/Province/Region',	
+        'Postal Code',	
+        'Country',	
+        'Attendee ID',	
+        'Attendee Groups',	
+        'Personal Agenda (Session IDs)',	
+        'Exhibitor ID',	
+        'Exhibitor Role',	
+        'Speaker ID',	
+        'Variable Data 1',	
+        'Variable Data 2',	
+        'Variable Data 3',
+    ]
+
     known_attendees = []
 
     def sanitize_phone( phone_number ):
@@ -110,13 +138,40 @@ def merge_registrants( eventID, attendee_file, output_file ):
                 # Set the users password.
                 attendee[3] = get_attendee_password( attendee[2] )
 
+                # Set the Title field to comply with DoubleDutch length limits.
+                attendee[4] = attendee[4][:99]
+
                 # Set the Company field to comply with DoubleDutch length limits.
                 attendee[5] = attendee[5][:99]
 
                 attendee[7] = sanitize_phone( attendee[7] )
 
                 print "Working on %s" % ( attendee )
-                known_attendees.append( attendee )
+
+                known_attendees.append( [ attendee[0],
+                                          attendee[1],
+                                          attendee[2],
+                                          attendee[3],
+                                          attendee[4],
+                                          attendee[5],
+                                          attendee[6],
+                                          attendee[7],
+                                          attendee[8],
+                                          '',
+                                          '',
+                                          '',
+                                          '',
+                                          '',
+                                          '',
+                                          attendee[-1],
+                                          '', #Groups added in below.
+                                          attendee[10],
+                                          attendee[11],
+                                          attendee[12],
+                                          attendee[13],
+                                          '',
+                                          '',
+                                          '' ] )
 
         known_attendees = known_attendees[1:]
         # DEBUG
@@ -180,10 +235,6 @@ def merge_registrants( eventID, attendee_file, output_file ):
                     
             if not add_attendee['Email']:
                 # Skip attendees who don't have an email.
-                continue
-
-            if add_attendee['Email'].lower() in known_emails:
-                # Skip attendees we know about from Linklings
                 continue
 
             # If we get here, we need to add the attendee.
@@ -272,22 +323,36 @@ def merge_registrants( eventID, attendee_file, output_file ):
                     user_group_labels.append( group_labels[groups_of_interest.index( value )] )
 
 
+            if add_attendee['Email'].lower() in known_emails:
+                # Fix up the ones from Linklings but otherwise leave them unchanged.
+                known_emails[add_attendee['Email'].lower()][16] = ",".join( user_group_labels )
+                continue
+                
             known_attendees.append( [
                 add_attendee['FirstName'],
                 add_attendee['LastName'],
                 add_attendee['Email'],
                 get_attendee_password( add_attendee['Email'] ),
-                add_attendee['Title'],
+                add_attendee['Title'][:99],
                 add_attendee['Company'][:99],
                 '',
                 sanitize_phone( add_attendee['Phone'] ),
                 '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                get_attendee_id( add_attendee['Email'] ),                
                 ",".join( user_group_labels ),
                 '',
                 '',
                 '',
                 '',
-                get_attendee_id( add_attendee['Email'] )
+                '',
+                '',
+                '',
                 ] )
 
             log.info( json.dumps( { 'message' : unicode( "Attendee data is: %s" % ( add_attendee ) ) } ) )
@@ -296,7 +361,7 @@ def merge_registrants( eventID, attendee_file, output_file ):
 
     with open( output_file, 'wb' ) as f:
         writer = unicodecsv.writer( f, encoding='utf-8' )
-        writer.writerow( attendee_headers )
+        writer.writerow( output_headers )
         for attendee in sorted( known_attendees ):
             writer.writerow( attendee )
 

@@ -7,6 +7,8 @@
 3. `cd utils`
 4. `./get_sponsors.py [-r regonline_event_id] -o [output_dir]`
 
+./get_sponsors.py -r 1639610 - /wintmp/api/sponsors
+
 TBD - Need sponsor descriptions.
 
 5. Upload the sponsors.csv file to DoubleDutch.
@@ -45,16 +47,21 @@ drop down one time for each submission type.
 
 /wintmp/abi/speaker_images/input/
 
-7. Edit the speakers_csv, indir, and outdir arguments in
-speaker_images.py.
+7. Edit the speakers_csv, indir, and outdir arguments in speaker_images.py, run:
 
-8. Copy the image files from speaker_images/output/ to:
+./speaker_images.py
+
+8. Then edit the speakers_file paramter of fix_speakers.py run:
+
+./fix_speakers.py
+
+9. Copy the image files from speaker_images/output/ to:
 
 cd to the output directory of the script.
 
 rsync -avz * matt@52.8.24.90:/var/www/z3rbr4ngy/
 
-Upload speakers.csv as speakers to DoubleDutch.
+10. Upload speakers.csv as speakers to DoubleDutch.
 
 ## Attendee Data
 
@@ -77,5 +84,14 @@ merge_attendees.py -f /wintmp/abi/speakers/attendee.csv
 
 Upload merged-attendees.csv as attendees to DoubleDutch.
 
+## Load session data.
 
+1.  Navigate to Linklings Publish -> Program -> Doubledutch ->
+Sessions -> Download, and download sessions.csv.
 
+2. Fix the attendee_file parameter in fix_sessions.csv.
+
+3. Run:
+./fix_sessions.csv
+
+4. Upload sessions.csv to DoubleDutch.

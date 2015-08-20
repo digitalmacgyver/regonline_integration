@@ -379,7 +379,7 @@ if __name__ == "__main__":
 
     continuous = options.continuous
 
-    sleep_duration = 900
+    sleep_duration = 3600
     if options.sleep_duration:
         sleep = int( options.sleep_duration )
 

@@ -187,7 +187,7 @@ def export_event_data( eventID, attendee_type ):
         raise Exception( "Unknown attendee type: '%s' - must be one of registrants or sponsors." % ( attendee_type ) )
 
 if __name__ == "__main__":
-    usage = "usage: %prog [-r registrant_event_id] [-s sponsor_event_id] [-c] [-f 900]"
+    usage = "usage: %prog [-r registrant_event_id] [-s sponsor_event_id] [-c] [-f 3600]"
     parser = OptionParser( usage = usage )
     parser.add_option( "-r", "--registrant-event-id",
                        dest = "registrants_id",
@@ -224,7 +224,7 @@ if __name__ == "__main__":
 
     continuous = options.continuous
 
-    sleep_duration = 900
+    sleep_duration = 3600
     if options.sleep_duration:
         sleep = int( options.sleep_duration )
 

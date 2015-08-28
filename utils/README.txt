@@ -5,11 +5,15 @@
 1. Get into the regonline_integration Git repository.
 2. In the root directory, `source env/bin/activate`
 3. `cd utils`
-4. `./get_sponsors.py [-r regonline_event_id] -o [output_dir]`
+
+4. Populate some canonical sponsor data files with prefered display
+names and descriptions.
+
+5. Edit get_sponsors with the canonical sponsor data files.
+6. `./get_sponsors.py [-r regonline_event_id] -o [output_dir]`
 
 ./get_sponsors.py -r 1639610 - /wintmp/api/sponsors
 
-TBD - Need sponsor descriptions.
 
 5. Upload the sponsors.csv file to DoubleDutch.
 

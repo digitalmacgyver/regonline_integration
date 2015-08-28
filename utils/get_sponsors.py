@@ -55,6 +55,8 @@ regonline_soap_namespace = 'http://www.regonline.com/api'
 
 abi_namespace_uuid = '0b595c4e-3dc7-4972-8434-6a2e818ccb38'
 
+
+
 def get_attendee_password( email ):
     '''Generate a deterministic, simple password based on an email.'''
     uid = get_attendee_id( email )
@@ -64,7 +66,30 @@ def get_attendee_id( email ):
     '''Generate a deterministic, unique identifier based on email.'''
     return unicode( uuid.uuid5( uuid.UUID( abi_namespace_uuid ), email.encode( 'ascii', errors='ignore' ) ) )
 
-def get_sponsors( eventID, output_dir ):
+def get_canonical( academic, corporate, lab ):
+    canonical = {
+        'Corporate Sponsors' : {},
+        'Academic Sponsors' : {},
+        'Lab & Nonprofit Sponsors' : {},
+    }
+
+    def set_canonical( canonical, file_name, index ):
+        with open( file_name, 'rb' ) as f:
+            reader = unicodecsv.reader( f, encoding='cp1252', errors="replace" )
+            for s in reader:
+                print "WORKING ON %s: " % ( file_name ), s
+                if len( s ):
+                    s = [ unicode( x ) for x in s ]
+                    print "GOT HERE"
+                    canonical[index][s[-1]] = { 'name' : s[0], 'desc' : s[1], 'website' : s[6] }
+        return canonical
+
+    canonical = set_canonical( canonical, academic, 'Academic Sponsors' )
+    canonical = set_canonical( canonical, corporate, 'Corporate Sponsors' )
+    canonical = set_canonical( canonical, lab, 'Lab & Nonprofit Sponsors' )
+    return canonical
+
+def get_sponsors( eventID, output_dir, canonical ):
 
     # DoubleDutch's required header format.
     attendee_headers = [
@@ -132,6 +157,11 @@ def get_sponsors( eventID, output_dir ):
 
     for attendee in attendees:
         try:
+            #if int( attendee['ID'] ) in [ 78021784, 80479404, 83117406 ]:
+            #    # Walmart: 818fb61d-b769-5e49-b2ce-542908c5e48c
+            #    import pdb
+            #    pdb.set_trace()
+
             if unicode( attendee['StatusDescription'] ) == 'Declined':
                 log.warning( json.dumps( { 'message' : "Ignoring attendee ID %s with registration status: %s" % ( attendee['ID'], unicode( attendee['StatusDescription'] ) ) } ) )
                 continue
@@ -181,14 +211,48 @@ def get_sponsors( eventID, output_dir ):
                 # opportunity record, skip it.
                 continue
 
+            attendee_id = get_attendee_id( add_attendee['Company'][:99] + add_attendee['Email'] )
+
+            # These aren't showing up, NSA is showing up twice.
+            '''
+            Present in Laura's:
+            Sequoia Capital
+            2d23af4d-db2a-570e-8b21-110b214f37b1
+            
+            
+            Square
+            7232f2ed-d86e-5963-a896-e65177d42406
+            
+            
+            @Walmartlabs
+            818fb61d-b769-5e49-b2ce-542908c5e48c
+            '''
+
+            if attendee_id in [ 'cc7e48b8-0c4d-5d27-b5a5-d84d1ab514d6' ]:
+                # A few companies we don't include for one reason or another.
+                continue
+
+            company_name = add_attendee['Company'][:99]
+            company_desc = ''
+            company_website = ''
+
+            company_data = canonical.get( attendee_type, {} ).get( attendee_id, False )
+            
+            if company_data:
+                company_name = company_data['name'][:99]
+                company_desc = company_data['desc']
+                company_website = company_data['website']
+            else:
+                print "WARNING! No canonical data found for:", add_attendee, attendee_id
+
             known_attendees[attendee_type].append( [
-                add_attendee['Company'][:99],
+                company_name,
+                company_desc,
                 '',
                 '',
                 '',
                 '',
-                '',
-                '',
+                company_website,
                 '',
                 '',
                 '',
@@ -233,10 +297,15 @@ if __name__ == "__main__":
     if options.output_dir:
         output_dir = options.output_dir
 
+    academic = '/wintmp/abi/sponsors/desc2/academic.csv'
+    corporate = '/wintmp/abi/sponsors/desc2/corporate.csv'
+    lab = '/wintmp/abi/sponsors/desc2/lab-nonprofit.csv'
+
     # Get a list of all registrations for GHC 2014.
     try:
         log.info( json.dumps( { 'message' : "Exporting data for registrants." } ) )
-        get_sponsors( sponsors_id, output_dir )
+        canonical = get_canonical( academic, corporate, lab )
+        get_sponsors( sponsors_id, output_dir, canonical )
     except Exception as e:
         log.error( json.dumps( { 'message' : "Failed to get registrants, error was: %s" % ( e ) } ) )
 

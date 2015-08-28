@@ -237,6 +237,13 @@ def merge_registrants( eventID, attendee_file, output_file ):
                 # Skip attendees who don't have an email.
                 continue
 
+            # DEBUG
+            #if not add_attendee['Email'].lower() == 'Alaa.fatayer@gmail.com'.lower():
+            #    continue
+            #else:
+            #    import pdb
+            #    pdb.set_trace()
+
             # If we get here, we need to add the attendee.
 
             # Avoid rate limiting.
@@ -253,7 +260,7 @@ def merge_registrants( eventID, attendee_file, output_file ):
                 'Professional Affiliation: National Lab',
                 'Professional Affiliation: Non-Profit',
                 'Professioanl Affiliation: Unaffiliated',
-                'Professional Affiliation: Other',
+                'Professional Affiliation: Other Affiliation',
                 'Interest: ABI.Locals',
                 'Interest: ACM',
                 'Interest: Artificial Intelligence',
@@ -282,7 +289,7 @@ def merge_registrants( eventID, attendee_file, output_file ):
                 'Ethnicity: European or Euro-American/White',
                 'Ethnicity: Native Hawaiian or Pacific Islander',
                 'Ethnicity: Hispanic or Latina/o',
-                'Ethnicity: Other',
+                'Ethnicity: Other Race',
                 'Gender: Female',
                 'Gender: Male',
                 'Gender: Transgender',
@@ -318,6 +325,10 @@ def merge_registrants( eventID, attendee_file, output_file ):
                     value = thing.CustomFieldNameOnForm
                 else:
                     value = thing.Response
+
+                if value == 'Other':
+                    if thing.CustomFieldNameOnReport != 'Gender.':
+                        value = thing.CustomFieldNameOnReport
 
                 if value in groups_of_interest:
                     user_group_labels.append( group_labels[groups_of_interest.index( value )] )
@@ -359,11 +370,13 @@ def merge_registrants( eventID, attendee_file, output_file ):
         except Exception as e:
             log.error( json.dumps( { 'message' : "General error %s while adding attendee %s - continuing." % ( e, attendee['ID'] ) } ) )
 
-    with open( output_file, 'wb' ) as f:
-        writer = unicodecsv.writer( f, encoding='utf-8' )
-        writer.writerow( output_headers )
-        for attendee in sorted( known_attendees ):
-            writer.writerow( attendee )
+    # DEBUG
+    if True:
+        with open( output_file, 'wb' ) as f:
+            writer = unicodecsv.writer( f, encoding='utf-8' )
+            writer.writerow( output_headers )
+            for attendee in sorted( known_attendees ):
+                writer.writerow( attendee )
 
 '''
 ABI.Locals

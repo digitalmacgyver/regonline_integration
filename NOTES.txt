@@ -109,3 +109,210 @@ Interest: Security
 Interest: Systers
 Interest: Wearables
 
+
+Other Affiliation
+Other Degree
+Other Job Role
+Other Race
+
+DUPLICATE GROUP: Other, SIGN OF MAJOR PROBLEMS!!!
+
+Alaa	Fatayer	Alaa.fatayer@gmail.com	0cdb68		Jawwal "Palestine Telecom Group"										0cdea22d-d987-5229-bc34-7ad9566a4b68	Registration: General,Professional Affiliation: Other,Gender: Female,Professional Affiliation: Other,Interest: Lean-In Circles,Interest: Being Mentored,Interest: Being a Mentor,Interest: Entrepreneurship,Interest: Internet of Things,Interest: Data Science,Interest: Artificial Intelligence							
+
+--
+
+Row 	Error
+88 	
+Duplicate identifier (email address)
+132 	
+Duplicate attendee group
+176 	
+Duplicate attendee group
+281 	
+Duplicate attendee group
+363 	
+Duplicate attendee group
+496 	
+Duplicate attendee group
+906 	
+Duplicate identifier (email address)
+924 	
+Duplicate attendee group
+1298 	
+Duplicate attendee group
+1444 	
+Duplicate identifier (email address)
+1458 	
+Duplicate attendee group
+1472 	
+Duplicate attendee group
+1631 	
+Duplicate identifier (email address)
+1632 	
+Duplicate identifier (email address)
+1683 	
+Duplicate identifier (email address)
+1781 	
+Duplicate attendee group
+1852 	
+Duplicate attendee group
+1915 	
+Duplicate attendee group
+1947 	
+Duplicate identifier (email address)
+1948 	
+Duplicate identifier (email address)
+1949 	
+Duplicate identifier (email address)
+1950 	
+Duplicate identifier (email address)
+1951 	
+Duplicate identifier (email address)
+1952 	
+Duplicate identifier (email address)
+1964 	
+Duplicate attendee group
+2060 	
+Duplicate attendee group
+2290 	
+Duplicate attendee group
+2347 	
+Duplicate attendee group, Duplicate attendee group
+2408 	
+Duplicate attendee group
+2596 	
+Duplicate attendee group
+2603 	
+Duplicate attendee group
+2675 	
+Duplicate identifier (email address)
+2676 	
+Duplicate identifier (email address)
+2677 	
+Duplicate identifier (email address)
+2678 	
+Duplicate identifier (email address)
+2916 	
+Duplicate attendee group
+2968 	
+Duplicate attendee group
+3097 	
+Duplicate attendee group
+3130 	
+Duplicate attendee group
+3141 	
+Duplicate identifier (email address)
+3229 	
+Duplicate attendee group
+3230 	
+Duplicate attendee group
+3287 	
+Duplicate attendee group
+3381 	
+Duplicate attendee group
+3470 	
+Duplicate attendee group
+3584 	
+Duplicate attendee group
+3618 	
+Duplicate identifier (email address)
+3694 	
+Duplicate identifier (email address)
+3695 	
+Duplicate identifier (email address)
+3716 	
+Duplicate identifier (email address)
+3729 	
+Duplicate attendee group
+3769 	
+Duplicate attendee group
+3862 	
+Duplicate attendee group
+3868 	
+Duplicate attendee group
+4001 	
+Duplicate attendee group
+4041 	
+Duplicate attendee group
+4189 	
+Duplicate attendee group
+4195 	
+Duplicate attendee group
+4503 	
+Duplicate attendee group
+4535 	
+Duplicate attendee group
+4568 	
+Duplicate attendee group
+4682 	
+Duplicate attendee group
+4737 	
+Duplicate attendee group
+4744 	
+Duplicate attendee group
+4805 	
+Duplicate attendee group
+5002 	
+Duplicate attendee group
+5027 	
+Duplicate attendee group
+5078 	
+Duplicate attendee group
+5089 	
+Duplicate identifier (email address)
+5155 	
+Duplicate attendee group
+5169 	
+Duplicate identifier (email address)
+5203 	
+Duplicate attendee group
+5214 	
+Duplicate attendee group
+5406 	
+Duplicate attendee group
+5531 	
+Duplicate identifier (email address)
+5532 	
+Duplicate attendee group
+5980 	
+Duplicate attendee group
+6069 	
+Duplicate identifier (email address)
+6164 	
+Duplicate identifier (email address)
+6238 	
+Duplicate attendee group
+6251 	
+Duplicate identifier (email address)
+6375 	
+Duplicate attendee group
+6422 	
+Duplicate attendee group
+6439 	
+Duplicate identifier (email address)
+6466 	
+Duplicate identifier (email address)
+6467 	
+Duplicate identifier (email address)
+6488 	
+Duplicate attendee group
+6506 	
+Duplicate attendee group
+6560 	
+Duplicate attendee group
+6579 	
+Duplicate attendee group
+6876 	
+Duplicate attendee group
+6894 	
+Duplicate attendee group
+6982 	
+Duplicate attendee group
+7232 	
+Duplicate identifier (email address)
+7342 	
+Duplicate identifier (email address)
+7418 	
+Duplicate attendee group
+7776 	
+Duplicate attendee group

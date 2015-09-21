@@ -23,6 +23,9 @@
     <a href="{{ url_for('logout') }}">Log out</a>
   {% endif %}
   </div>
+
+    <p style="color: red; font-size: xx-large;">NOTE: All Discount Codes Expired on September 18th, 2015.  These reports are for historical and reporting purposes only.</p>
+
   {% for message in get_flashed_messages() %}
     <div class=flash>{{ message }}</div>
   {% endfor %}

@@ -40,40 +40,42 @@ def get_attendee_id( email ):
     '''Generate a deterministic, unique identifier based on email.'''
     return unicode( uuid.uuid5( uuid.UUID( abi_namespace_uuid ), email.encode( 'ascii', errors='ignore' ) ) )
 
-attendee_file = '/wintmp/abi/sessions/sessions.csv'
+speaker_file = '/wintmp/abi/speakers/speakers.csv'
 
-attendees = []
+speakers = []
 
-with open( attendee_file, 'rb' ) as f:
+unique_speakers = {}
+
+with open( speaker_file, 'rb' ) as f:
     reader = unicodecsv.reader( f, encoding='utf-8' )
-    for attendee in reader:
-        if len( attendee ):
-            attendee = [ unicode( x ) for x in attendee ]
+    for speaker in reader:
+        if len( speaker ):
+            speaker = [ unicode( x ) for x in speaker ]
 
-            attendee[0] = attendee[0][:249]
+            if speaker[-1] in unique_speakers:
+                print "DUPLICATE SPEAKER:", speaker
+            else:
+                unique_speakers[speaker[-1]] = True
+
+            speaker[2] = speaker[2][:99]
+
+            speaker[3] = speaker[3][:99]
             
-            # DoubleDutch doesn't allow session descriptions to start
-            # with a # in their uploader.
-            if attendee[0][0] == '#':
-                attendee[0] = ' ' + attendee[0][:248]
 
-            before_hashtag = attendee[1].replace( '\n', '<br />' )
+            desc = speaker[4]
+            before_hashtag = desc.replace( '\n', '<br />' )
             #p = re.compile( r'\s+#(\D\w+?)(\W)' )
-            #attendee[1] = p.sub( r' dd://hashtag/\1 \2', before_hashtag )
-            attendee[1] = before_hashtag
+            #desc = p.sub( r' dd://hashtag/\1 \2', before_hashtag ) 
+            desc = before_hashtag
+            speaker[4] = desc
 
-            m = attendee[1]
+            speakers.append( speaker )
 
-            if len( attendee[0] ) == 0:
-                print "ERROR: ", attendee
-
-            attendees.append( attendee )
-
-with open( attendee_file, 'wb' ) as f:
+with open( speaker_file, 'wb' ) as f:
     writer = unicodecsv.writer( f, encoding="utf-8" )
 
-    for attendee in attendees:
-        writer.writerow( attendee )
+    for speaker in speakers:
+        writer.writerow( speaker )
 
 
         

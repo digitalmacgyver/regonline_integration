@@ -47,7 +47,6 @@ def get_password( password_file ):
             else:
                 password = key
                 break
-
     return password
 
 regonline_password_file = './config/regonline_api_key.txt'

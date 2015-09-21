@@ -3,6 +3,7 @@
 import json
 from optparse import OptionParser
 import os
+import re
 import unicodecsv
 import uuid
 
@@ -66,22 +67,46 @@ def get_attendee_id( email ):
     '''Generate a deterministic, unique identifier based on email.'''
     return unicode( uuid.uuid5( uuid.UUID( abi_namespace_uuid ), email.encode( 'ascii', errors='ignore' ) ) )
 
-def get_canonical( academic, corporate, lab ):
+def get_canonical( academic, corporate, lab, booth_file ):
     canonical = {
         'Corporate Sponsors' : {},
         'Academic Sponsors' : {},
         'Lab & Nonprofit Sponsors' : {},
     }
 
+    booths = {}
+    with open( booth_file, 'rb' ) as f:
+        reader = unicodecsv.reader( f, encoding='cp1252', errors="replace" )
+        for s in reader:
+            print "WORKING ON %s: " % ( booths ), s
+            if len( s ):
+                s = [ unicode( x ) for x in s ]
+                print "GOT HERE"
+                booths[s[0].strip()] = { 'booth' : s[1].strip(), 'interview' : s[2].strip() }
+
     def set_canonical( canonical, file_name, index ):
         with open( file_name, 'rb' ) as f:
             reader = unicodecsv.reader( f, encoding='cp1252', errors="replace" )
             for s in reader:
-                print "WORKING ON %s: " % ( file_name ), s
                 if len( s ):
-                    s = [ unicode( x ) for x in s ]
-                    print "GOT HERE"
-                    canonical[index][s[-1]] = { 'name' : s[0], 'desc' : s[1], 'website' : s[6] }
+                    s = [ unicode( x ).strip() for x in s ]
+                    
+                    booth = ''
+                    desc = s[1]
+
+                    before_hashtag = desc.replace( '\n', '<br />' )
+                    #p = re.compile( r'\s+#(\D\w+?)(\W)' )
+                    #desc = p.sub( r' dd://hashtag/\1 \2', before_hashtag )
+                    desc = before_hashtag
+
+                    if booths.get( s[0], False ):
+                        if len( booths[s[0]]['interview'] ):
+                            desc += "<br /><br />Interview Booth Location(s): " + booths[s[0]]['interview']
+                        booth = booths[s[0]]['booth']
+                    else:
+                        print "WARNING: No booth information found for:", s
+
+                    canonical[index][s[-1].strip()] = { 'name' : s[0].strip(), 'desc' : desc, 'website' : s[6], 'booth' : booth }
         return canonical
 
     canonical = set_canonical( canonical, academic, 'Academic Sponsors' )
@@ -153,6 +178,9 @@ def get_sponsors( eventID, output_dir, canonical ):
     log.info( json.dumps( { 'message' : "Getting registrations for eventID: %s" % ( eventID ) } ) )
     result = client.service.GetRegistrationsForEvent( eventID=eventID, filter=None, orderBy=None )
 
+    #import pdb
+    #pdb.set_trace()
+
     attendees = result[1][0]
 
     for attendee in attendees:
@@ -213,28 +241,14 @@ def get_sponsors( eventID, output_dir, canonical ):
 
             attendee_id = get_attendee_id( add_attendee['Company'][:99] + add_attendee['Email'] )
 
-            # These aren't showing up, NSA is showing up twice.
-            '''
-            Present in Laura's:
-            Sequoia Capital
-            2d23af4d-db2a-570e-8b21-110b214f37b1
-            
-            
-            Square
-            7232f2ed-d86e-5963-a896-e65177d42406
-            
-            
-            @Walmartlabs
-            818fb61d-b769-5e49-b2ce-542908c5e48c
-            '''
-
-            if attendee_id in [ 'cc7e48b8-0c4d-5d27-b5a5-d84d1ab514d6' ]:
+            if attendee_id in [ 'cc7e48b8-0c4d-5d27-b5a5-d84d1ab514d6', '355a9d91-314d-5a2e-a0dc-5b4b26de5711' ]:
                 # A few companies we don't include for one reason or another.
                 continue
 
             company_name = add_attendee['Company'][:99]
             company_desc = ''
             company_website = ''
+            company_booth = ''
 
             company_data = canonical.get( attendee_type, {} ).get( attendee_id, False )
             
@@ -242,6 +256,7 @@ def get_sponsors( eventID, output_dir, canonical ):
                 company_name = company_data['name'][:99]
                 company_desc = company_data['desc']
                 company_website = company_data['website']
+                company_booth = company_data['booth']
             else:
                 print "WARNING! No canonical data found for:", add_attendee, attendee_id
 
@@ -251,7 +266,7 @@ def get_sponsors( eventID, output_dir, canonical ):
                 '',
                 '',
                 '',
-                '',
+                company_booth,
                 company_website,
                 '',
                 '',
@@ -270,6 +285,7 @@ def get_sponsors( eventID, output_dir, canonical ):
 
     for attendee_type in known_attendees.keys():
         attendee_file = attendee_type.lower().replace( ' ', '_' ).replace( '&', 'and' )
+        # DEBUG
         with open( "%s/%s.csv" % ( output_dir, attendee_file ), 'wb' ) as f:
             writer = unicodecsv.writer( f, encoding='utf-8' )
             writer.writerow( attendee_headers )
@@ -300,11 +316,12 @@ if __name__ == "__main__":
     academic = '/wintmp/abi/sponsors/desc2/academic.csv'
     corporate = '/wintmp/abi/sponsors/desc2/corporate.csv'
     lab = '/wintmp/abi/sponsors/desc2/lab-nonprofit.csv'
+    booths = '/wintmp/abi/sponsors/desc2/booths.csv'
 
     # Get a list of all registrations for GHC 2014.
     try:
         log.info( json.dumps( { 'message' : "Exporting data for registrants." } ) )
-        canonical = get_canonical( academic, corporate, lab )
+        canonical = get_canonical( academic, corporate, lab, booths )
         get_sponsors( sponsors_id, output_dir, canonical )
     except Exception as e:
         log.error( json.dumps( { 'message' : "Failed to get registrants, error was: %s" % ( e ) } ) )

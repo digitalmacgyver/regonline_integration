@@ -317,6 +317,12 @@ def merge_registrants( eventID, attendee_file, output_file ):
                 client.set_options( soapheaders=token )
                 continue
 
+            # DEBUG
+            #import pdb
+            #pdb.set_trace()
+
+            is_faculty = False
+
             for thing in custom_data1.Data.APICustomFieldResponse:
                 field = thing.CustomFieldNameOnReport
                 if 'ItemDescription' in thing:
@@ -332,11 +338,24 @@ def merge_registrants( eventID, attendee_file, output_file ):
 
                 if value in groups_of_interest:
                     user_group_labels.append( group_labels[groups_of_interest.index( value )] )
+                elif not is_faculty and value in [ 'Academic Staff', 'Lecturer/Non-Tenure Track', 'Instructor', 'Assistant Professor', 'Associate Professor', 'Full Professor' ]:
+                    user_group_labels.append( 'Faculty' )
+                    is_faculty = True
 
+
+            # DoubleDutch doesn't like duplicates in this list.
+            seen = {}
+            unique_labels = []
+            for thing in user_group_labels:
+                if thing not in seen:
+                    seen[thing] = True
+                    unique_labels.append( thing )
+            user_group_labels = unique_labels
 
             if add_attendee['Email'].lower() in known_emails:
                 # Fix up the ones from Linklings but otherwise leave them unchanged.
-                known_emails[add_attendee['Email'].lower()][16] = ",".join( user_group_labels )
+                # The ones from Linklings are presumed to be Speakers.
+                known_emails[add_attendee['Email'].lower()][16] = ",".join( [ 'Speaker' ] + user_group_labels )
                 continue
                 
             known_attendees.append( [
@@ -377,75 +396,6 @@ def merge_registrants( eventID, attendee_file, output_file ):
             writer.writerow( output_headers )
             for attendee in sorted( known_attendees ):
                 writer.writerow( attendee )
-
-'''
-ABI.Locals
-ACM
-African or African-American/Black
-Age
-Alaska Native or American Indian/Native American
-Artificial Intelligence
-Asian or Asian-American
-Being Mentored
-Being a Mentor
-CRA-W
-Data Science
-Degree Currently Pursuing
-Entrepreneurship
-European or Euro-American/White
-GHC 1994
-GHC 1997
-GHC 2000
-GHC 2002
-GHC 2004
-GHC 2006
-GHC 2007
-GHC 2008
-GHC 2009
-GHC 2010
-GHC 2011
-GHC 2012
-GHC 2013
-GHC 2014
-Gender specified
-Gender.
-Gluten-Free
-Graphic Effects / Gaming
-Hispanic or Latina/o
-Human-Computer Interactions
-IEEE
-ISOC
-Internet of Things
-Job Role - Academic
-Job Role - Govt/Lab/Unaffiliated
-Job Role - Industry
-Lean-In Circles
-NCWIT
-Native Hawaiian or Pacific Islander
-Open Source
-Organizational Change
-Other Affiliation
-Other Degree
-Other Job Role
-Other Race
-Previous Attendee
-Privacy
-Productization
-Professional Affiliation
-RegistrationType
-Security
-State
-StatusDescription
-Syster
-Systers
-Title
-Vegetarian or Vegan
-Visual
-Waitlist Type
-Wearables
-'''
-
-
 
 if __name__ == "__main__":
     usage = "usage: %prog [-r registrant_event_id] [-s sponsor_event_id] [-c] [-f 900]"

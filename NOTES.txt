@@ -6,6 +6,56 @@ http://developer.regonline.com/
 
 ==
 
+
+import datetime
+import json
+from optparse import OptionParser
+import time
+
+from suds.client import Client
+from suds.xsd.doctor import ImportDoctor, Import
+from suds.plugin import MessagePlugin
+from datastore import get_sponsors, get_registrants, set_sponsors, set_registrants, get_discount_codes, set_discount_codes
+from sfexport import sync_salesforce
+
+def get_password( password_file ):
+    '''Utility function to load in our various passwords.'''
+    password = None
+    with open( password_file, "r" ) as f:
+        for key in f.readlines():
+            key = key.strip()
+            if key.startswith( '#' ):
+                continue
+            elif len( key ) == 0:
+                continue
+            else:
+                password = key
+                break
+    return password
+
+regonline_password_file = './config/regonline_api_key.txt'
+regonline_api_key = get_password( regonline_password_file )
+regonline_wsdl = "https://www.regonline.com/api/default.asmx?WSDL"
+regonline_soap_namespace = 'http://www.regonline.com/api'
+eventID =  1702108
+imp = Import( 'http://schemas.xmlsoap.org/soap/encoding/' )
+imp.filter.add( regonline_soap_namespace )
+doctor = ImportDoctor( imp )
+client = Client( regonline_wsdl, doctor=doctor )
+token = client.factory.create( "TokenHeader" )
+token.APIToken = regonline_api_key
+client.set_options( soapheaders=token )
+attendees = get_registrants( eventID )
+attendee_ids = { x['ID']:x for x in attendees }
+result = client.service.GetRegistrationsForEvent( eventID=eventID, filter=None, orderBy=None )
+new_attendees = result[1][0]
+new_attendee_ids = { x['ID']:x for x in new_attendees }
+db_only = [ x for x in attendees if x['ID'] not in new_attendee_ids ]
+
+
+==
+
+
 x = client.service.GetCustomFieldResponsesForRegistration( eventID=eventID, registrationID=attendee['ID'], pageSectionID=1 )
 
 Badge type ==> Registrant_Type__c (object: OpportunityLineItems)
@@ -20,6 +70,17 @@ reserved code outstanding.
 
 I DELETED ALL DISCOUNT CODES AND REPOPULATED, LEAVING SPONSORS AND
 ATTENDEES IN PLACE.
+
+==
+
+No booth:
+Stanford University, Department of Computer Science
+University of California - San Diego, Department Computer Science and Engineering
+Pennsylvania State University, Department of Computer Science and Engineering
+OpenText
+
+Univerity of Illinois: two spaces after the word "of" in the name.
+
 
 ==
 
@@ -109,210 +170,18 @@ Interest: Security
 Interest: Systers
 Interest: Wearables
 
+==x
 
-Other Affiliation
-Other Degree
-Other Job Role
-Other Race
-
-DUPLICATE GROUP: Other, SIGN OF MAJOR PROBLEMS!!!
-
-Alaa	Fatayer	Alaa.fatayer@gmail.com	0cdb68		Jawwal "Palestine Telecom Group"										0cdea22d-d987-5229-bc34-7ad9566a4b68	Registration: General,Professional Affiliation: Other,Gender: Female,Professional Affiliation: Other,Interest: Lean-In Circles,Interest: Being Mentored,Interest: Being a Mentor,Interest: Entrepreneurship,Interest: Internet of Things,Interest: Data Science,Interest: Artificial Intelligence							
-
---
-
-Row 	Error
-88 	
-Duplicate identifier (email address)
-132 	
-Duplicate attendee group
-176 	
-Duplicate attendee group
-281 	
-Duplicate attendee group
-363 	
-Duplicate attendee group
-496 	
-Duplicate attendee group
-906 	
-Duplicate identifier (email address)
-924 	
-Duplicate attendee group
-1298 	
-Duplicate attendee group
-1444 	
-Duplicate identifier (email address)
-1458 	
-Duplicate attendee group
-1472 	
-Duplicate attendee group
-1631 	
-Duplicate identifier (email address)
-1632 	
-Duplicate identifier (email address)
-1683 	
-Duplicate identifier (email address)
-1781 	
-Duplicate attendee group
-1852 	
-Duplicate attendee group
-1915 	
-Duplicate attendee group
-1947 	
-Duplicate identifier (email address)
-1948 	
-Duplicate identifier (email address)
-1949 	
-Duplicate identifier (email address)
-1950 	
-Duplicate identifier (email address)
-1951 	
-Duplicate identifier (email address)
-1952 	
-Duplicate identifier (email address)
-1964 	
-Duplicate attendee group
-2060 	
-Duplicate attendee group
-2290 	
-Duplicate attendee group
-2347 	
-Duplicate attendee group, Duplicate attendee group
-2408 	
-Duplicate attendee group
-2596 	
-Duplicate attendee group
-2603 	
-Duplicate attendee group
-2675 	
-Duplicate identifier (email address)
-2676 	
-Duplicate identifier (email address)
-2677 	
-Duplicate identifier (email address)
-2678 	
-Duplicate identifier (email address)
-2916 	
-Duplicate attendee group
-2968 	
-Duplicate attendee group
-3097 	
-Duplicate attendee group
-3130 	
-Duplicate attendee group
-3141 	
-Duplicate identifier (email address)
-3229 	
-Duplicate attendee group
-3230 	
-Duplicate attendee group
-3287 	
-Duplicate attendee group
-3381 	
-Duplicate attendee group
-3470 	
-Duplicate attendee group
-3584 	
-Duplicate attendee group
-3618 	
-Duplicate identifier (email address)
-3694 	
-Duplicate identifier (email address)
-3695 	
-Duplicate identifier (email address)
-3716 	
-Duplicate identifier (email address)
-3729 	
-Duplicate attendee group
-3769 	
-Duplicate attendee group
-3862 	
-Duplicate attendee group
-3868 	
-Duplicate attendee group
-4001 	
-Duplicate attendee group
-4041 	
-Duplicate attendee group
-4189 	
-Duplicate attendee group
-4195 	
-Duplicate attendee group
-4503 	
-Duplicate attendee group
-4535 	
-Duplicate attendee group
-4568 	
-Duplicate attendee group
-4682 	
-Duplicate attendee group
-4737 	
-Duplicate attendee group
-4744 	
-Duplicate attendee group
-4805 	
-Duplicate attendee group
-5002 	
-Duplicate attendee group
-5027 	
-Duplicate attendee group
-5078 	
-Duplicate attendee group
-5089 	
-Duplicate identifier (email address)
-5155 	
-Duplicate attendee group
-5169 	
-Duplicate identifier (email address)
-5203 	
-Duplicate attendee group
-5214 	
-Duplicate attendee group
-5406 	
-Duplicate attendee group
-5531 	
-Duplicate identifier (email address)
-5532 	
-Duplicate attendee group
-5980 	
-Duplicate attendee group
-6069 	
-Duplicate identifier (email address)
-6164 	
-Duplicate identifier (email address)
-6238 	
-Duplicate attendee group
-6251 	
-Duplicate identifier (email address)
-6375 	
-Duplicate attendee group
-6422 	
-Duplicate attendee group
-6439 	
-Duplicate identifier (email address)
-6466 	
-Duplicate identifier (email address)
-6467 	
-Duplicate identifier (email address)
-6488 	
-Duplicate attendee group
-6506 	
-Duplicate attendee group
-6560 	
-Duplicate attendee group
-6579 	
-Duplicate attendee group
-6876 	
-Duplicate attendee group
-6894 	
-Duplicate attendee group
-6982 	
-Duplicate attendee group
-7232 	
-Duplicate identifier (email address)
-7342 	
-Duplicate identifier (email address)
-7418 	
-Duplicate attendee group
-7776 	
-Duplicate attendee group
+First Name (required)	
+Last Name (required)	
+Title	
+Company	
+Description	
+Image URL	
+Website	
+Twitter Handle	
+Facebook URL	
+LinkedIn URL	
+Session IDs	
+Attendee ID	
+Speaker ID

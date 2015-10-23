@@ -7,6 +7,17 @@ http://developer.regonline.com/
 ==
 
 
+Log in from 52 server:
+
+psql -h abicivis.c8krcuxhwj4g.us-west-2.redshift.amazonaws.com dev mhayward
+
+ABIcivisghc2015
+
+
+
+
+==
+
 import datetime
 import json
 from optparse import OptionParser

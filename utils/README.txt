@@ -14,7 +14,6 @@ names and descriptions.
 
 ./get_sponsors.py -r 1639610 -o /wintmp/abi/sponsors
 
-
 5. Upload the 3 resulting files to DoubleDutch.
 
 ## Speaker Data
@@ -53,6 +52,15 @@ Type" drop down one time for each submission type.
 /wintmp/abi/speaker_images/input/
 
 Move the files all into the root directory after unzipping.
+
+
+cd /wintmp/abi/speaker_images/input
+for file in `ls *.zip`
+do
+unzip $file
+done
+mv */* .
+
 
 7. Edit the speakers_csv, indir, and outdir arguments in speaker_images.py, run:
 

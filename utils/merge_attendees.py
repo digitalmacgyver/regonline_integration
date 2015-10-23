@@ -247,7 +247,7 @@ def merge_registrants( eventID, attendee_file, output_file ):
             # If we get here, we need to add the attendee.
 
             # Avoid rate limiting.
-            time.sleep( 2 )
+            #time.sleep( 2 )
                     
             custom_data1 = client.service.GetCustomFieldResponsesForRegistration( eventID=eventID, 
                                                                                   registrationID=attendee['ID'], 
@@ -259,8 +259,8 @@ def merge_registrants( eventID, attendee_file, output_file ):
                 'Professional Affiliation: Industry',
                 'Professional Affiliation: National Lab',
                 'Professional Affiliation: Non-Profit',
-                'Professioanl Affiliation: Unaffiliated',
-                'Professional Affiliation: Other Affiliation',
+                #'Professioanl Affiliation: Unaffiliated',
+                #'Professional Affiliation: Other Affiliation',
                 'Interest: ABI.Locals',
                 'Interest: ACM',
                 'Interest: Artificial Intelligence',
@@ -283,24 +283,24 @@ def merge_registrants( eventID, attendee_file, output_file ):
                 'Interest: Security',
                 'Interest: Systers',
                 'Interest: Wearables',
-                'Ethnicity: African or African-American/Black',
-                'Ethnicity: Alaska Native or American Indian/Native American',
-                'Ethnicity: Asian or Asian-American',
-                'Ethnicity: European or Euro-American/White',
-                'Ethnicity: Native Hawaiian or Pacific Islander',
-                'Ethnicity: Hispanic or Latina/o',
-                'Ethnicity: Other Race',
-                'Gender: Female',
-                'Gender: Male',
-                'Gender: Transgender',
-                'Gender: Nonbinary',
-                'Gender: Other',
-                'Gender: Decline to state',
-                'Agenda: Fall Partner Meeting',
+                #'Ethnicity: African or African-American/Black',
+                #'Ethnicity: Alaska Native or American Indian/Native American',
+                #'Ethnicity: Asian or Asian-American',
+                #'Ethnicity: European or Euro-American/White',
+                #'Ethnicity: Native Hawaiian or Pacific Islander',
+                #'Ethnicity: Hispanic or Latina/o',
+                #'Ethnicity: Other Race',
+                #'Gender: Female',
+                #'Gender: Male',
+                #'Gender: Transgender',
+                #'Gender: Nonbinary',
+                #'Gender: Other',
+                #'Gender: Decline to state',
+                #'Agenda: Fall Partner Meeting',
                 'Agenda: Global Women Technical Leaders Program',
-                'Agenda: Private Reception',
-                "Agenda: Senior Women's Program and Luncheon",
-                'Agenda: Technical Executive Forum'
+                #'Agenda: Private Reception',
+                #"Agenda: Senior Women's Program and Luncheon",
+                #'Agenda: Technical Executive Forum'
             ]
             
             groups_of_interest = [ x[x.find( ':' )+2:] for x in group_labels ]
@@ -355,7 +355,7 @@ def merge_registrants( eventID, attendee_file, output_file ):
             if add_attendee['Email'].lower() in known_emails:
                 # Fix up the ones from Linklings but otherwise leave them unchanged.
                 # The ones from Linklings are presumed to be Speakers.
-                known_emails[add_attendee['Email'].lower()][16] = ",".join( [ 'Speaker' ] + user_group_labels )
+                #known_emails[add_attendee['Email'].lower()][16] = ",".join( [ 'Speaker' ] + user_group_labels )
                 continue
                 
             known_attendees.append( [

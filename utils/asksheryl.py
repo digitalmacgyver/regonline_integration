@@ -40,41 +40,33 @@ def get_attendee_id( email ):
     '''Generate a deterministic, unique identifier based on email.'''
     return unicode( uuid.uuid5( uuid.UUID( abi_namespace_uuid ), email.encode( 'ascii', errors='ignore' ) ) )
 
-attendee_file = '/wintmp/abi/sessions/sessions.csv'
-attendee_file_out = '/wintmp/abi/sessions/sessions-out.csv'
+attendee_file = '/wintmp/abi/asksheryl.csv'
+attendee_file_out = '/wintmp/abi/asksheryl2.csv'
 
-attendees = []
+output = []
 
 with open( attendee_file, 'rb' ) as f:
-    reader = unicodecsv.reader( f, encoding='utf-8' )
-    for attendee in reader:
-        if len( attendee ):
-            attendee = [ unicode( x ) for x in attendee ]
+    reader = unicodecsv.reader( f, encoding='utf-8', errors='replace' )
 
-            attendee[0] = attendee[0][:249]
-            
-            # DoubleDutch doesn't allow session descriptions to start
-            # with a # in their uploader.
-            if len( attendee[0] ) and attendee[0][0] == '#':
-                attendee[0] = ' ' + attendee[0][:248]
+    first = True
 
-            before_hashtag = attendee[1].replace( '\n', '<br />' )
-            #p = re.compile( r'\s+#(\D\w+?)(\W)' )
-            #attendee[1] = p.sub( r' dd://hashtag/\1 \2', before_hashtag )
-            attendee[1] = before_hashtag
+    for comment in reader:
+        if len( comment ):
+            fields = [ unicode( x ) for x in comment ]
 
-            m = attendee[1]
+            comment = fields[6]
 
-            if len( attendee[0] ) == 0:
-                print "ERROR: ", attendee
+            if first or re.search( r'#asksheryl', comment, re.IGNORECASE ):
+                output.append( fields )
+                first = False
 
-            attendees.append( attendee )
+
 
 with open( attendee_file_out, 'wb' ) as f:
     writer = unicodecsv.writer( f, encoding="utf-8" )
 
-    for attendee in attendees:
-        writer.writerow( attendee )
+    for thing in output:
+        writer.writerow( thing )
 
 
         

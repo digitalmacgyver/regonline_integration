@@ -158,7 +158,7 @@ def get_sponsors( eventID, output_dir, canonical ):
             return 'Corporate Sponsors'
         elif regtype in [ 'Academic - Gold', 'Academic - Silver', 'Academic - Bronze' ]:
             return 'Academic Sponsors'
-        elif regtype in [ 'Lab & Non-Profit - Gold', 'Lab & Non-Profit - Gold', 'Lab & Non-Profit - Gold' ]:
+        elif regtype in [ 'Lab & Non-Profit - Gold', 'Lab & Non-Profit - Silver', 'Lab & Non-Profit - Bronze' ]:
             return 'Lab & Nonprofit Sponsors'
         elif regid == 79052836:
             return 'Lab & Nonprofit Sponsors'

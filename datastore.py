@@ -6,6 +6,7 @@ import os
 import os.path
 import cPickle as pickle
 
+
 # For now just store things in a flat file, in the future we'll make
 # this a database.
 
